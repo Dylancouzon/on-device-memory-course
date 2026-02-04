@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>On-Device Memory for AI Agents - DeepLearning.AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --coral: #E8594F;
+            --coral-light: #F26B5B;
+            --bg-white: #FFFFFF;
+            --bg-gray: #F8F8F8;
+            --text-dark: #1A1A1A;
+            --text-gray: #4A4A4A;
+            --text-muted: #6B6B6B;
+            --border-gray: #E5E5E5;
+            --green-check: #22C55E;
+            --dark-footer: #4A5568;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-white);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        /* Announcement Bar */
+        .announcement-bar {
+            background: var(--coral);
+            color: white;
+            text-align: center;
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .announcement-bar a {
+            color: white;
+            text-decoration: underline;
+        }
+
+        .announcement-bar .close-btn {
+            position: absolute;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        /* Navigation */
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 2rem;
+            background: white;
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-dark);
+            text-decoration: none;
+        }
+
+        .nav-logo img {
+            height: 28px;
+        }
+
+        .nav-center {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-center a {
+            color: var(--text-gray);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .nav-center a:hover {
+            color: var(--text-dark);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .nav-right a {
+            color: var(--text-gray);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .start-learning-btn {
+            background: var(--coral);
+            color: white !important;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #E8594F 0%, #D94A40 50%, #C43D33 100%);
+            padding: 2rem 2rem 3rem;
+            color: white;
+        }
+
+        .breadcrumb {
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .breadcrumb a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumb span {
+            margin: 0 0.5rem;
+        }
+
+        .hero-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.35rem 0.75rem;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: white;
+        }
+
+        .badge svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 0.75rem;
+        }
+
+        .hero-instructor {
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            opacity: 0.95;
+        }
+
+        .partner-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .partner-logo svg {
+            height: 32px;
+        }
+
+        .partner-logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .enroll-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            background: var(--text-dark);
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .enroll-btn:hover {
+            background: #333;
+        }
+
+        .hero-video {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 16/10;
+            background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-thumbnail {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .play-btn {
+            width: 60px;
+            height: 60px;
+            background: var(--coral);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .play-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+            margin-left: 3px;
+        }
+
+        .video-title {
+            margin-top: 1rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 3rem;
+        }
+
+        /* Content Cards */
+        .content-card {
+            background: var(--bg-gray);
+            border-radius: 12px;
+            padding: 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .content-card h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            color: var(--text-dark);
+        }
+
+        /* What You'll Learn */
+        .learn-list {
+            list-style: none;
+        }
+
+        .learn-list li {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            color: var(--text-gray);
+            line-height: 1.5;
+        }
+
+        .learn-list li:last-child {
+            margin-bottom: 0;
+        }
+
+        .check-icon {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            color: var(--green-check);
+            margin-top: 2px;
+        }
+
+        /* About Section */
+        .about-text {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        .about-text p {
+            margin-bottom: 1rem;
+        }
+
+        .about-text strong {
+            color: var(--text-dark);
+        }
+
+        .detail-list {
+            list-style: none;
+            margin-top: 1rem;
+        }
+
+        .detail-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+            color: var(--text-gray);
+            line-height: 1.6;
+        }
+
+        .detail-list li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: var(--text-dark);
+            font-weight: bold;
+        }
+
+        .closing-text {
+            margin-top: 1.5rem;
+            font-size: 0.95rem;
+            color: var(--text-gray);
+        }
+
+        /* Who Should Join */
+        .who-text {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Course Outline */
+        .outline-header {
+            display: flex;
+            align-items: baseline;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .outline-header h2 {
+            margin-bottom: 0;
+        }
+
+        .outline-meta {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .outline-list {
+            list-style: none;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid var(--border-gray);
+            overflow: hidden;
+        }
+
+        .outline-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        .outline-item:last-child {
+            border-bottom: none;
+        }
+
+        .outline-icon {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .outline-info {
+            flex: 1;
+        }
+
+        .outline-title {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-dark);
+            margin-bottom: 0.2rem;
+        }
+
+        .outline-detail {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Instructor Section */
+        .instructor-section {
+            margin-top: 2rem;
+        }
+
+        .instructor-section h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        .instructor-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            border: 1px solid var(--border-gray);
+            border-radius: 8px;
+            padding: 1.25rem;
+        }
+
+        .instructor-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .instructor-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .instructor-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.2rem;
+        }
+
+        .instructor-role {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .instructor-role a {
+            color: var(--coral);
+            text-decoration: none;
+        }
+
+        .instructor-role a:hover {
+            text-decoration: underline;
+        }
+
+        .instructor-social {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .instructor-social a {
+            color: var(--text-muted);
+            transition: color 0.2s;
+        }
+
+        .instructor-social a:hover {
+            color: var(--coral);
+        }
+
+        .instructor-social svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Sidebar */
+        .sidebar-card {
+            background: var(--bg-gray);
+            border-radius: 12px;
+            padding: 1.75rem;
+            position: sticky;
+            top: 2rem;
+        }
+
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+            color: var(--text-dark);
+        }
+
+        .sidebar-meta {
+            list-style: none;
+        }
+
+        .sidebar-meta li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 0;
+            font-size: 0.9rem;
+            color: var(--text-gray);
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        .sidebar-meta li:last-of-type {
+            border-bottom: none;
+        }
+
+        .sidebar-meta svg {
+            width: 18px;
+            height: 18px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .sidebar-partner {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 0;
+            font-size: 0.9rem;
+            color: var(--text-gray);
+        }
+
+        .qdrant-logo-small {
+            width: 24px;
+            height: 24px;
+        }
+
+        .sidebar-enroll {
+            display: block;
+            width: 100%;
+            margin-top: 1.5rem;
+            padding: 0.9rem 1.5rem;
+            background: var(--coral);
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.2s;
+        }
+
+        .sidebar-enroll:hover {
+            background: var(--coral-light);
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--dark-footer);
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-links a {
+            color: var(--coral-light);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .footer-social {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .footer-social a {
+            color: white;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .footer-social a:hover {
+            opacity: 1;
+        }
+
+        .footer-social svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        /* Mockup Notice */
+        .mockup-notice {
+            background: #FEF3C7;
+            border: 1px solid #F59E0B;
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin: 2rem auto;
+            max-width: 600px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #92400E;
+        }
+
+        .mockup-notice strong {
+            color: #B45309;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar-card {
+                position: static;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-center {
+                display: none;
+            }
+
+            .hero {
+                padding: 1.5rem 1rem 2rem;
+            }
+
+            .hero-title {
+                font-size: 1.75rem;
+            }
+
+            .main-content {
+                padding: 2rem 1rem;
+            }
+
+            .hero-badges {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Announcement Bar -->
+    <div class="announcement-bar">
+        <span>✦</span>
+        New course! Enroll in <a href="#">Agent Skills with Anthropic</a>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <a href="#" class="nav-logo">
+            <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+                <circle cx="16" cy="16" r="16" fill="#E8594F"/>
+                <path d="M10 16C10 12.6863 12.6863 10 16 10C19.3137 10 22 12.6863 22 16C22 19.3137 19.3137 22 16 22" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+            DeepLearning.AI
+        </a>
+        <ul class="nav-center">
+            <li><a href="#">Explore Courses</a></li>
+            <li><a href="#">AI Newsletter</a></li>
+            <li><a href="#">✦ AI Dev x SF 26</a></li>
+            <li><a href="#">Community</a></li>
+        </ul>
+        <div class="nav-right">
+            <a href="#">Membership</a>
+            <a href="#" class="start-learning-btn">Start Learning</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <div class="breadcrumb">
+                <a href="#">All Courses</a>
+                <span>›</span>
+                <a href="#">Short Courses</a>
+                <span>›</span>
+                On-Device Memory for AI Agents
+            </div>
+            <div class="hero-content">
+                <div class="hero-text">
+                    <div class="hero-badges">
+                        <span class="badge">Short Course</span>
+                        <span class="badge">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            Intermediate
+                        </span>
+                        <span class="badge">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            1 Hour 45 Minutes
+                        </span>
+                    </div>
+                    <h1 class="hero-title">On-Device Memory for AI Agents</h1>
+                    <p class="hero-instructor">Instructor: Kacper Łukawski</p>
+                    <div class="partner-logo">
+                        <svg class="qdrant-logo" viewBox="0 0 120 40" fill="none" height="32">
+                            <circle cx="20" cy="20" r="16" fill="white"/>
+                            <circle cx="20" cy="20" r="8" fill="#DC2F5E"/>
+                            <text x="44" y="26" fill="white" font-family="Inter, sans-serif" font-size="18" font-weight="700">Qdrant</text>
+                        </svg>
+                    </div>
+                    <a href="#" class="enroll-btn">Enroll for Free</a>
+                </div>
+                <div class="hero-video">
+                    <div class="video-overlay">
+                        <div class="play-btn">
+                            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        </div>
+                        <div class="video-title">On-Device Memory<br>for AI Agents</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="content-left">
+            <!-- What You'll Learn -->
+            <div class="content-card">
+                <h2>What you'll learn</h2>
+                <ul class="learn-list">
+                    <li>
+                        <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <span>Understand why on-device retrieval matters for latency-sensitive applications, and how to design memory architectures that meet sub-10ms response budgets on wearables and robots.</span>
+                    </li>
+                    <li>
+                        <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <span>Implement hybrid retrieval (dense + sparse) with payload filtering using Qdrant's embedded mode, optimized for resource-constrained edge environments.</span>
+                    </li>
+                    <li>
+                        <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <span>Build complete offline-first agent memory systems with intelligent eviction policies, privacy boundaries, and eventual cloud synchronization patterns.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- About This Course -->
+            <div class="content-card">
+                <h2>About this course</h2>
+                <div class="about-text">
+                    <p>Join our new short course, On-Device Memory for AI Agents! Learn from <strong>Kacper Łukawski</strong>, Developer Relations Lead at Qdrant.</p>
+
+                    <p>Most AI memory systems assume constant cloud connectivity. But agents running on wearables, robots, and field devices need to store embeddings locally, retrieve context in milliseconds, and keep working when the network disappears. This course teaches you to build memory systems that run entirely at the edge.</p>
+
+                    <p>In this course, you'll learn on-device memory architecture, implement Qdrant in embedded mode for local vector storage, and apply optimization techniques to make these systems production-ready. You'll work with real hardware constraints to build a complete offline-first memory system.</p>
+
+                    <p>In detail, you'll:</p>
+
+                    <ul class="detail-list">
+                        <li>Learn why latency budgets matter for wearables and robotics, and how cloud round-trips of 200-800ms break real-time user experiences that require sub-10ms responses.</li>
+                        <li>Configure Qdrant in embedded mode for local vector storage with memory constraints, enabling full vector search capabilities without network dependencies.</li>
+                        <li>Implement hybrid dense + sparse retrieval with metadata filtering at the edge, combining semantic similarity with keyword matching for higher precision.</li>
+                        <li>Design memory lifecycle policies including LRU eviction, compaction strategies, and privacy-aware retention rules for personal data on wearable devices.</li>
+                        <li>Build an offline-first sync pattern that queues writes locally and merges to cloud on reconnection, handling conflict resolution gracefully.</li>
+                    </ul>
+
+                    <p class="closing-text">Start building memory systems that work without the cloud and unlock AI applications on smart glasses, industrial robots, and field equipment.</p>
+                </div>
+            </div>
+
+            <!-- Who Should Join -->
+            <div class="content-card">
+                <h2>Who should join?</h2>
+                <p class="who-text">AI engineers building applications for edge devices, wearables, or robotics. Mobile developers adding AI memory capabilities to apps. ML engineers looking to deploy RAG systems beyond the cloud. Familiarity with Python and vector embeddings is recommended.</p>
+            </div>
+
+            <!-- Course Outline -->
+            <div class="content-card">
+                <div class="outline-header">
+                    <h2>Course Outline</h2>
+                    <span class="outline-meta">9 Lessons · 5 Code Examples</span>
+                </div>
+                <ul class="outline-list">
+                    <li class="outline-item">
+                        <svg class="outline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <div class="outline-info">
+                            <div class="outline-title">Introduction</div>
+                            <div class="outline-detail">Video · 3 mins</div>
+                        </div>
+                    </li>
+                    <li class="outline-item">
+                        <svg class="outline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <div class="outline-info">
+                            <div class="outline-title">Why On-Device Memory Matters</div>
+                            <div class="outline-detail">Video · 8 mins</div>
+                        </div>
+                    </li>
+                    <li class="outline-item">
+                        <svg class="outline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                        <div class="outline-info">
+                            <div class="outline-title">Qdrant Embedded Mode Setup</div>
+                            <div class="outline-detail">Video with code examples · 12 mins</div>
+                        </div>
+                    </li>
+                    <li class="outline-item">
+                        <svg class="outline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                        <div class="outline-info">
+                            <div class="outline-title">Hybrid Retrieval at the Edge</div>
+                            <div class="outline-detail">Video with code examples · 15 mins</div>
+                        </div>
+                    </li>
+                    <li class="outline-item">
+                        <svg class="outline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                        <div class="outline-info">
+                            <div class="outline-title">Memory Lifecycle: Eviction & Compaction</div>
+                            <div class="outline-detail">Video with code examples · 14 mins</div>
+                        </div>
+                    </li>
+                    <li class="outline-item">
+                        <svg class="outline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <div class="outline-info">
+                            <div class="outline-title">Privacy Boundaries for Personal Data</div>
+                            <div class="outline-detail">Video · 10 mins</div>
+                        </div>
+                    </li>
+                    <li class="outline-item">
+                        <svg class="outline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                        <div class="outline-info">
+                            <div class="outline-title">Offline-First Sync Patterns</div>
+                            <div class="outline-detail">Video with code examples · 18 mins</div>
+                        </div>
+                    </li>
+                    <li class="outline-item">
+                        <svg class="outline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                        <div class="outline-info">
+                            <div class="outline-title">Lab: Wearable "What Did I See?" Assistant</div>
+                            <div class="outline-detail">Video with code examples · 20 mins</div>
+                        </div>
+                    </li>
+                    <li class="outline-item">
+                        <svg class="outline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <div class="outline-info">
+                            <div class="outline-title">Conclusion</div>
+                            <div class="outline-detail">Video · 2 mins</div>
+                        </div>
+                    </li>
+                    <li class="outline-item">
+                        <svg class="outline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <div class="outline-info">
+                            <div class="outline-title">Quiz</div>
+                            <div class="outline-detail">Reading · 10 mins</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Instructor -->
+            <div class="instructor-section">
+                <h2>Instructor</h2>
+                <div class="instructor-card">
+                    <div class="instructor-left">
+                        <div class="instructor-avatar">KŁ</div>
+                        <div>
+                            <div class="instructor-name">Kacper Łukawski</div>
+                            <div class="instructor-role">Developer Relations Lead at <a href="https://qdrant.tech">Qdrant</a></div>
+                        </div>
+                    </div>
+                    <div class="instructor-social">
+                        <a href="#" aria-label="LinkedIn">
+                            <svg fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                        </a>
+                        <a href="#" aria-label="X">
+                            <svg fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <aside>
+            <div class="sidebar-card">
+                <h3 class="sidebar-title">On-Device Memory for AI Agents</h3>
+                <ul class="sidebar-meta">
+                    <li>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        Intermediate
+                    </li>
+                    <li>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        1 Hour 45 Minutes
+                    </li>
+                    <li>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        9 Video Lessons
+                    </li>
+                    <li>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                        5 Code Examples
+                    </li>
+                    <li>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        Instructor: Kacper Łukawski
+                    </li>
+                </ul>
+                <div class="sidebar-partner">
+                    <svg class="qdrant-logo-small" viewBox="0 0 40 40" fill="none">
+                        <circle cx="20" cy="20" r="18" fill="#DC2F5E"/>
+                        <circle cx="20" cy="20" r="8" fill="white"/>
+                    </svg>
+                    Qdrant
+                </div>
+                <a href="#" class="sidebar-enroll">Enroll for Free</a>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-links">
+            <a href="#">Courses</a>
+            <a href="#">The Batch</a>
+            <a href="#">Community</a>
+            <a href="#">Careers</a>
+            <a href="#">About</a>
+            <a href="#">Contact</a>
+            <a href="#">Help</a>
+        </div>
+        <div class="footer-social">
+            <a href="#" aria-label="Facebook">
+                <svg fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            </a>
+            <a href="#" aria-label="Instagram">
+                <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+            </a>
+            <a href="#" aria-label="X">
+                <svg fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            </a>
+            <a href="#" aria-label="LinkedIn">
+                <svg fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            </a>
+            <a href="#" aria-label="YouTube">
+                <svg fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+            </a>
+        </div>
+    </footer>
+
+    <div class="mockup-notice">
+        <strong>Note:</strong> This is a course proposal mockup, not an official DeepLearning.AI page.
+    </div>
+</body>
+</html>
