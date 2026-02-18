@@ -3,7 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>On-Device Memory for AI Agents - DeepLearning.AI</title>
+    <title>Building On-Device AI Memory with Qdrant Edge - DeepLearning.AI</title>
+    <meta name="description" content="Build cross-device AI memory systems using AI Hub and Qdrant Edge. Deploy on-device models, store context locally, and orchestrate memory across AR glasses, phones, and wearables.">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Building On-Device AI Memory with Qdrant Edge">
+    <meta property="og:description" content="Build cross-device AI memory with AI Hub and Qdrant Edge. On-device models, edge vector storage, and cloud sync for AR glasses, phones, and wearables.">
+    <meta property="og:image" content="https://on-device-memory-course.vercel.app/og-image.png">
+    <meta property="og:url" content="https://on-device-memory-course.vercel.app">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Building On-Device AI Memory with Qdrant Edge">
+    <meta name="twitter:description" content="Build cross-device AI memory with AI Hub and Qdrant Edge. On-device models, edge storage, and cloud sync.">
+    <meta name="twitter:image" content="https://on-device-memory-course.vercel.app/og-image.png">
+
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -122,12 +138,115 @@
             padding: 0.5rem 1rem;
             border-radius: 6px;
             font-weight: 500;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        /* Mobile Menu */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            min-width: 44px;
+            min-height: 44px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mobile-menu-btn svg {
+            width: 24px;
+            height: 24px;
+            color: var(--text-dark);
+        }
+
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            z-index: 1000;
+            padding: 1rem;
+            flex-direction: column;
+        }
+
+        .mobile-nav.active {
+            display: flex;
+        }
+
+        .mobile-nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-gray);
+            margin-bottom: 1rem;
+        }
+
+        .mobile-nav-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            min-width: 44px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mobile-nav-close svg {
+            width: 24px;
+            height: 24px;
+            color: var(--text-dark);
+        }
+
+        .mobile-nav-links {
+            list-style: none;
+            flex: 1;
+        }
+
+        .mobile-nav-links li {
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        .mobile-nav-links a {
+            display: block;
+            padding: 1rem 0.5rem;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 1.1rem;
+            font-weight: 500;
+            min-height: 44px;
+        }
+
+        .mobile-nav-cta {
+            padding-top: 1rem;
+        }
+
+        .mobile-nav-cta a {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            background: var(--coral);
+            color: white;
+            text-decoration: none;
+            text-align: center;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            min-height: 44px;
         }
 
         /* Hero Section */
         .hero {
             background: linear-gradient(135deg, #E8594F 0%, #D94A40 50%, #C43D33 100%);
-            padding: 2rem 2rem 3rem;
+            padding: 1.5rem 2rem 2rem;
             color: white;
         }
 
@@ -683,8 +802,31 @@
         }
 
         @media (max-width: 768px) {
-            .nav-center {
+            .nav {
+                padding: 0.75rem 1rem;
+            }
+
+            .nav-center,
+            .nav-right a:not(.start-learning-btn) {
                 display: none;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .nav-right {
+                gap: 0.5rem;
+            }
+
+            .start-learning-btn {
+                padding: 0.4rem 0.75rem;
+                font-size: 0.85rem;
+            }
+
+            .announcement-bar {
+                font-size: 0.8rem;
+                padding: 0.5rem 0.75rem;
             }
 
             .hero {
@@ -692,34 +834,179 @@
             }
 
             .hero-title {
-                font-size: 1.75rem;
+                font-size: 1.5rem;
+            }
+
+            .hero-instructor {
+                font-size: 0.9rem;
+            }
+
+            .breadcrumb {
+                font-size: 0.75rem;
             }
 
             .main-content {
-                padding: 2rem 1rem;
+                padding: 1.5rem 1rem;
+                gap: 1.5rem;
             }
 
             .hero-badges {
                 flex-wrap: wrap;
+                gap: 0.4rem;
+            }
+
+            .badge {
+                font-size: 0.7rem;
+                padding: 0.3rem 0.6rem;
+            }
+
+            .content-card {
+                padding: 1.25rem;
+                margin-bottom: 1rem;
+            }
+
+            .content-card h2 {
+                font-size: 1.1rem;
+            }
+
+            .learn-list li {
+                font-size: 0.9rem;
+            }
+
+            .about-text,
+            .detail-list li,
+            .who-text,
+            .closing-text {
+                font-size: 0.9rem;
+            }
+
+            /* Course outline mobile */
+            .outline-header {
+                flex-direction: column;
+                gap: 0.25rem;
+            }
+
+            .outline-item {
+                padding: 0.875rem 1rem;
+                gap: 0.75rem;
+            }
+
+            .outline-title {
+                font-size: 0.875rem;
+            }
+
+            .outline-detail {
+                font-size: 0.75rem;
+            }
+
+            .outline-icon {
+                width: 18px;
+                height: 18px;
+            }
+
+            /* Instructor mobile */
+            .instructor-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .instructor-social {
+                margin-left: 0;
+            }
+
+            .instructor-social a {
+                min-width: 44px;
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            /* Sidebar mobile */
+            .sidebar-card {
+                padding: 1.25rem;
+            }
+
+            .sidebar-title {
+                font-size: 1.1rem;
+            }
+
+            .sidebar-enroll {
+                min-height: 48px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            /* Enroll button touch-friendly */
+            .enroll-btn {
+                min-height: 48px;
+                padding: 0.875rem 1.5rem;
+            }
+
+            /* Footer mobile */
+            .footer-links {
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+
+            .footer-links a {
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+            }
+
+            .footer-social a {
+                min-width: 44px;
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .mockup-notice {
+                margin: 1rem;
+                padding: 0.875rem 1rem;
+                font-size: 0.85rem;
+            }
+
+            .video-title {
+                font-size: 1.25rem;
+            }
+
+            .play-btn {
+                width: 50px;
+                height: 50px;
+            }
+
+            .play-btn svg {
+                width: 20px;
+                height: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-title {
+                font-size: 1.35rem;
+            }
+
+            .nav-logo {
+                font-size: 0.95rem;
+            }
+
+            .nav-logo svg {
+                width: 24px;
+                height: 24px;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Announcement Bar -->
-    <div class="announcement-bar">
-        <span>✦</span>
-        New course! Enroll in <a href="#">Agent Skills with Anthropic</a>
-    </div>
-
     <!-- Navigation -->
     <nav class="nav">
         <a href="#" class="nav-logo">
-            <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-                <circle cx="16" cy="16" r="16" fill="#E8594F"/>
-                <path d="M10 16C10 12.6863 12.6863 10 16 10C19.3137 10 22 12.6863 22 16C22 19.3137 19.3137 22 16 22" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-            </svg>
-            DeepLearning.AI
+            <img src="assets/logos/deeplearning-ai-logo.png" alt="DeepLearning.AI" height="28">
         </a>
         <ul class="nav-center">
             <li><a href="#">Explore Courses</a></li>
@@ -730,8 +1017,44 @@
         <div class="nav-right">
             <a href="#">Membership</a>
             <a href="#" class="start-learning-btn">Start Learning</a>
+            <button class="mobile-menu-btn" onclick="openMobileNav()" aria-label="Open menu">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
         </div>
     </nav>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav" id="mobileNav">
+        <div class="mobile-nav-header">
+            <a href="#" class="nav-logo">
+                <img src="assets/logos/deeplearning-ai-logo.png" alt="DeepLearning.AI" height="28">
+            </a>
+            <button class="mobile-nav-close" onclick="closeMobileNav()" aria-label="Close menu">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <ul class="mobile-nav-links">
+            <li><a href="#">Explore Courses</a></li>
+            <li><a href="#">AI Newsletter</a></li>
+            <li><a href="#">AI Dev x SF 26</a></li>
+            <li><a href="#">Community</a></li>
+            <li><a href="#">Membership</a></li>
+        </ul>
+        <div class="mobile-nav-cta">
+            <a href="#">Start Learning</a>
+        </div>
+    </div>
+
+    <script>
+        function openMobileNav() {
+            document.getElementById('mobileNav').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeMobileNav() {
+            document.getElementById('mobileNav').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    </script>
 
     <!-- Hero Section -->
     <section class="hero">
@@ -741,7 +1064,7 @@
                 <span>›</span>
                 <a href="#">Short Courses</a>
                 <span>›</span>
-                On-Device Memory for AI Agents
+                Building On-Device AI Memory with Qdrant Edge
             </div>
             <div class="hero-content">
                 <div class="hero-text">
@@ -749,31 +1072,23 @@
                         <span class="badge">Short Course</span>
                         <span class="badge">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                            Intermediate
+                            Beginner-Intermediate
                         </span>
                         <span class="badge">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            1 Hour 45 Minutes
+                            1 Hour 30 Minutes
                         </span>
                     </div>
-                    <h1 class="hero-title">On-Device Memory for AI Agents</h1>
-                    <p class="hero-instructor">Instructor: Kacper Łukawski</p>
-                    <div class="partner-logo">
-                        <svg class="qdrant-logo" viewBox="0 0 120 40" fill="none" height="32">
-                            <circle cx="20" cy="20" r="16" fill="white"/>
-                            <circle cx="20" cy="20" r="8" fill="#DC2F5E"/>
-                            <text x="44" y="26" fill="white" font-family="Inter, sans-serif" font-size="18" font-weight="700">Qdrant</text>
-                        </svg>
+                    <h1 class="hero-title">Building On-Device AI Memory with Qdrant Edge</h1>
+                    <p class="hero-instructor">Instructor: Thierry Damiba</p>
+                    <div class="partner-logo" style="gap: 1.5rem; align-items: center;">
+                        <img src="assets/logos/qdrant-logo-white.svg" alt="Qdrant" height="32">
                     </div>
                     <a href="#" class="enroll-btn">Enroll for Free</a>
                 </div>
-                <div class="hero-video">
-                    <div class="video-overlay">
-                        <div class="play-btn">
-                            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                        </div>
-                        <div class="video-title">On-Device Memory<br>for AI Agents</div>
-                    </div>
+                <div style="background: #1b1b30; border-radius: 12px; padding: 0.75rem; display: flex; flex-direction: column; align-self: center; max-width: 380px; margin: 0 auto;">
+                    <img src="assets/qdrant-edge-scheme.svg" alt="Qdrant Edge architecture diagram" style="display: block; width: 100%; height: auto; border-radius: 6px;">
+                    <p style="text-align: center; color: rgba(255,255,255,0.5); font-size: 0.7rem; margin-top: 0.4rem;">Qdrant Edge: On-Device Vector Search Architecture</p>
                 </div>
             </div>
         </div>
@@ -788,15 +1103,15 @@
                 <ul class="learn-list">
                     <li>
                         <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                        <span>Understand why on-device retrieval matters for latency-sensitive applications, and how to design memory architectures that meet sub-10ms response budgets on wearables and robots.</span>
+                        <span>Learn to store and retrieve vector embeddings on-device with Qdrant Edge, achieving sub-20ms query latency with no cloud dependency.</span>
                     </li>
                     <li>
                         <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                        <span>Implement hybrid retrieval (dense + sparse) with payload filtering using Qdrant's embedded mode, optimized for resource-constrained edge environments.</span>
+                        <span>Compile and run embedding models on Snapdragon hardware using AI Hub, then orchestrate memory across devices and cloud.</span>
                     </li>
                     <li>
                         <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                        <span>Build complete offline-first agent memory systems with intelligent eviction policies, privacy boundaries, and eventual cloud synchronization patterns.</span>
+                        <span>Build three end-to-end applications: a photo memory you search with plain English, a product scout for cross-trip comparisons, and a robot memory agent.</span>
                     </li>
                 </ul>
             </div>
@@ -805,107 +1120,108 @@
             <div class="content-card">
                 <h2>About this course</h2>
                 <div class="about-text">
-                    <p>Join our new short course, On-Device Memory for AI Agents! Learn from <strong>Kacper Łukawski</strong>, Developer Relations Lead at Qdrant.</p>
+                    <p>In Building On-Device AI Memory with Qdrant Edge, taught by <strong>Thierry Damiba</strong>, Developer Advocate at <strong>Qdrant</strong>, you'll learn to build AI memory systems that run entirely on-device.</p>
 
-                    <p>Most AI memory systems assume constant cloud connectivity. But agents running on wearables, robots, and field devices need to store embeddings locally, retrieve context in milliseconds, and keep working when the network disappears. This course teaches you to build memory systems that run entirely at the edge.</p>
+                    <p>Today's AI interactions are fragmented across devices. Your AR glasses, phone, and laptop each hold separate context, with no shared memory. Relying on cloud-only retrieval adds latency that breaks real-time experiences. This course teaches you to build a <strong>context hub</strong>: a cross-device memory system where AI can subscribe to relevant information streams and deliver personalized experiences across all your devices.</p>
 
-                    <p>In this course, you'll learn on-device memory architecture, implement Qdrant in embedded mode for local vector storage, and apply optimization techniques to make these systems production-ready. You'll work with real hardware constraints to build a complete offline-first memory system.</p>
+                    <p>Using <strong>Qdrant Edge</strong> for local vector storage and <strong>AI Hub</strong> for on-device inference, you'll store and query embeddings locally in under 20ms, design memory that works offline, and orchestrate context across multiple devices and the cloud.</p>
 
-                    <p>In detail, you'll:</p>
+                    <p>In this course, you'll:</p>
 
                     <ul class="detail-list">
-                        <li>Learn why latency budgets matter for wearables and robotics, and how cloud round-trips of 200-800ms break real-time user experiences that require sub-10ms responses.</li>
-                        <li>Configure Qdrant in embedded mode for local vector storage with memory constraints, enabling full vector search capabilities without network dependencies.</li>
-                        <li>Implement hybrid dense + sparse retrieval with metadata filtering at the edge, combining semantic similarity with keyword matching for higher precision.</li>
-                        <li>Design memory lifecycle policies including LRU eviction, compaction strategies, and privacy-aware retention rules for personal data on wearable devices.</li>
-                        <li>Build an offline-first sync pattern that queues writes locally and merges to cloud on reconnection, handling conflict resolution gracefully.</li>
+                        <li>Build a phone photo memory you search with natural language, a product scout that compares items across shopping trips, and a robot memory agent with spatial navigation.</li>
+                        <li>Configure Qdrant Edge for local vector storage on resource-constrained devices, with no server or network required.</li>
+                        <li>Generate embeddings on-device using models from AI Hub and store them in Qdrant Edge for fast local retrieval.</li>
+                        <li>Implement time and location-aware filtering using must (AND) and should (OR) conditions for contextual retrieval.</li>
+                        <li>Design cross-device memory orchestration with cascade queries: search locally first, fall back to cloud when needed.</li>
+                        <li>Compile the same model for multiple Snapdragon devices and sync memory between them.</li>
                     </ul>
 
-                    <p class="closing-text">Start building memory systems that work without the cloud and unlock AI applications on smart glasses, industrial robots, and field equipment.</p>
+                    <p class="closing-text">All lessons use interactive Jupyter notebooks. An appendix covers deploying your context hub to a Snapdragon-powered Android phone or dev kit.</p>
                 </div>
             </div>
 
             <!-- Who Should Join -->
             <div class="content-card">
                 <h2>Who should join?</h2>
-                <p class="who-text">AI engineers building applications for edge devices, wearables, or robotics. Mobile developers adding AI memory capabilities to apps. ML engineers looking to deploy RAG systems beyond the cloud. Familiarity with Python and vector embeddings is recommended.</p>
+                <p class="who-text">Anyone with basic Python knowledge who wants to build AI applications that run on-device. If you've taken <strong><a href="https://www.deeplearning.ai/short-courses/introduction-to-on-device-ai/" style="color: var(--coral); text-decoration: none;">Introduction to On-Device AI</a></strong> with Krishna Sridhar, this is a great next step.</p>
             </div>
 
             <!-- Course Outline -->
             <div class="content-card">
                 <div class="outline-header">
                     <h2>Course Outline</h2>
-                    <span class="outline-meta">9 Lessons · 5 Code Examples</span>
+                    <span class="outline-meta">9 Lessons · 7 Notebooks · Appendix</span>
                 </div>
                 <ul class="outline-list">
                     <li class="outline-item">
                         <svg class="outline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         <div class="outline-info">
-                            <div class="outline-title">Introduction</div>
-                            <div class="outline-detail">Video · 3 mins</div>
-                        </div>
-                    </li>
-                    <li class="outline-item">
-                        <svg class="outline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <div class="outline-info">
-                            <div class="outline-title">Why On-Device Memory Matters</div>
-                            <div class="outline-detail">Video · 8 mins</div>
+                            <div class="outline-title">Introduction - The Context Hub Vision</div>
+                            <div class="outline-detail">Video · 5 mins</div>
                         </div>
                     </li>
                     <li class="outline-item">
                         <svg class="outline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
                         <div class="outline-info">
-                            <div class="outline-title">Qdrant Embedded Mode Setup</div>
-                            <div class="outline-detail">Video with code examples · 12 mins</div>
-                        </div>
-                    </li>
-                    <li class="outline-item">
-                        <svg class="outline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-                        <div class="outline-info">
-                            <div class="outline-title">Hybrid Retrieval at the Edge</div>
+                            <div class="outline-title">Edge Vector Memory with Qdrant</div>
                             <div class="outline-detail">Video with code examples · 15 mins</div>
                         </div>
                     </li>
                     <li class="outline-item">
                         <svg class="outline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
                         <div class="outline-info">
-                            <div class="outline-title">Memory Lifecycle: Eviction & Compaction</div>
-                            <div class="outline-detail">Video with code examples · 14 mins</div>
-                        </div>
-                    </li>
-                    <li class="outline-item">
-                        <svg class="outline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <div class="outline-info">
-                            <div class="outline-title">Privacy Boundaries for Personal Data</div>
-                            <div class="outline-detail">Video · 10 mins</div>
+                            <div class="outline-title">On-Device Embeddings with AI Hub</div>
+                            <div class="outline-detail">Video with code examples · 15 mins</div>
                         </div>
                     </li>
                     <li class="outline-item">
                         <svg class="outline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
                         <div class="outline-info">
-                            <div class="outline-title">Offline-First Sync Patterns</div>
+                            <div class="outline-title">Contextual Retrieval and Filtering</div>
+                            <div class="outline-detail">Video with code examples · 12 mins</div>
+                        </div>
+                    </li>
+                    <li class="outline-item">
+                        <svg class="outline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                        <div class="outline-info">
+                            <div class="outline-title">Cross-Device Memory Orchestration</div>
+                            <div class="outline-detail">Video with code examples · 15 mins</div>
+                        </div>
+                    </li>
+                    <li class="outline-item">
+                        <svg class="outline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                        <div class="outline-info">
+                            <div class="outline-title">Lab - Phone Photo Memory</div>
                             <div class="outline-detail">Video with code examples · 18 mins</div>
                         </div>
                     </li>
                     <li class="outline-item">
                         <svg class="outline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
                         <div class="outline-info">
-                            <div class="outline-title">Lab: Wearable "What Did I See?" Assistant</div>
-                            <div class="outline-detail">Video with code examples · 20 mins</div>
+                            <div class="outline-title">Lab - Product Scout</div>
+                            <div class="outline-detail">Video with code examples · 15 mins</div>
+                        </div>
+                    </li>
+                    <li class="outline-item">
+                        <svg class="outline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                        <div class="outline-info">
+                            <div class="outline-title">Lab - Robot Memory Agent</div>
+                            <div class="outline-detail">Video with code examples · 15 mins</div>
                         </div>
                     </li>
                     <li class="outline-item">
                         <svg class="outline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         <div class="outline-info">
                             <div class="outline-title">Conclusion</div>
-                            <div class="outline-detail">Video · 2 mins</div>
+                            <div class="outline-detail">Video · 1 min</div>
                         </div>
                     </li>
                     <li class="outline-item">
                         <svg class="outline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         <div class="outline-info">
-                            <div class="outline-title">Quiz</div>
-                            <div class="outline-detail">Reading · 10 mins</div>
+                            <div class="outline-title">Appendix - Deploying to a Snapdragon Device</div>
+                            <div class="outline-detail">Code examples · 1 min</div>
                         </div>
                     </li>
                 </ul>
@@ -916,10 +1232,10 @@
                 <h2>Instructor</h2>
                 <div class="instructor-card">
                     <div class="instructor-left">
-                        <div class="instructor-avatar">KŁ</div>
+                        <div class="instructor-avatar">TD</div>
                         <div>
-                            <div class="instructor-name">Kacper Łukawski</div>
-                            <div class="instructor-role">Developer Relations Lead at <a href="https://qdrant.tech">Qdrant</a></div>
+                            <div class="instructor-name">Thierry Damiba</div>
+                            <div class="instructor-role">Developer Advocate at <a href="https://qdrant.tech">Qdrant</a></div>
                         </div>
                     </div>
                     <div class="instructor-social">
@@ -937,37 +1253,37 @@
         <!-- Sidebar -->
         <aside>
             <div class="sidebar-card">
-                <h3 class="sidebar-title">On-Device Memory for AI Agents</h3>
+                <h3 class="sidebar-title">Building On-Device AI Memory with Qdrant Edge</h3>
                 <ul class="sidebar-meta">
                     <li>
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                        Intermediate
+                        Beginner-Intermediate
                     </li>
                     <li>
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        1 Hour 45 Minutes
+                        1 Hour 30 Minutes
                     </li>
                     <li>
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        9 Video Lessons
+                        8 Lessons + Appendix
                     </li>
                     <li>
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-                        5 Code Examples
+                        7 Notebooks (3 Labs)
                     </li>
                     <li>
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        Instructor: Kacper Łukawski
+                        Instructor: Thierry Damiba
                     </li>
                 </ul>
-                <div class="sidebar-partner">
-                    <svg class="qdrant-logo-small" viewBox="0 0 40 40" fill="none">
-                        <circle cx="20" cy="20" r="18" fill="#DC2F5E"/>
-                        <circle cx="20" cy="20" r="8" fill="white"/>
-                    </svg>
-                    Qdrant
+                <div class="sidebar-partner" style="display: flex; flex-direction: column; gap: 1rem; padding: 0.75rem 0;">
+                    <img src="assets/logos/qdrant-logo-red-black.svg" alt="Qdrant" height="28">
                 </div>
                 <a href="#" class="sidebar-enroll">Enroll for Free</a>
+                <a href="https://github.com/thierrypdamiba/on-device-memory-course" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 0.75rem; padding: 0.7rem 1rem; border: 1px solid var(--border-gray); border-radius: 6px; color: var(--text-dark); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: background 0.2s;">
+                    <svg fill="currentColor" viewBox="0 0 24 24" width="18" height="18"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+                    View on GitHub
+                </a>
             </div>
         </aside>
     </main>
