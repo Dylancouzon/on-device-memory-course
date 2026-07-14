@@ -1,0 +1,44 @@
+[
+  {
+    "file": "book.jpg",
+    "topic": "stack of books",
+    "source": "https://commons.wikimedia.org/wiki/File:A_stack_of_wooden_books_-_geograph.org.uk_-_6462548.jpg",
+    "license": "CC BY-SA 2.0",
+    "artist": "Evelyn Simak"
+  },
+  {
+    "file": "coffee.jpg",
+    "topic": "cappuccino cup cafe",
+    "source": "https://commons.wikimedia.org/wiki/File:A-cup-of-cappuccino-coffee-dar-es-salaam-cafe.jpg",
+    "license": "CC BY-SA 4.0",
+    "artist": "Aneth David (SLU)"
+  },
+  {
+    "file": "plant.jpg",
+    "topic": "potted houseplant",
+    "source": "https://commons.wikimedia.org/wiki/File:Amaryllis_(Hippeastrum)_18-01-2025._(actm.)_02.jpg",
+    "license": "CC BY-SA 4.0",
+    "artist": "Agnes Monkelbaan"
+  },
+  {
+    "file": "restaurant.jpg",
+    "topic": "restaurant plate food",
+    "source": "https://commons.wikimedia.org/wiki/File:Elizabeth%27s_Restaurant_-_Food_and_Devices_-_New_Orleans_2016.jpg",
+    "license": "CC BY 2.0",
+    "artist": "Infrogmation of New Orleans"
+  },
+  {
+    "file": "sneakers.jpg",
+    "topic": "white sneakers shoe",
+    "source": "https://commons.wikimedia.org/wiki/File:Black_white_sneakers_logo_(Unsplash).jpg",
+    "license": "CC0",
+    "artist": "chuttersnap"
+  },
+  {
+    "file": "street.jpg",
+    "topic": "busy city street cars daytime",
+    "source": "https://commons.wikimedia.org/wiki/File:City_of_Toy_Cars_(Unsplash).jpg",
+    "license": "CC0",
+    "artist": "Dakota Corbin"
+  }
+]

@@ -1,8 +1,0 @@
-{
-  "name": "deeplearning-course-mockup",
-  "version": "1.0.0",
-  "description": "Course proposal mockup for DeepLearning.AI",
-  "scripts": {
-    "start": "npx serve ."
-  }
-}
