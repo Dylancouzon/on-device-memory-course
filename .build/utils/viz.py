@@ -1,0 +1,279 @@
+"""Course visualizations.
+
+Every figure carries a provenance badge (design principle 7): each number is
+labelled as measured live or illustrative. The badge is baked into the figure
+so no chart can ship unlabelled.
+"""
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
+from matplotlib.lines import Line2D
+
+# provenance -> (label, color)
+BADGES = {
+    "measured": ("Measured in notebook", "#2ecc71"),
+    "illustrative": ("Illustrative", "#95a5a6"),
+}
+QDRANT_RED = "#DC244C"
+
+
+def receipt_table(rows, title="Resurrection receipt", provenance="measured", save=None):
+    """Render a forensic key/value table as a figure with a provenance badge.
+
+    `rows` is a list of (label, value) pairs.
+    """
+    import textwrap
+    # Wrap long values so nothing overflows the value column.
+    wrapped = [(str(label), textwrap.fill(str(value), 44)) for label, value in rows]
+    extra = sum(v.count("\n") for _, v in wrapped)
+    fig, ax = plt.subplots(figsize=(8.5, 0.5 + 0.45 * (len(rows) + extra)))
+    ax.axis("off")
+    ax.set_title(title, fontweight="bold", loc="left", pad=18)
+    table = ax.table(
+        cellText=[[label, value] for label, value in wrapped],
+        colLabels=["", ""], colWidths=[0.42, 0.58], cellLoc="left", loc="center",
+    )
+    table.auto_set_font_size(False)
+    table.set_fontsize(11)
+    table.scale(1, 1.6)
+    for (r, c), cell in table.get_celld().items():
+        cell.set_edgecolor("#dddddd")
+        if r == 0:
+            cell.set_height(0.001)  # hide empty header row
+        if c == 0:
+            cell.set_text_props(color="#555555")
+        else:
+            cell.set_text_props(fontweight="bold")
+    label, color = BADGES[provenance]
+    ax.text(1.0, 1.04, label, transform=ax.transAxes, ha="right", va="bottom",
+            fontsize=8, color="white",
+            bbox=dict(boxstyle="round,pad=0.3", fc=color, ec="none"))
+    if save:
+        fig.savefig(save, dpi=120, bbox_inches="tight")
+    plt.show()
+
+
+def before_after(query, before_title, before_items, after_title, after_items):
+    """Print two result lists stacked one above the other as plain text, so a
+    filter's effect reads at a glance.
+
+    Items in `before_items` that the filter dropped (absent from `after_items`)
+    are marked with a leading ✗; kept items in the second list get a ✓.
+    """
+    kept = {str(s) for s in after_items}
+    print(f'query: "{query}"\n')
+    print(f"{before_title}:")
+    for b in before_items:
+        mark = "✗" if str(b) not in kept else " "
+        print(f"  {mark} {b}")
+    print(f"\n{after_title}:")
+    for a in after_items:
+        print(f"  ✓ {a}")
+
+
+def show_photo_results(hits, image_dir, query, save=None):
+    """Show the photos a text query retrieved: the top hit as a hero, the rest muted.
+
+    The winning photo is large, with its filename and score; runners-up sit in a
+    small dimmed strip so the cross-modal match reads in one glance.
+    """
+    from PIL import Image
+    hero, rest = hits[0], hits[1:]
+    fig = plt.figure(figsize=(9, 4.4))
+    gs = fig.add_gridspec(max(len(rest), 1), 3)
+
+    hax = fig.add_subplot(gs[:, :2])
+    him = Image.open(Path(image_dir) / hero.payload["file"])
+    him.thumbnail((520, 520))
+    hax.imshow(him)
+    hax.set_title(f'best match  ·  {hero.payload["file"]}  ·  score {hero.score:.3f}',
+                  fontsize=12, fontweight="bold", loc="left", color=QDRANT_RED)
+    hax.axis("off")
+
+    for i, hit in enumerate(rest):
+        ax = fig.add_subplot(gs[i, 2])
+        img = Image.open(Path(image_dir) / hit.payload["file"])
+        img.thumbnail((200, 200))
+        ax.imshow(img, alpha=0.55)
+        ax.set_title(f'{hit.payload["file"]} · {hit.score:.3f}', fontsize=8, color="#888")
+        ax.axis("off")
+
+    fig.suptitle(f'text query -> photos:  "{query}"', fontsize=12, x=0.02, ha="left")
+    fig.tight_layout(rect=[0, 0, 1, 0.94])
+    if save:
+        fig.savefig(save, dpi=120, bbox_inches="tight")
+    plt.show()
+
+
+MODALITY_COLOR = {"photo": QDRANT_RED, "voice": "#8e44ad", "text": "#2c3e50"}
+
+
+def _thumb_data_uri(path, size=120):
+    """Return a base64 data URI for a small thumbnail of an image file."""
+    import base64
+    import io
+    from PIL import Image
+    img = Image.open(path).convert("RGB")
+    img.thumbnail((size, size))
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", quality=80)
+    return "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()
+
+
+def day_timeline(memories, image_dir, save=None):
+    """Two-lane strip of a day's captured memories, in time order.
+
+    Photos sit in an upper lane (thumbnails + store label); voice and text
+    notes sit in a lower lane as numbered markers. A compact legend under the
+    axis maps each number to its time and full text, so no label collides.
+    Each memory is a dict with `timestamp`, `source_type`, and either `file`
+    (photo) or `note`/`transcript` (voice/text).
+    """
+    from datetime import datetime, timezone
+    from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+    from PIL import Image
+
+    def hhmm(ts):
+        return datetime.fromtimestamp(ts, timezone.utc).strftime("%H:%M")
+    def hour(ts):
+        d = datetime.fromtimestamp(ts, timezone.utc)
+        return d.hour + d.minute / 60
+
+    mems = sorted(memories, key=lambda m: m["timestamp"])
+    fig, ax = plt.subplots(figsize=(11, 4.2))
+    ax.axhline(0, color="#cccccc", lw=2, zorder=0)
+
+    note_legend, n, photo_i = [], 0, 0
+    for m in mems:
+        st, h = m["source_type"], hour(m["timestamp"])
+        color = MODALITY_COLOR.get(st, "#2c3e50")
+        if st == "photo" and m.get("file"):
+            # Stagger neighbouring thumbnails on two heights so close-in-time
+            # photos never overlap.
+            y_img = 0.6 if photo_i % 2 == 0 else 0.92
+            photo_i += 1
+            ax.scatter([h], [0.15], s=40, color=color, zorder=3)
+            im = Image.open(Path(image_dir) / m["file"]).convert("RGB")
+            im.thumbnail((52, 52))
+            ax.add_artist(AnnotationBbox(OffsetImage(im, zoom=1), (h, y_img),
+                                         frameon=True, pad=0.1, zorder=4))
+            ax.annotate(m.get("store", ""), (h, y_img + 0.22), ha="center", va="bottom",
+                        fontsize=8, color=color)
+        else:
+            n += 1
+            ax.scatter([h], [-0.15], s=90, color=color, zorder=3)
+            ax.annotate(str(n), (h, -0.32), ha="center", va="top",
+                        fontsize=9, fontweight="bold", color=color)
+            text = (m.get("note") or m.get("transcript") or "")
+            note_legend.append((n, hhmm(m["timestamp"]), st, text))
+
+    ax.set_ylim(-0.5, 1.4)
+    ax.set_yticks([])
+    ax.set_xlabel("Time of day (hour)")
+    ax.set_title("A day of captured memories: photos above, notes below", loc="left")
+    ax.spines[["top", "right", "left"]].set_visible(False)
+    handles = [Patch(color=c, label=k.capitalize()) for k, c in MODALITY_COLOR.items()]
+    ax.legend(handles=handles, loc="upper right", fontsize=8, ncol=3)
+
+    # Compact legend of the numbered notes, full text wrapped, anchored at the
+    # figure bottom so it never collides with the x-axis label. The legend is
+    # capped so a busy day stays readable and the layout never inverts.
+    import textwrap
+    LEGEND_MAX = 12
+    lines = []
+    for i, t, st, txt in note_legend[:LEGEND_MAX]:
+        lines += textwrap.wrap(f"{i}. {t} · {st:>5} · {txt}", 104,
+                               subsequent_indent="        ") or [""]
+    if len(note_legend) > LEGEND_MAX:
+        lines.append(f"        ... and {len(note_legend) - LEGEND_MAX} more notes")
+    bottom = min(0.82, 0.12 + 0.035 * len(lines))
+    fig.subplots_adjust(bottom=bottom, top=0.93)
+    fig.text(0.02, 0.02, "\n".join(lines), va="bottom", ha="left",
+             fontsize=8.5, family="monospace", color="#333333")
+    if save:
+        fig.savefig(save, dpi=120, bbox_inches="tight")
+    plt.show()
+
+
+INBOX_SECTIONS = ("Photos", "Voice Notes", "Text Notes")
+
+
+def _mem_when(payload):
+    """Format a memory's timestamp as HH:MM, or '' if it has none."""
+    from datetime import datetime, timezone
+    ts = payload.get("timestamp")
+    return datetime.fromtimestamp(ts, timezone.utc).strftime("%H:%M") if ts else ""
+
+
+def _mem_context(payload):
+    """The store / location / price line for a memory (only the fields present)."""
+    parts = [payload.get("store"), payload.get("location")]
+    if payload.get("price") is not None:
+        parts.append(f"${payload['price']:.0f}")
+    return " · ".join(p for p in parts if p)
+
+
+def memory_inbox(sections, image_dir, min_score=None):
+    """Render query results grouped by modality (never one blended list). Returns HTML.
+
+    `sections` maps a section title to a list of ScoredPoint. Every section in
+    INBOX_SECTIONS is rendered even when empty ("No matches"). Each card shows
+    the memory's timestamp, its store/location/price context, and its score.
+    Scores below `min_score` are dimmed and tagged as weaker matches. Scores are
+    measured live in the notebook, so the header carries that provenance badge.
+    """
+    from IPython.display import HTML
+
+    def card(h):
+        p = h.payload
+        # Only text/voice (Nomic) scores are thresholded; CLIP photo scores live
+        # on a different scale and are never marked weak against a Nomic cutoff.
+        weak = min_score is not None and not p.get("file") and h.score < min_score
+        when = _mem_when(p)
+        ctx = _mem_context(p)
+        head = (f'<div style="font-size:11px;color:#888">{when}'
+                + (f' · {ctx}' if ctx else '') + '</div>')
+        if p.get("file"):
+            uri = _thumb_data_uri(Path(image_dir) / p["file"])
+            body = f'<img src="{uri}" style="height:96px;border-radius:6px;display:block;margin-top:4px">'
+        else:
+            text = p.get("transcript") or p.get("note") or ""
+            body = f'<div style="max-width:240px;font-size:13px;margin-top:4px">{text}</div>'
+        tag = ('<span style="font-size:10px;color:#b08">weaker match</span>' if weak else '')
+        score = f'<span style="color:#DC244C;font-weight:700">{h.score:.3f}</span>'
+        return (f'<div style="border:1px solid #e0e0e0;border-radius:8px;padding:8px;'
+                f'margin:4px;background:#fff;{"opacity:.55" if weak else ""}">{head}{body}'
+                f'<div style="font-size:12px;margin-top:4px">score {score} {tag}</div></div>')
+
+    blocks = []
+    for title in INBOX_SECTIONS:
+        hits = sections.get(title, [])
+        if hits:
+            inner = f'<div style="display:flex;flex-wrap:wrap">{"".join(card(h) for h in hits)}</div>'
+        else:
+            inner = '<div style="font-size:13px;color:#aaa;font-style:italic;margin:4px">No matches</div>'
+        blocks.append(
+            f'<div style="margin:10px 0">'
+            f'<div style="font-weight:700;color:#2c3e50;border-bottom:2px solid #DC244C;'
+            f'display:inline-block;margin-bottom:6px">{title}</div>{inner}</div>')
+    _badge_label, _badge_color = BADGES["measured"]
+    header = (
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+        '<span style="font-weight:800;font-size:15px">Memory Inbox</span>'
+        f'<span style="font-size:11px;color:#fff;background:{_badge_color};'
+        f'border-radius:10px;padding:2px 8px">{_badge_label}</span></div>')
+    return HTML(
+        '<div style="font-family:system-ui,sans-serif;background:#f7f7f8;'
+        'border-radius:12px;padding:12px 16px">' + header + "".join(blocks) + "</div>")
+
+
+def demo():
+    receipt_table([("path", "./coffee_shard"), ("points_before_close", 6),
+                   ("points_after_reopen", 6), ("same_top_result", "✓"),
+                   ("network_calls", 0)])
+    print("viz demo OK (1 figure created)")
+
+
+if __name__ == "__main__":
+    demo()

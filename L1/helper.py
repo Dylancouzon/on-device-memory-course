@@ -65,6 +65,6 @@ def embed_image(paths):
     return [v.tolist() for v in _clip_vision().embed(list(paths))]
 
 
-def embed_text_clip(text):
+def embed_query_clip(text):
     """Embed a text query into CLIP's space, to search the image vector."""
     return next(_clip_text().query_embed([text])).tolist()

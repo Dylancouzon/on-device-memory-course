@@ -2,11 +2,6 @@
 __pycache__/
 *.pyc
 *_shard/
+.firecrawl/
 
-# Build material and course sources, not part of the student-facing course
-# (slide style, lesson scripts, canonical utils + helper.py generator)
-.build/
 CLAUDE.md
-
-# Personal API keys stay out of git (see L1); .env.example is the template
-.env

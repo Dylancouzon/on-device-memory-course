@@ -1,0 +1,16 @@
+[
+  {
+    "file": "coffee.jpg",
+    "topic": "cappuccino cup cafe",
+    "source": "https://commons.wikimedia.org/wiki/File:A-cup-of-cappuccino-coffee-dar-es-salaam-cafe.jpg",
+    "license": "CC BY-SA 4.0",
+    "artist": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:Aneth_David_(SLU)&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Aneth David (SLU) (page does not exist)\">Aneth David (SLU)</a>"
+  },
+  {
+    "file": "restaurant.jpg",
+    "topic": "restaurant plate food",
+    "source": "https://commons.wikimedia.org/wiki/File:Elizabeth%27s_Restaurant_-_Food_and_Devices_-_New_Orleans_2016.jpg",
+    "license": "CC BY 2.0",
+    "artist": "Infrogmation of New Orleans"
+  }
+]
