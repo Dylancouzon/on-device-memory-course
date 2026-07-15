@@ -106,6 +106,13 @@ def add_filler(shard, vector_name, count, dim, payload_fn=None, start_id=1000, s
     return count
 
 
+def fresh_start(directory):
+    """Delete any previous run's shard directory and recreate it empty."""
+    shutil.rmtree(directory, ignore_errors=True)
+    Path(directory).mkdir(parents=True, exist_ok=True)
+    return directory
+
+
 def cleanup(shard, directory=None):
     """Close the shard and optionally delete its directory."""
     try:
