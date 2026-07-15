@@ -27,10 +27,7 @@ Total: ~300 sec (~5 min).
 
 ## Beat 1 — INTRO
 
-Open on the course endpoint: screen capture of the L5 finale — the
-question "the ramen place downtown" returning a photo, a voice memo, and
-notes; then the backpack recognized from a new angle with its note
-recalled.
+Footage (shotlist #1): the L5 finale, payoff first.
 
 **NARRATION:**
 
@@ -46,7 +43,7 @@ on the device, not in the cloud.
 
 ## Beat 2 — Why memory can't live in the cloud
 
-Instructor to camera; no slide.
+No slide.
 
 **NARRATION:**
 
@@ -101,7 +98,7 @@ keeps beside it. Everything we build in this course is that notebook.
 
 ## Beat 4 — What "memory" means for a device
 
-Instructor to camera; no slide.
+No slide.
 
 **NARRATION:**
 
@@ -154,8 +151,7 @@ And lesson six takes that exact design and puts it on a robot.
 
 ## Beat 6 — WRAP
 
-Cut to short footage of the L6 finale: the robot fails on an object,
-is taught once by voice, then recognizes it from a new angle.
+Footage (shotlist #2): the L6 robot finale.
 
 **NARRATION:**
 

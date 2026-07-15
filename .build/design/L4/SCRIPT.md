@@ -72,7 +72,7 @@ Run the captures cell.
 
 **NARRATION**
 
-> A day starts with 17 photos, five voice notes, and 20 text notes: 42 captures in all. Each capture carries the same metadata: source type, timestamp, location, category, price when relevant, and store. The voice notes arrive as audio, so a small Whisper model transcribes them on-device — the kind of speech-to-text a phone or a pair of smart glasses runs, no server and no account. Play the clip and read what the model heard, side by side. From there the transcript embeds exactly like any other text. The helper frees the speech model as soon as transcription is done — on a small device, you load what you need and release what you don't. Three source types, two embedding paths.
+A day starts with 17 photos, five voice notes, and 20 text notes: 42 captures in all. Each capture carries the same metadata: source type, timestamp, location, category, price when relevant, and store. The voice notes arrive as audio, so a small Whisper model transcribes them on-device — the kind of speech-to-text a phone or a pair of smart glasses runs, no server and no account. Play the clip and read what the model heard, side by side. From there the transcript embeds exactly like any other text. The helper frees the speech model as soon as transcription is done — on a small device, you load what you need and release what you don't. Three source types, two embedding paths.
 
 ---
 
@@ -82,7 +82,7 @@ Run `day_timeline`.
 
 **NARRATION**
 
-> Before asking anything, here's the raw material laid flat: photos in the upper lane as thumbnails, in the order they were taken, and the voice and text notes below as numbered markers. This is what a day of on-device capture looks like — nothing recalled yet, just what's there. It's for orientation, not a result.
+Before asking anything, here's the raw material laid flat: photos in the upper lane as thumbnails, in the order they were taken, and the voice and text notes below as numbered markers. This is what a day of on-device capture looks like — nothing recalled yet, just what's there. It's for orientation, not a result.
 
 ---
 
@@ -92,7 +92,7 @@ Run the shard-and-index cell.
 
 **NARRATION**
 
-> One shard holds the whole day, with the two named vectors from L3: `text` for Nomic, `image` for CLIP. Then we index the four payload fields we'll filter on — category and location as keywords, timestamp and price as floats. That index is what lets the filters in a few cells' time run inside the query.
+One shard holds the whole day, with the two named vectors from L3: `text` for Nomic, `image` for CLIP. Then we index the four payload fields we'll filter on — category and location as keywords, timestamp and price as floats. That index is what lets the filters in a few cells' time run inside the query.
 
 ---
 
@@ -103,7 +103,7 @@ gallery.
 
 **NARRATION**
 
-> Store the day in two batches. The notes and transcripts embed with Nomic and land under the `text` vector; the photos embed with CLIP and land under `image`. Same `Point`, same upsert, whichever modality it came from — you built one by hand in L3, so here the batches can just run. Check the total: 42 memories, one shard. The last cell lays out all seventeen photos, so when a recall returns one later you've already seen it.
+Store the day in two batches. The notes and transcripts embed with Nomic and land under the `text` vector; the photos embed with CLIP and land under `image`. Same `Point`, same upsert, whichever modality it came from — you built one by hand in L3, so here the batches can just run. Check the total: 42 memories, one shard. The last cell lays out all seventeen photos, so when a recall returns one later you've already seen it.
 
 ---
 
@@ -113,7 +113,7 @@ Run the scroll cell.
 
 **NARRATION**
 
-> Pull one point back out and look at it. Its id, the named vectors it actually carries — this one is a text note, so only `text` — and its full payload. A photo point would show `image` instead. This is the raw shape everything else in the lab searches over.
+Pull one point back out and look at it. Its id, the named vectors it actually carries — this one is a text note, so only `text` — and its full payload. A photo point would show `image` instead. This is the raw shape everything else in the lab searches over.
 
 ---
 
@@ -123,7 +123,7 @@ Run the cell that defines `recall`.
 
 **NARRATION**
 
-> Now build recall in the open. It embeds the question twice — Nomic for the `text` vector, CLIP for the `image` vector — and runs one `QueryRequest` against each, with the same filter. The two result lists stay separate, grouped as photos, voice notes, and text notes, because Nomic and CLIP scores are not on the same scale. The helper's `show_raw` prints the plain evidence — which space, the score, the id, the payload — so you always see the hits before any rendering.
+Now build recall in the open. It embeds the question twice — Nomic for the `text` vector, CLIP for the `image` vector — and runs one `QueryRequest` against each, with the same filter. The two result lists stay separate, grouped as photos, voice notes, and text notes, because Nomic and CLIP scores are not on the same scale. The helper's `show_raw` prints the plain evidence — which space, the score, the id, the payload — so you always see the hits before any rendering.
 
 ---
 
@@ -133,7 +133,7 @@ Run the cell. Raw hits print first, then the memory inbox renders.
 
 **NARRATION**
 
-> First payoff: "black and white sneakers under fifty dollars." The filter is spelled out in code: `Filter(must=[...])` with category equal to `shopping` and price below 50, using raw `FieldCondition`, `MatchValue`, and `RangeFloat` types. Look at `show_raw` first: the space searched, the score, the id, the payload, in plain text. Then the same hits rendered as the memory inbox. The evidence comes before the presentation, never the other way round.
+First payoff: "black and white sneakers under fifty dollars." The filter is spelled out in code: `Filter(must=[...])` with category equal to `shopping` and price below 50, using raw `FieldCondition`, `MatchValue`, and `RangeFloat` types. Look at `show_raw` first: the space searched, the score, the id, the payload, in plain text. Then the same hits rendered as the memory inbox. The evidence comes before the presentation, never the other way round.
 
 ---
 
@@ -143,7 +143,7 @@ Run the editable cell, then change it and run again.
 
 **NARRATION**
 
-> Your turn. The cell lists a handful of questions the day can answer — where you parked the bike, the gym locker code, when the dentist is — so you can start from one that lands. Change `my_question` to any of them or to your own, and set `my_category` to filter, or `None` to search everything. Re-run, and you get the same raw hits and the same inbox for your question.
+Your turn. The cell lists a handful of questions the day can answer — where you parked the bike, the gym locker code, when the dentist is — so you can start from one that lands. Change `my_question` to any of them or to your own, and set `my_category` to filter, or `None` to search everything. Re-run, and you get the same raw hits and the same inbox for your question.
 
 ---
 
@@ -153,7 +153,7 @@ Run the editable cell.
 
 **NARRATION**
 
-> The second payoff, and the one that makes it yours: add a memory. Change `my_note` and its metadata, embed it, build a `Point`, and upsert it into the same shard. Then recall it right away. The memory you just wrote comes back at the top — the store didn't need a rebuild or a restart to know something new. That's the whole promise of on-device memory: it grows as you use it.
+The second payoff, and the one that makes it yours: add a memory. Change `my_note` and its metadata, embed it, build a `Point`, and upsert it into the same shard. Then recall it right away. The memory you just wrote comes back at the top — the store didn't need a rebuild or a restart to know something new. That's the whole promise of on-device memory: it grows as you use it.
 
 ---
 
@@ -161,4 +161,4 @@ Run the editable cell.
 
 **NARRATION**
 
-> So: one `EdgeShard` held a whole day across three source types and two vector spaces. You built the store, inspected a point, and wrote the recall yourself; you asked your own question and added your own memory — all offline. Next, the final lab takes the same API to a new job — teaching a device to recognize a brand-new object by writing memory, without retraining a model — and then assembles everything you've built into one assistant.
+So: one `EdgeShard` held a whole day across three source types and two vector spaces. You built the store, inspected a point, and wrote the recall yourself; you asked your own question and added your own memory — all offline. Next, the final lab takes the same API to a new job — teaching a device to recognize a brand-new object by writing memory, without retraining a model — and then assembles everything you've built into one assistant.

@@ -86,24 +86,21 @@ from pathlib import Path
 from qdrant_edge import Point, UpdateOperation
 
 
-def add_filler(shard, vector_name, count, dim, payload_fn=None, start_id=1000, seed=0):
-    """Grow the shard with `count` random vectors, so a latency number is credible.
+def filler_points(count, dim, vector_name="text", start_id=1000, seed=0):
+    """Random filler points that grow the shard so a latency number is credible.
 
-    Content is irrelevant to latency, it tracks how many vectors there are and how
-    wide they are. Pass `payload_fn(i, rng)` to attach filter fields when the
-    benchmark is a filtered search.
+    Content is irrelevant to latency, it tracks how many vectors there are and
+    how wide they are. The notebook upserts these itself, so the write stays
+    visible in the cell.
     """
     import numpy as np
     rng = np.random.default_rng(seed)
     vecs = rng.normal(size=(count, dim)).astype("float32")
-    points = [
+    return [
         Point(id=start_id + i, vector={vector_name: vecs[i].tolist()},
-              payload=(payload_fn(i, rng) if payload_fn else {"kind": "filler"}))
+              payload={"kind": "filler"})
         for i in range(count)
     ]
-    shard.update(UpdateOperation.upsert_points(points))
-    shard.optimize()
-    return count
 
 
 def fresh_start(directory):
@@ -164,7 +161,7 @@ BADGES = {
 QDRANT_RED = "#DC244C"
 
 
-def receipt_table(rows, title="Resurrection receipt", provenance="measured", save=None):
+def receipt_table(rows, title="Restart receipt", provenance="measured", save=None):
     """Render a forensic key/value table as a figure with a provenance badge.
 
     `rows` is a list of (label, value) pairs.
@@ -200,16 +197,18 @@ def receipt_table(rows, title="Resurrection receipt", provenance="measured", sav
     plt.show()
 
 
-def before_after(query, before_title, before_items, after_title, after_items):
+def before_after(query, before_title, before_items, after_title, after_items,
+                 legend="✗ dropped by the filter · ✓ passed the filter"):
     """Print two result lists stacked one above the other as plain text, so a
-    filter's effect reads at a glance.
+    change's effect reads at a glance.
 
-    Items in `before_items` that the filter dropped (absent from `after_items`)
-    are marked with a leading ✗; kept items in the second list get a ✓.
+    Items in `before_items` that are absent from `after_items` are marked with
+    a leading ✗; kept items in the second list get a ✓. Pass `legend` when the
+    change isn't a filter (e.g. a deletion).
     """
     kept = {str(s) for s in after_items}
     print(f'query: "{query}"')
-    print("✗ dropped by the filter · ✓ passed the filter\n")
+    print(f"{legend}\n")
     print(f"{before_title}:")
     for b in before_items:
         mark = "✗" if str(b) not in kept else " "

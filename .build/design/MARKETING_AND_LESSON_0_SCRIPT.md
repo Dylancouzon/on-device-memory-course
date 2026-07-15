@@ -45,9 +45,10 @@ the moment to an application that can accumulate useful context over time.
 [Dylan]
 
 You'll build a local memory store, search text and photos together, add
-contextual filters, and assemble an interactive memory assistant. In the final
-lab, you'll teach a device to recognize a new object by adding a few examples
-to its memory. The model isn't retrained. The memory changes.
+contextual filters, and assemble an interactive memory assistant. You'll teach
+a device to recognize a new object by adding a few examples to its memory —
+the model isn't retrained; the memory changes. And in the final lesson, you'll
+see that same design running on a robot.
 
 By the end, you'll understand how information moves from input, to embedding,
 to local storage, and back into a useful result. I hope you'll join us.
@@ -115,29 +116,32 @@ vector search engine. It runs inside the application process and stores its
 shard on local disk. Model loading and display code stay out of the way so we
 can inspect the memory operations themselves.
 
-Each lesson uses one notebook to explore one major idea.
+Lessons two through five each use one notebook to explore one major idea;
+the first and last lessons are on video.
 
-In lesson one, you'll create the smallest useful on-device memory: one stored
-note, persisted as files on disk.
+In lesson one, we'll look at why an AI's memory can't live in the cloud, and
+at the loop the whole course builds: capture, embed, store, recall.
 
-In lesson two, you'll build the complete memory lifecycle. You'll write notes,
-recall them by meaning, close the store, and reopen it with the memory intact.
+In lesson two, you'll build the complete memory lifecycle. One question,
+asked four times: of an empty store, after writing notes, after forgetting
+one on purpose, and after a restart.
 
-In lesson three, you'll work with text and photos. You'll see why each data
-type needs the right embedding path, and you'll retrieve a photo from a text
-description.
+In lesson three, you'll work with text and photos together. Each data type
+gets the right embedding path, you'll retrieve a photo from a text
+description, and structured filters add details such as category and price.
 
-In lesson four, you'll add context. Semantic similarity finds what a memory is
-about, while structured filters enforce details such as time, location,
-category, and price.
+In lesson four, you'll assemble a whole day — photos, voice notes transcribed
+on the device, and text notes — into an interactive personal memory
+assistant. You'll ask your own question, add a new memory, and retrieve it
+immediately.
 
-In lesson five, you'll assemble those methods into an interactive personal
-memory workflow. You'll ask your own question, change its filters, add a new
-memory, and retrieve it immediately.
+In lesson five, you'll teach the device a new object from a few images and
+test it with a view it has never seen. The model remains unchanged; the
+device learns by writing new memory. Then you'll assemble everything from
+the course into one assistant that keeps working after a restart, offline.
 
-In the final lesson, you'll teach the device a new object from a few images.
-Then you'll test it with a different view. The model remains unchanged; the
-device learns by writing new memory.
+And in the final lesson, you'll see the whole design embodied: a robot that
+runs the same memory loop you built, taught by showing and telling.
 
 [Andrew]
 
@@ -166,5 +170,5 @@ Dylan, what will we do first?
 
 [Dylan]
 
-We'll start with the smallest working memory and see exactly where it lives.
-Let's get coding!
+We'll start with why an AI's memory has to live where the AI runs — and then
+we'll build one. Let's get started!

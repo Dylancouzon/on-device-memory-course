@@ -14,24 +14,21 @@ from pathlib import Path
 from qdrant_edge import Point, UpdateOperation
 
 
-def add_filler(shard, vector_name, count, dim, payload_fn=None, start_id=1000, seed=0):
-    """Grow the shard with `count` random vectors, so a latency number is credible.
+def filler_points(count, dim, vector_name="text", start_id=1000, seed=0):
+    """Random filler points that grow the shard so a latency number is credible.
 
-    Content is irrelevant to latency, it tracks how many vectors there are and how
-    wide they are. Pass `payload_fn(i, rng)` to attach filter fields when the
-    benchmark is a filtered search.
+    Content is irrelevant to latency, it tracks how many vectors there are and
+    how wide they are. The notebook upserts these itself, so the write stays
+    visible in the cell.
     """
     import numpy as np
     rng = np.random.default_rng(seed)
     vecs = rng.normal(size=(count, dim)).astype("float32")
-    points = [
+    return [
         Point(id=start_id + i, vector={vector_name: vecs[i].tolist()},
-              payload=(payload_fn(i, rng) if payload_fn else {"kind": "filler"}))
+              payload={"kind": "filler"})
         for i in range(count)
     ]
-    shard.update(UpdateOperation.upsert_points(points))
-    shard.optimize()
-    return count
 
 
 def fresh_start(directory):

@@ -146,7 +146,7 @@ diagram spec (8:9, stack top-to-bottom):
 Before we store anything, look at what actually gets stored. A point is
 three things: an id, a named vector, and a payload. The payload is the
 original text plus any metadata you want to carry along. That's the whole
-shape of a memory in Qdrant Edge.
+shape of a memory in the store.
 
 ---
 

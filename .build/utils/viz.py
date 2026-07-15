@@ -18,7 +18,7 @@ BADGES = {
 QDRANT_RED = "#DC244C"
 
 
-def receipt_table(rows, title="Resurrection receipt", provenance="measured", save=None):
+def receipt_table(rows, title="Restart receipt", provenance="measured", save=None):
     """Render a forensic key/value table as a figure with a provenance badge.
 
     `rows` is a list of (label, value) pairs.
@@ -54,16 +54,18 @@ def receipt_table(rows, title="Resurrection receipt", provenance="measured", sav
     plt.show()
 
 
-def before_after(query, before_title, before_items, after_title, after_items):
+def before_after(query, before_title, before_items, after_title, after_items,
+                 legend="✗ dropped by the filter · ✓ passed the filter"):
     """Print two result lists stacked one above the other as plain text, so a
-    filter's effect reads at a glance.
+    change's effect reads at a glance.
 
-    Items in `before_items` that the filter dropped (absent from `after_items`)
-    are marked with a leading ✗; kept items in the second list get a ✓.
+    Items in `before_items` that are absent from `after_items` are marked with
+    a leading ✗; kept items in the second list get a ✓. Pass `legend` when the
+    change isn't a filter (e.g. a deletion).
     """
     kept = {str(s) for s in after_items}
     print(f'query: "{query}"')
-    print("✗ dropped by the filter · ✓ passed the filter\n")
+    print(f"{legend}\n")
     print(f"{before_title}:")
     for b in before_items:
         mark = "✗" if str(b) not in kept else " "

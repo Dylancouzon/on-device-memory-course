@@ -14,7 +14,7 @@ blocker.
 | 5 | Keyword scan "latte" | 0 matches | must be exactly 0 |
 | 5 | Ask #2 top hit | id 0 café note @ **0.653** (then 0.590 quiet cafe, 0.511 espresso) | café note ranks #1 |
 | 6 | Offline recall | standup note with Sarah | returns under `no_network()` |
-| 7 | Local latency | **0.20 ms** median at **5,020** memories, 200 queries | one honest live number; no cloud comparison |
+| 7 | Local latency | **0.15 ms** median at **5,020** memories, 200 queries | one honest live number; no cloud comparison |
 | 8 | Ask #3 (after `delete_points([0])`) | top = quiet cafe @ **0.590**; runners-up scores unchanged; café marked ✗ | different top, lower score, others untouched |
 | 9 | Restart receipt | 34 files on disk; points 5,019 before = after; top hit = ask #3's; forgotten_note_returned = no | forgotten note stays gone after `EdgeShard.load` |
 

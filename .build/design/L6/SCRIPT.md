@@ -116,7 +116,7 @@ microphone bolted on. The robot's memory code mirrors what you wrote.
 
 ## Beat 4 — The two new pieces
 
-Instructor to camera; no slide.
+No slide.
 
 **NARRATION:**
 
