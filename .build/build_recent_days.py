@@ -1,9 +1,9 @@
 """Build data/recent_days.json: a few weeks of text/voice notes before "today".
 
-Gives the L6 capstone a realistic history to search, so the finished assistant
+Gives the L5 capstone a realistic history to search, so the finished assistant
 feels lived-in. Photos stay in the curated data/images set: this file is text
 and voice only. The hero day (data/memories.json, 42 memories) is untouched, so
-L2/L4 payoffs and the spoken counts in L5 hold. Read only by the L6 capstone.
+L2/L4 payoffs and spoken counts hold. Read by L3 §8 and the L5 capstone.
 
 Timestamps share memories.json's BASE ("today 00:00 UTC"); `day` is days before
 today, `h` is the hour of day. Ids start at 1000, clear of the hero day's 0-41.

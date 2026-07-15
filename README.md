@@ -19,16 +19,17 @@ On-device AI needs **memory**: a place to keep personal facts that grow over tim
 
 ## Lessons
 
-Run in order; each folder is self-contained.
+Run the notebooks in order; each folder is self-contained. L1 and L6 are
+video lessons with no notebook.
 
 | # | Lesson | What it covers |
 |---|--------|----------------|
-| 1 | The On-Device Memory Problem | Why cloud-only memory breaks offline; your first `EdgeShard` on disk |
-| 2 | An Embedded Memory Engine | A store that recalls offline and survives a restart |
-| 3 | Multimodal Memory: Text and Photos | Find a photo by describing it; the right model per modality |
-| 4 | Contextual Filtering for Memory | Time and payload filters inside one query |
-| 5 | Lab: On-Device Assistant | A day of photos, voice, and text notes; ask and add your own memories |
-| 6 | Lab: Teach a Device a New Object | Teach an object from a few photos, recognize it from a new angle, no retraining |
+| 1 | Why Devices Need Memory | Video: why memory can't live in the cloud; the capture → embed → store → recall loop |
+| 2 | Store and Recall | One question, asked four times: recall by meaning, forget on purpose, persist across a restart |
+| 3 | Finding the Right Memory | Find a photo by describing it; narrow recall with filters inside one query |
+| 4 | Your On-Device Assistant | A day of photos, voice, and text notes; on-device transcription; ask and add your own memories |
+| 5 | Teaching It to See | Teach an object from a few photos, recognize a new angle — then assemble the full assistant, offline |
+| 6 | The Robot | Video: the same design walking around — every stage mapped back to the lesson that built it |
 
 ## Setup
 
@@ -44,13 +45,15 @@ Qdrant Edge is in beta and its API can change between releases. This course is v
 ## How it's built
 
 ```
-L1/ … L6/            one folder per lesson
+L2/ … L5/            one folder per notebook lesson
   L{n}.ipynb         the notebook
-  helper.py          supporting code (embeddings, charts, offline guard)
+  helper.py          supporting code (embeddings, audio, charts, offline guard)
   requirements.txt   the lesson's dependencies
-data/memories.json   one day of text, voice, and photo memories (L2, L4, L5)
-data/images/         scene photos (L3, L5)
-data/objects/        multi-view object photos (L6)
+data/memories.json   one day of text, voice, and photo memories (L2–L5)
+data/recent_days.json  a few weeks of earlier notes (L3, L5)
+data/audio/          the voice-note recordings L4 transcribes on-device
+data/images/         scene photos (L3, L4, L5)
+data/objects/        multi-view object photos (L5)
 requirements.txt     every dependency the course uses
 ```
 

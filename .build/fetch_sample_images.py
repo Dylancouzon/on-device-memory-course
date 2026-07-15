@@ -1,6 +1,6 @@
 """Download a curated set of freely-licensed sample photos from Wikimedia Commons.
 
-Everyday subjects for the day-in-the-life labs (L3 image search, L5 multimodal
+Everyday subjects for the day-in-the-life labs (L3 image search, L4 multimodal
 day). One image per topic. Records source URL, license, and attribution in
 data/images/CREDITS.json.
 
