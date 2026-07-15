@@ -152,8 +152,8 @@ from matplotlib.lines import Line2D
 
 # provenance -> (label, color)
 BADGES = {
-    "measured": ("Measured in notebook", "#2ecc71"),
-    "illustrative": ("Illustrative", "#95a5a6"),
+    "measured": ("Measured in notebook", "#008A53"),
+    "illustrative": ("Illustrative", "#8F98B2"),
 }
 QDRANT_RED = "#DC244C"
 
@@ -202,7 +202,8 @@ def before_after(query, before_title, before_items, after_title, after_items):
     are marked with a leading ✗; kept items in the second list get a ✓.
     """
     kept = {str(s) for s in after_items}
-    print(f'query: "{query}"\n')
+    print(f'query: "{query}"')
+    print("✗ dropped by the filter · ✓ passed the filter\n")
     print(f"{before_title}:")
     for b in before_items:
         mark = "✗" if str(b) not in kept else " "
@@ -246,7 +247,7 @@ def show_photo_results(hits, image_dir, query, save=None):
     plt.show()
 
 
-MODALITY_COLOR = {"photo": QDRANT_RED, "voice": "#8e44ad", "text": "#2c3e50"}
+MODALITY_COLOR = {"photo": QDRANT_RED, "voice": "#8547FF", "text": "#28324D"}
 
 
 def _thumb_data_uri(path, size=120):
@@ -287,9 +288,9 @@ def day_timeline(memories, image_dir, save=None):
     note_legend, n, photo_i = [], 0, 0
     for m in mems:
         st, h = m["source_type"], hour(m["timestamp"])
-        color = MODALITY_COLOR.get(st, "#2c3e50")
+        color = MODALITY_COLOR.get(st, "#28324D")
         if st == "photo" and m.get("file"):
-            # Stagger neighbouring thumbnails on two heights so close-in-time
+            # Stagger neighboring thumbnails on two heights so close-in-time
             # photos never overlap.
             y_img = 0.6 if photo_i % 2 == 0 else 0.92
             photo_i += 1
@@ -395,7 +396,7 @@ def memory_inbox(sections, image_dir, min_score=None):
             inner = '<div style="font-size:13px;color:#aaa;font-style:italic;margin:4px">No matches</div>'
         blocks.append(
             f'<div style="margin:10px 0">'
-            f'<div style="font-weight:700;color:#2c3e50;border-bottom:2px solid #DC244C;'
+            f'<div style="font-weight:700;color:#28324D;border-bottom:2px solid #DC244C;'
             f'display:inline-block;margin-bottom:6px">{title}</div>{inner}</div>')
     _badge_label, _badge_color = BADGES["measured"]
     header = (

@@ -39,6 +39,8 @@ pip install -r requirements.txt
 
 CPU-only, fits a 4 GB sandbox. No account or API key: models download once through FastEmbed, then run offline.
 
+Qdrant Edge is in beta and its API can change between releases. This course is validated against `qdrant-edge-py` 0.7.2, which the requirements files pin.
+
 ## How it's built
 
 ```
