@@ -19,7 +19,7 @@ LESSONS = {
     "L2": ["embeddings", "qdrant_helpers", "viz"],
     "L3": ["embeddings", "qdrant_helpers", "viz"],
     "L4": ["embeddings", "qdrant_helpers", "viz"],
-    "L5": ["embeddings", "qdrant_helpers", "viz"],
+    "L5": ["embeddings", "qdrant_helpers", "viz", "audio"],
     "L6": ["embeddings", "qdrant_helpers", "viz", "webcam"],
 }
 

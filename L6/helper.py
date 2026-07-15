@@ -131,7 +131,6 @@ def no_network():
         raise OSError("Python socket creation blocked for this cell")
 
     socket.socket = blocked
-    print("⚠ Python socket creation blocked for this cell")
     try:
         yield
     finally:

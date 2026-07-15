@@ -171,6 +171,7 @@
     "location": "Downtown",
     "timestamp": 1699968240,
     "transcript": "Note to self, the ramen downtown was incredible, fourteen dollars and worth it, sat right by the window",
+    "audio_file": "ramen.wav",
     "price": 14.0,
     "store": "Ramen-ya"
   },
@@ -180,7 +181,8 @@
     "category": "shopping",
     "location": "Mall",
     "timestamp": 1699975800,
-    "transcript": "Reminder, buy a birthday present for Alex this week, maybe those headphones he mentioned"
+    "transcript": "Reminder, buy a birthday present for Alex this week, maybe those headphones he mentioned",
+    "audio_file": "birthday.wav"
   },
   {
     "id": 22,
@@ -188,7 +190,8 @@
     "category": "work",
     "location": "Office",
     "timestamp": 1699956360,
-    "transcript": "Quick memo, the standup is moved to Thursday, tell the rest of the team"
+    "transcript": "Quick memo, the standup is moved to Thursday, tell the rest of the team",
+    "audio_file": "standup.wav"
   },
   {
     "id": 23,
@@ -196,7 +199,8 @@
     "category": "travel",
     "location": "Station",
     "timestamp": 1699953120,
-    "transcript": "Parked the bike near the station, second rack from the entrance"
+    "transcript": "Parked the bike near the station, second rack from the entrance",
+    "audio_file": "bike.wav"
   },
   {
     "id": 24,
@@ -204,7 +208,8 @@
     "category": "errands",
     "location": "Home",
     "timestamp": 1699990200,
-    "transcript": "Just remembered, we are low on coffee at home, grab a bag on the way back"
+    "transcript": "Just remembered, we are low on coffee at home, grab a bag on the way back",
+    "audio_file": "coffee.wav"
   },
   {
     "id": 25,

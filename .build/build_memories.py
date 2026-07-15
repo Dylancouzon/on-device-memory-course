@@ -63,6 +63,17 @@ DAY = [
     (7.4, "photo", "gym.jpg", "health", "Gym", None, None),
 ]
 
+# Voice notes carry the audio file L5 transcribes on-device. The stored
+# transcript is the fallback text L2/L4/L6 read; L5 replaces it with what its
+# Whisper model produces from these clips (see .build/utils/audio.py).
+VOICE_AUDIO = {
+    "Note to self, the ramen downtown was incredible, fourteen dollars and worth it, sat right by the window": "ramen.wav",
+    "Reminder, buy a birthday present for Alex this week, maybe those headphones he mentioned": "birthday.wav",
+    "Quick memo, the standup is moved to Thursday, tell the rest of the team": "standup.wav",
+    "Parked the bike near the station, second rack from the entrance": "bike.wav",
+    "Just remembered, we are low on coffee at home, grab a bag on the way back": "coffee.wav",
+}
+
 
 def build():
     out = []
@@ -75,6 +86,8 @@ def build():
             "timestamp": BASE + int(h * 3600),
         }
         m["note" if kind == "text" else "transcript" if kind == "voice" else "file"] = content
+        if kind == "voice":
+            m["audio_file"] = VOICE_AUDIO[content]
         if price is not None:
             m["price"] = price
         if store is not None:
@@ -90,6 +103,11 @@ def main():
     missing = [m["file"] for m in memories
                if m["source_type"] == "photo" and m["file"] not in imgs]
     assert not missing, f"photo entries with no image on disk: {missing}"
+    # every voice note must point at a real audio clip
+    clips = {p.name for p in Path("data/audio").glob("*.wav")}
+    missing_audio = [m["audio_file"] for m in memories
+                     if m["source_type"] == "voice" and m["audio_file"] not in clips]
+    assert not missing_audio, f"voice entries with no audio on disk: {missing_audio}"
     Path("data/memories.json").write_text(json.dumps(memories, indent=2) + "\n")
 
     from collections import Counter

@@ -49,7 +49,7 @@ Run the captures cell.
 
 **NARRATION**
 
-> A day starts with 17 photos, five voice notes, and 20 text notes: 42 captures in all. Each capture carries the same kind of metadata: source type, timestamp, location, category, price when relevant, and store. One honest detail: the voice notes are provided transcripts — the text an on-device speech model would produce — not a live audio pipeline. Nomic embeds those transcripts exactly like any other text. Three source types, two embedding paths.
+> A day starts with 17 photos, five voice notes, and 20 text notes: 42 captures in all. Each capture carries the same metadata: source type, timestamp, location, category, price when relevant, and store. The voice notes arrive as audio, so a small Whisper model transcribes them on-device — the kind of speech-to-text a phone runs, no server and no account. From there Nomic embeds the transcript exactly like any other text. Three source types, two embedding paths.
 
 ---
 
@@ -120,7 +120,7 @@ Run the editable cell, then change it and run again.
 
 **NARRATION**
 
-> Your turn. Change `my_question` to anything you'd ask your own phone, and set `my_category` to filter — or to `None` to search everything. Re-run, and you get the same raw hits and the same inbox for your question. There's a safe default, so the cell always returns something.
+> Your turn. The cell lists a handful of questions the day can answer — where you parked the bike, the gym locker code, when the dentist is — so you can start from one that lands. Change `my_question` to any of them or to your own, and set `my_category` to filter, or `None` to search everything. Re-run, and you get the same raw hits and the same inbox for your question.
 
 ---
 

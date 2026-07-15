@@ -1,11 +1,14 @@
 # L6 — Lab: Teach a Device a New Object — script
 
-**Target runtime:** ~12 min
+**Target runtime:** ~13 min
 
 The device learns a new object by *writing memory*, not by retraining. The
 lesson's arc is one live reveal: an object the device fails to recognize, a
 few lines that teach it, and the same object recognized from a different
-angle seconds later.
+angle seconds later. The finale assembles the whole course into one
+assistant — a day of captures, weeks of notes, and the taught object in a
+single offline shard — that both answers questions and recognizes what you
+show it.
 
 Section 7 teaches from the webcam where the environment supports it: capture
 views to teach an object, then capture a new angle to recognize it. When a
@@ -28,12 +31,15 @@ camera or widget is unavailable, section 8 uses the bundled photos in
 | 8 | NOTEBOOK §6 | Inspect the evidence and the threshold (the gap) | 55 |
 | 9 | NOTEBOOK §7 | **The payoff:** teach from the webcam | 55 |
 | 10 | NOTEBOOK §8 | Bundled fallback: teach and recognize | 55 |
-| 11 | NOTEBOOK §9 | **The payoff:** recognition recalls the memory | 45 |
-| 12 | NOTEBOOK §10 | Persistence, offline + cleanup | 40 |
-| 13 | WRAP | Wrap the course | 55 |
+| 11 | NOTEBOOK §9 | Assemble the assistant: a day + weeks + the taught object | 30 |
+| 12 | NOTEBOOK §9 | **The payoff:** ask it about your day (cross-modal recall) | 50 |
+| 13 | NOTEBOOK §9 | **The payoff:** show it what you taught (recognition + note) | 40 |
+| 14 | NOTEBOOK §10 | Persistence: reopen, recall + recognize, offline | 35 |
+| 15 | WRAP | Wrap the course | 55 |
 
-Total: ~620 sec (~10.5 min narration; ~13 min with the reveal and the
-editable cells run live).
+Total: ~690 sec (~11.5 min narration; ~13 min with the reveals and the
+editable cells run live). This makes L6 the longest lesson — a deliberate
+call for the course finale.
 
 ---
 
@@ -159,27 +165,47 @@ Run the bundled fallback cell.
 
 ---
 
-## Beat 11 — NOTEBOOK §9. The payoff: recognition recalls the memory
+## Beat 11 — NOTEBOOK §9. Assemble the assistant
 
-Run the recall-the-note cell.
+Run the assemble cell.
 
 **NARRATION**
 
-> One more payoff, and it lands the whole course. When we taught the backpack, we attached a note to it — where it's from, what it cost. So recognition isn't just a label: the matched point carries everything we stored with it. Recognize the backpack, and the device doesn't only say "backpack" — it recalls "I remember this: bought at SportsWorld, forty-five dollars." That's the difference between a classifier and a memory. "I know what this is" becomes "I remember this."
+> Here is where the whole course comes together. We build one shard with both vectors — `text` for notes and voice, `image` for photos — the same design as L5. Into it goes a full day of captures, plus a few weeks of earlier notes, so the assistant has real history to draw on. Then we teach it today's object, the backpack: its views go in the image vector with a note attached. One shard now holds everything you built — recorded memories and a taught object, side by side.
 
 ---
 
-## Beat 12 — NOTEBOOK §10. Wrap: learned objects persist, offline
+## Beat 12 — NOTEBOOK §9. The payoff: ask it about your day
+
+Run the recall cell.
+
+**NARRATION**
+
+> This assistant does two things. The first is answering a question about your day. The question — "the ramen place downtown" — goes into both vector spaces at once. It comes back with the photo you took, the voice memo you left, and the notes you wrote, all about the same place, drawn from today and from weeks ago. One question, every kind of memory, on the device.
+
+---
+
+## Beat 13 — NOTEBOOK §9. The payoff: show it what you taught
+
+Run the recognition cell.
+
+**NARRATION**
+
+> The second thing it does is recognize what you show it. We hand it a new photo of the backpack, a different angle than the one we taught. It matches above the threshold, and because we stored a note with the object, it doesn't just name the backpack — it recalls it: "I remember this, bought at SportsWorld, forty-five dollars." Asking and recognizing, both reading from the same local memory. That's the difference between a classifier and a memory: "I know what this is" becomes "I remember this."
+
+---
+
+## Beat 14 — NOTEBOOK §10. Wrap: it all persists, offline
 
 Run the persistence cell, then the cleanup cell.
 
 **NARRATION**
 
-> One last check: the objects it learned are real memory, so they persist. Close the shard, disable the network, reopen from disk, and recognize the flower again — offline, zero network calls. What the device learned today is still there tomorrow, with no server involved.
+> One last check, the one that makes it real. Close the shard, block the network, reopen from disk, and run both skills again: the recall still finds the ramen place, and the backpack is still recognized. Everything this assistant knows lives on the device and survives a restart, with no server in the loop.
 
 ---
 
-## Beat 13 — WRAP
+## Beat 15 — WRAP
 
 **NARRATION**
 
