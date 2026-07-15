@@ -253,8 +253,8 @@ separate step to maintain.
 
 ## Beat 12 — NOTEBOOK §7: The payoff — recall with a filter
 
-Run the index cell, then the filter cell. The filter is written out in
-full — no helper.
+Run the index cell, the cell that defines `search`, then the filter cell.
+The filter is written out in full — no helper.
 
 **NARRATION:**
 
