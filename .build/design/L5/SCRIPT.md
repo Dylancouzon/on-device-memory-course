@@ -49,7 +49,7 @@ Run the captures cell.
 
 **NARRATION**
 
-> A day starts with 17 photos, five voice notes, and 20 text notes: 42 captures in all. Each capture carries the same metadata: source type, timestamp, location, category, price when relevant, and store. The voice notes arrive as audio, so a small Whisper model transcribes them on-device — the kind of speech-to-text a phone or a pair of smart glasses runs, no server and no account. From there Nomic embeds the transcript exactly like any other text. Three source types, two embedding paths.
+> A day starts with 17 photos, five voice notes, and 20 text notes: 42 captures in all. Each capture carries the same metadata: source type, timestamp, location, category, price when relevant, and store. The voice notes arrive as audio, so a small Whisper model transcribes them on-device — the kind of speech-to-text a phone or a pair of smart glasses runs, no server and no account. Play the clip and read what the model heard, side by side. From there Nomic embeds the transcript exactly like any other text. Three source types, two embedding paths.
 
 ---
 
@@ -75,12 +75,12 @@ Run the shard-and-index cell.
 
 ## Beat 5 — NOTEBOOK §4. Store the day
 
-Run the two cells: the first stores one text note and one photo by hand, the
-second batches the rest.
+Run the three cells: one text note and one photo by hand, the batch, then the
+photo gallery.
 
 **NARRATION**
 
-> Store the day in two steps. First, one of each by hand — a text note embedded with Nomic under the `text` vector, and one photo embedded with CLIP under the `image` vector — so you can see a memory is the same `Point` whichever modality it came from. Then the rest go in two batches, text and image. Check the total: 42 memories, one shard.
+> Store the day in two steps. First, one of each by hand — a text note embedded with Nomic under the `text` vector, and one photo embedded with CLIP under the `image` vector — so you can see a memory is the same `Point` whichever modality it came from. Then the rest go in two batches, text and image. Check the total: 42 memories, one shard. The last cell lays out all seventeen photos, so when a recall returns one later you've already seen it.
 
 ---
 

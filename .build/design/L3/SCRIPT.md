@@ -17,10 +17,11 @@ executed `L3.ipynb`.
 | 6 | NOTEBOOK §4 | Store photos (CLIP): first point by hand, then batch | 35 |
 | 7 | NOTEBOOK §5 | **The payoff:** find a photo by describing it | 50 |
 | 8 | SLIDE 2 | Cross-modal recall | 30 |
-| 9 | NOTEBOOK §6 | Your turn: describe a photo (editable) | 25 |
-| 10 | NOTEBOOK §7 | Two spaces, shown side by side — never merged | 40 |
-| 11 | WRAP | Wrap: summary, what's next | 40 |
-| | | **Total** | **~390 (6.5 min)** |
+| 9 | NOTEBOOK §6 | The photos on hand (gallery, seen before describing) | 20 |
+| 10 | NOTEBOOK §7 | Your turn: describe a photo (editable) | 25 |
+| 11 | NOTEBOOK §8 | Two spaces, shown side by side — never merged | 40 |
+| 12 | WRAP | Wrap: summary, what's next | 40 |
+| | | **Total** | **~410 (6.8 min)** |
 
 ---
 
@@ -178,7 +179,19 @@ space, two doors in.
 
 ---
 
-## Beat 9 — NOTEBOOK §6: your turn — describe a photo
+## Beat 9 — NOTEBOOK §6: the photos on hand
+
+Run the gallery cell.
+
+**NARRATION:**
+
+Before you describe a photo, here are the ones now in the store — all
+seventeen, laid out so you're choosing from photos you've actually seen. Pick
+one that catches your eye; you'll describe it in the next cell.
+
+---
+
+## Beat 10 — NOTEBOOK §7: your turn — describe a photo
 
 Run the editable cell.
 
@@ -191,7 +204,7 @@ vector. There's a safe default, so the cell always returns something.
 
 ---
 
-## Beat 10 — NOTEBOOK §7: two spaces, shown side by side
+## Beat 11 — NOTEBOOK §8: two spaces, shown side by side
 
 Run the dual-query cell and `memory_inbox`.
 
@@ -204,7 +217,7 @@ spaces. The memory inbox keeps the results grouped by modality.
 
 ---
 
-## Beat 11 — WRAP
+## Beat 12 — WRAP
 
 **NARRATION:**
 

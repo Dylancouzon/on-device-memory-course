@@ -19,13 +19,13 @@ proves. Only "anatomy of a point" earns its place, ahead of writing one.
 | 4 | NOTEBOOK §3 | Embed the notes locally with Nomic | 30 |
 | 5 | SLIDE 1 | Anatomy of a point | 30 |
 | 6 | NOTEBOOK §4 | Store the memories (Point, upsert, optimize) | 35 |
-| 7 | NOTEBOOK §5 | Ask again — now it remembers (meaning, not keywords) | 45 |
+| 7 | NOTEBOOK §5 | Ask again — keyword search fails, meaning succeeds | 55 |
 | 8 | NOTEBOOK §6 | **The payoff:** recall with the network off | 50 |
 | 9 | NOTEBOOK §7 | **The payoff:** local recall at 5,000 memories | 45 |
 | 10 | NOTEBOOK §8 | **The payoff:** memory survives a restart | 55 |
 | 11 | WRAP | Wrap: the pattern, what's next | 45 |
 
-Total: ~445 sec (~7.5 min).
+Total: ~455 sec (~7.5 min).
 
 ---
 
@@ -127,17 +127,19 @@ background.
 
 ## Beat 7 — NOTEBOOK §5: ask again — now it remembers
 
-Run the recall cell.
+Run the keyword cell, then the recall cell.
 
 **NARRATION:**
 
-Now ask the exact same question from the cold open: "where can I sit outside
-for a latte?" This time the coffee place on 5th comes back on top. The model
-didn't change between these two cells — the memory did. We embed the question
-with `embed_query`, not `embed_text`: Nomic treats queries and documents
-differently, and `embed_query` adds the prefix the model expects. And look
-closely — not one word of the question, "sit", "outside", or "latte", appears
-in that note. Keyword search would return nothing. The vector matched the
+First, try it the old way: a literal search for the word "latte" across all
+twenty notes. Zero matches — no note contains it. Now ask the exact same
+question from the cold open: "where can I sit outside for a latte?" This time
+the coffee place on 5th comes back on top. The model didn't change between
+these two cells — the memory did. We embed the question with `embed_query`,
+not `embed_text`: Nomic treats queries and documents differently, and
+`embed_query` adds the prefix the model expects. And look closely — not one
+word of the question, "sit", "outside", or "latte", appears in that note. The
+keyword search you just ran proved it returns nothing; the vector matched the
 meaning. This is the query grep can't run.
 
 ---

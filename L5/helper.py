@@ -407,6 +407,31 @@ def memory_inbox(sections, image_dir, min_score=None):
         '<div style="font-family:system-ui,sans-serif;background:#f7f7f8;'
         'border-radius:12px;padding:12px 16px">' + header + "".join(blocks) + "</div>")
 
+
+def show_images(paths, captions=None, height=2.2, per_row=6):
+    """One row of images with optional captions under each, wrapping to a new
+    row past `per_row`. White background, axes off. For showing inputs a student
+    hasn't seen yet, so there is no provenance badge (these aren't results).
+    """
+    from PIL import Image
+    paths = list(paths)
+    n = len(paths)
+    cols = min(per_row, n) or 1
+    rows = (n + cols - 1) // cols
+    fig, axes = plt.subplots(rows, cols, squeeze=False,
+                             figsize=(height * cols, height * rows))
+    fig.patch.set_facecolor("white")
+    for i, ax in enumerate(ax for row in axes for ax in row):
+        ax.axis("off")
+        if i < n:
+            img = Image.open(paths[i]).convert("RGB")
+            img.thumbnail((int(height * 110), int(height * 110)))
+            ax.imshow(img)
+            if captions and i < len(captions):
+                ax.set_title(str(captions[i]), fontsize=8, fontweight="bold")
+    fig.tight_layout()
+    plt.show()
+
 # --- audio ----------------------------------------
 """On-device speech-to-text for L5's voice notes.
 

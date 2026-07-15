@@ -5,15 +5,14 @@
 The device learns a new object by *writing memory*, not by retraining. The
 lesson's arc is one live reveal: an object the device fails to recognize, a
 few lines that teach it, and the same object recognized from a different
-angle seconds later. The finale assembles the whole course into one
-assistant — a day of captures, weeks of notes, and the taught object in a
-single offline shard — that both answers questions and recognizes what you
-show it.
+angle seconds later. Then you teach one yourself. The finale assembles the
+whole course into one assistant — a day of captures, weeks of notes, and the
+taught object in a single offline shard — that both answers questions and
+recognizes what you show it.
 
-Section 7 teaches from the webcam where the environment supports it: capture
-views to teach an object, then capture a new angle to recognize it. When a
-camera or widget is unavailable, section 8 uses the bundled photos in
-`data/objects/` as the guaranteed offline fallback.
+Everything runs on the bundled object photos in `data/objects/`, so the whole
+lab works offline in the course container. Section 8 hands the loop to the
+student: pick one of the bundled objects and teach it.
 
 ---
 
@@ -23,23 +22,24 @@ camera or widget is unavailable, section 8 uses the bundled photos in
 |---|---|---|---|
 | 1 | INTRO | Learn an object by writing memory, not retraining | 40 |
 | 2 | SLIDE 1 | Teach → store → recognize | 35 |
-| 3 | NOTEBOOK §1 | An object-memory shard (image vector + threshold) | 40 |
-| 4 | NOTEBOOK §2 | Teach the objects it already knows | 45 |
-| 5 | NOTEBOOK §3 | Show it something new — not recognized yet | 55 |
-| 6 | NOTEBOOK §4 | Teach it the new object | 40 |
-| 7 | NOTEBOOK §5 | **The payoff:** recognize it from a new angle | 60 |
-| 8 | NOTEBOOK §6 | Inspect the evidence and the threshold (the gap) | 55 |
-| 9 | NOTEBOOK §7 | **The payoff:** teach from the webcam | 55 |
-| 10 | NOTEBOOK §8 | Bundled fallback: teach and recognize | 55 |
-| 11 | NOTEBOOK §9 | Assemble the assistant: a day + weeks + the taught object | 30 |
-| 12 | NOTEBOOK §9 | **The payoff:** ask it about your day (cross-modal recall) | 50 |
-| 13 | NOTEBOOK §9 | **The payoff:** show it what you taught (recognition + note) | 40 |
-| 14 | NOTEBOOK §10 | Persistence: reopen, recall + recognize, offline | 35 |
-| 15 | WRAP | Wrap the course | 55 |
+| 3 | NOTEBOOK §1 | An object-memory shard (image vector + threshold) | 35 |
+| 4 | NOTEBOOK §2 | The objects on hand (gallery, seen up front) | 30 |
+| 5 | NOTEBOOK §3 | Teach the objects it already knows | 45 |
+| 6 | NOTEBOOK §4 | Show it something new — not recognized yet | 50 |
+| 7 | NOTEBOOK §5 | Teach it the new object | 40 |
+| 8 | NOTEBOOK §6 | **The payoff:** recognize it from a new angle | 55 |
+| 9 | NOTEBOOK §7 | Inspect the evidence and the threshold (the gap) | 55 |
+| 10 | NOTEBOOK §8 | Your turn: teach an object yourself | 50 |
+| 11 | NOTEBOOK §9 | One view is enough | 45 |
+| 12 | NOTEBOOK §10 | Assemble the assistant: a day + weeks + the taught object | 30 |
+| 13 | NOTEBOOK §10 | **The payoff:** ask it about your day (cross-modal recall) | 50 |
+| 14 | NOTEBOOK §10 | **The payoff:** show it what you taught (recognition + note) | 40 |
+| 15 | NOTEBOOK §11 | Persistence: reopen, recall + recognize, offline | 35 |
+| 16 | WRAP | Wrap the course | 55 |
 
-Total: ~690 sec (~11.5 min narration; ~13 min with the reveals and the
-editable cells run live). This makes L6 the longest lesson — a deliberate
-call for the course finale.
+Total: ~715 sec (~12 min narration; ~13 min with the reveals and the editable
+cell run live). This makes L6 the longest lesson — a deliberate call for the
+course finale.
 
 ---
 
@@ -94,27 +94,37 @@ Run the shard cell.
 
 ---
 
-## Beat 4 — NOTEBOOK §2. Teach the objects it already knows
+## Beat 4 — NOTEBOOK §2. The objects on hand
+
+Run the gallery cell.
+
+**NARRATION**
+
+> Before teaching anything, here are the objects this lab uses, laid out so you've seen every one before it's stored or queried. A couple of plants, a backpack, and a few everyday things — a rubber duck, a ceramic vase, a hard hat — each with three photos from slightly different angles. Nothing is recognized yet; this is just what's on hand.
+
+---
+
+## Beat 5 — NOTEBOOK §3. Teach the objects it already knows
 
 Run the `teach` cell.
 
 **NARRATION**
 
-> Teaching is the mechanism worth slowing down on, and it's short: `teach` embeds each view with CLIP and upserts one point per view, with the object's id and label in the payload. That's the whole learning step — an upsert, not a training run. We seed the shard with one object it already knows, so it isn't starting empty.
+> Teaching is the mechanism worth slowing down on, and it's short: `teach` embeds each view with CLIP and upserts one point per view, with the object's id, label, and file in the payload. That's the whole learning step — an upsert, not a training run. We seed the shard with one object it already knows, so it isn't starting empty.
 
 ---
 
-## Beat 5 — NOTEBOOK §3. Show it something new — not recognized yet
+## Beat 6 — NOTEBOOK §4. Show it something new — not recognized yet
 
 Run the recognize cell on the new object.
 
 **NARRATION**
 
-> Now `recognize`: embed a query image, search the `image` vector for the nearest stored view, and compare the top score to the threshold. Here we show the device a flower it has never been taught. The nearest thing it knows is well below the threshold, so the verdict is UNKNOWN. That's the honest starting point — the device doesn't pretend to recognize something it has no memory of.
+> Now `recognize`: embed a query image, search the `image` vector for the nearest stored view, and compare the top score to the threshold. We show the device a flower it has never been taught, and put the query next to the closest thing it knows. That nearest match is well below the threshold, so the verdict is UNKNOWN. That's the honest starting point — the device doesn't pretend to recognize something it has no memory of.
 
 ---
 
-## Beat 6 — NOTEBOOK §4. Teach it the new object
+## Beat 7 — NOTEBOOK §5. Teach it the new object
 
 Run the teach-the-flower cell.
 
@@ -124,48 +134,47 @@ Run the teach-the-flower cell.
 
 ---
 
-## Beat 7 — NOTEBOOK §5. The payoff: recognize it from a new angle
+## Beat 8 — NOTEBOOK §6. The payoff: recognize it from a new angle
 
 Run the recognize cell again on the same held-out view.
 
 **NARRATION**
 
-> The first payoff, and the heart of the lesson: run the exact same query image that came back UNKNOWN a moment ago. This view was never stored — it's a different angle from the two we taught. Now the nearest match is well above the threshold, and the device recognizes the object by its label. Same image, same threshold; the only thing that changed is that the device now has a memory to match against.
+> The first payoff, and the heart of the lesson: run the exact same query image that came back UNKNOWN a moment ago, side by side with the view it now matches. This query was never stored — it's a different angle from the two we taught. Now the nearest match is well above the threshold, and the device recognizes the object by its label. Same image, same threshold; the only thing that changed is that the device now has a memory to match against.
 
 ---
 
-## Beat 8 — NOTEBOOK §6. Inspect the evidence and the threshold
+## Beat 9 — NOTEBOOK §7. Inspect the evidence and the threshold
 
 Run the evidence cell.
 
 **NARRATION**
 
-> A recognition should be inspectable, so look at the evidence and at why the threshold is 0.80. First, the flower recognized from a held-out view: its two stored views rank at the top, both above the line. Then objects the device was never taught — a different flower, a book, a coffee cup — all land below it. That's the point: recognized objects and unknowns fall into two groups with a clear gap, and 0.80 sits inside that gap. It isn't a magic number; it's a known-versus-unknown line you can move as you teach more objects.
+> A recognition should be inspectable, so look at the evidence and at why the threshold is 0.80. First, the flower recognized from a held-out view: its two stored views rank at the top, both above the line. Then objects the device was never taught — a different plant, a book, a coffee cup — all land below it. That's the point: recognized objects and unknowns fall into two groups with a clear gap, and 0.80 sits inside that gap. It isn't a magic number; it's a known-versus-unknown line you can move as you teach more objects.
 
 ---
 
-## Beat 9 — NOTEBOOK §7. The payoff: teach from the webcam
+## Beat 10 — NOTEBOOK §8. Your turn: teach an object yourself
 
-Point the camera at an object, capture a view to teach it, then capture a new
-angle to recognize it.
+Run the editable cell, then change `my_object` and run again.
 
 **NARRATION**
 
-> Another payoff — your turn, with the webcam. Point the camera at an object and use the capture button to save a view. The next cell sends that snapshot through `snapshot_to_file`, then teaches it as `my object`. Capture a NEW angle, run the recognition cell, and the device searches its local image memory for the nearest view. Capture a couple of teaching views if you want a stronger memory. If no camera or widget is available, skip to the bundled fallback in the next section — it demonstrates the same teach-and-recognize loop entirely offline.
+> Your turn. Pick any object from the gallery with three views — the rubber duck, the vase, the hard hat — and teach two of them. Then hand it the third, an angle it never saw, and let it recognize what you just taught. Change `my_object`, re-run, and you get the same teach-and-recognize loop you just watched, now driven by you. Two views in, a new angle recognized.
 
 ---
 
-## Beat 10 — NOTEBOOK §8. Bundled fallback: teach and recognize
+## Beat 11 — NOTEBOOK §9. One view is enough
 
-Run the bundled fallback cell.
+Run the backpack cell.
 
 **NARRATION**
 
-> The guaranteed fallback uses the bundled backpack photos. Teach one view, then recognize a second, unseen angle. One view is enough to recognize; more views make the memory more robust. This is the same loop as the webcam section — see, teach, recognize — using files that work in every offline course environment.
+> One more property worth seeing: a single view is enough to recognize. Teach one photo of the backpack, then hand it a second, unseen angle — and it still matches above the threshold. More views make the memory more robust, but even one gives the device something to recognize against. This is the same see-teach-recognize loop, at its smallest.
 
 ---
 
-## Beat 11 — NOTEBOOK §9. Assemble the assistant
+## Beat 12 — NOTEBOOK §10. Assemble the assistant
 
 Run the assemble cell.
 
@@ -175,7 +184,7 @@ Run the assemble cell.
 
 ---
 
-## Beat 12 — NOTEBOOK §9. The payoff: ask it about your day
+## Beat 13 — NOTEBOOK §10. The payoff: ask it about your day
 
 Run the recall cell.
 
@@ -185,7 +194,7 @@ Run the recall cell.
 
 ---
 
-## Beat 13 — NOTEBOOK §9. The payoff: show it what you taught
+## Beat 14 — NOTEBOOK §10. The payoff: show it what you taught
 
 Run the recognition cell.
 
@@ -195,7 +204,7 @@ Run the recognition cell.
 
 ---
 
-## Beat 14 — NOTEBOOK §10. Wrap: it all persists, offline
+## Beat 15 — NOTEBOOK §11. Wrap: it all persists, offline
 
 Run the persistence cell, then the cleanup cell.
 
@@ -205,7 +214,7 @@ Run the persistence cell, then the cleanup cell.
 
 ---
 
-## Beat 15 — WRAP
+## Beat 16 — WRAP
 
 **NARRATION**
 

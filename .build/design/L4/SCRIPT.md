@@ -14,11 +14,12 @@
 | 4 | NOTEBOOK §2 | Store, and index the fields we'll filter on | 30 |
 | 5 | NOTEBOOK §3 | The payoff (a): time window, as a raw filter request | 65 |
 | 6 | NOTEBOOK §4 | The payoff (b): semantic query + payload filter | 55 |
-| 7 | NOTEBOOK §5 | Your turn: change the filter (editable) | 25 |
-| 8 | NOTEBOOK §6 | Filter fields reference table | 30 |
-| 9 | WRAP | Wrap-up + pointer to L5 | 45 |
+| 7 | NOTEBOOK §5 | A few weeks of history (load recent_days) | 25 |
+| 8 | NOTEBOOK §6 | Your turn: change the filter (editable) | 25 |
+| 9 | NOTEBOOK §7 | Filter fields reference table | 30 |
+| 10 | WRAP | Wrap-up + pointer to L5 | 45 |
 
-Total: ~360 sec (~6 min). One slide, down from three: the time-window and
+Total: ~385 sec (~6.5 min). One slide, down from three: the time-window and
 filter-toolbox slides are cut — a bracket on a timeline and a list of raw
 conditions both read more clearly from the code and the reference table.
 
@@ -111,17 +112,27 @@ Run the cell.
 
 ---
 
-## Beat 7 — NOTEBOOK §5. Your turn: change the filter
+## Beat 7 — NOTEBOOK §5. A few weeks of history
+
+Run the load-history cell.
+
+**NARRATION**
+
+> One thing before your turn: a real assistant carries weeks of notes, not a single day. So we load a few weeks of earlier text and voice notes into the same shard — about a hundred more, each already carrying the same category, timestamp, and price fields. Now the filters have a realistic pile of memory to sift, and your own queries in the next cell have somewhere to land.
+
+---
+
+## Beat 8 — NOTEBOOK §6. Your turn: change the filter
 
 Run the editable cell.
 
 **NARRATION**
 
-> Your turn. Change `my_category`, then re-run. The cell builds `Filter(must=[FieldCondition(key="category", match=MatchValue(value=my_category))])` directly from your value. Try food, travel, shopping, home, or health and watch the list change. A safe default is set, so the cell always returns something.
+> Your turn. Change `my_category`, then re-run. The cell builds `Filter(must=[FieldCondition(key="category", match=MatchValue(value=my_category))])` directly from your value. Try food, travel, shopping, home, or health and watch the list change — now across weeks of memory, not just today. A safe default is set, so the cell always returns something.
 
 ---
 
-## Beat 8 — NOTEBOOK §6. The filter fields, for reference
+## Beat 9 — NOTEBOOK §7. The filter fields, for reference
 
 Run or scroll to the reference table.
 
@@ -131,7 +142,7 @@ Run or scroll to the reference table.
 
 ---
 
-## Beat 9 — WRAP
+## Beat 10 — WRAP
 
 Run the cleanup cell (final action).
 

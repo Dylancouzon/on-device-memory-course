@@ -8,5 +8,3 @@ onnx-asr>=0.12.0
 matplotlib>=3.7.0
 numpy>=1.24.0
 Pillow>=10.0.0
-# Optional: webcam capture for the L6 lab
-ipywebrtc>=0.6.0

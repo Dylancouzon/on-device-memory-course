@@ -407,39 +407,27 @@ def memory_inbox(sections, image_dir, min_score=None):
         '<div style="font-family:system-ui,sans-serif;background:#f7f7f8;'
         'border-radius:12px;padding:12px 16px">' + header + "".join(blocks) + "</div>")
 
-# --- webcam ----------------------------------------
-"""Optional webcam capture for L6, using ipywebrtc (a Jupyter camera widget).
 
-`camera()` shows the webcam with a snapshot button; `snapshot_to_file()` saves
-the most recent snapshot to disk so CLIP can embed it. When the widget stack or
-a camera is missing (the case on a headless sandbox), `camera()` returns None
-and the lesson falls back to the bundled object photos.
-"""
-
-
-def camera():
-    """Show the webcam with a snapshot button. Returns an ipywebrtc
-    ImageRecorder, or None when no camera widget is available."""
-    try:
-        from ipywebrtc import CameraStream, ImageRecorder
-    except ImportError:
-        print("ipywebrtc is not installed; use a bundled photo path instead.")
-        return None
-    stream = CameraStream(constraints={"video": True, "audio": False})
-    return ImageRecorder(stream=stream)
-
-
-def snapshot_to_file(recorder, path="./capture.jpg"):
-    """Save the recorder's latest snapshot to `path` and return it.
-
-    Click the snapshot button in the camera widget first, then run this.
+def show_images(paths, captions=None, height=2.2, per_row=6):
+    """One row of images with optional captions under each, wrapping to a new
+    row past `per_row`. White background, axes off. For showing inputs a student
+    hasn't seen yet, so there is no provenance badge (these aren't results).
     """
-    from io import BytesIO
     from PIL import Image
-    data = recorder.image.value
-    if not data:
-        raise RuntimeError(
-            "No snapshot yet: click the camera's capture button, then re-run."
-        )
-    Image.open(BytesIO(data)).convert("RGB").save(path)
-    return path
+    paths = list(paths)
+    n = len(paths)
+    cols = min(per_row, n) or 1
+    rows = (n + cols - 1) // cols
+    fig, axes = plt.subplots(rows, cols, squeeze=False,
+                             figsize=(height * cols, height * rows))
+    fig.patch.set_facecolor("white")
+    for i, ax in enumerate(ax for row in axes for ax in row):
+        ax.axis("off")
+        if i < n:
+            img = Image.open(paths[i]).convert("RGB")
+            img.thumbnail((int(height * 110), int(height * 110)))
+            ax.imshow(img)
+            if captions and i < len(captions):
+                ax.set_title(str(captions[i]), fontsize=8, fontweight="bold")
+    fig.tight_layout()
+    plt.show()
