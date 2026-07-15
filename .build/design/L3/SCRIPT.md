@@ -280,7 +280,8 @@ Run the load-history cell, then the editable cell.
 
 A real assistant carries weeks of notes, not a single day. So we load a
 few weeks of earlier notes into the same shard — about a hundred more,
-each already carrying the same category, timestamp, and price fields. Now
+each carrying a category and a timestamp, with price and location where
+they apply. Now
 your turn. Change `my_category`, re-run, and the cell builds the filter
 directly from your value. Try food, travel, shopping, home, or health, and
 watch the list change — now across weeks of memory, not just today. A safe

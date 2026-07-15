@@ -67,20 +67,24 @@ Recall has to be a local function call, not a round trip.
 
 ```slide-brief
 slug: l1-01-memory-beside-model
-purpose: the course's core mental model — a frozen model with a growing
-  memory store beside it, both inside the device; the cloud crossed out.
-on-slide text: node labels only — "model (frozen)", "memory (grows)",
-  "device", crossed-out "cloud". No headline.
+purpose: the course's core mental model — an application orchestrating a
+  frozen model and a growing memory store, all inside the device; the
+  cloud crossed out.
+on-slide text: node labels only — "model (frozen)", "assistant app",
+  "memory (grows)", "device", crossed-out "cloud". No headline.
 diagram spec (16:9, left-to-right):
   - One large dashed container spanning most of the slide, hand-lettered
     label "device".
   - Inside, left: an orange (#FF9800) rounded node with a brain icon,
     label "model (frozen)", drawn with a small padlock.
+  - Inside, center: a light-blue (#03A9F4) rounded node, label
+    "assistant app".
   - Inside, right: a violet (#6047FF) hand-drawn cylinder with the spiral
     notebook motif, label "memory (grows)", with a few small "+" marks
     to suggest growth.
-  - A double-headed arrow between them, labeled "recall" one way and
-    "write" the other, in Qdrant Red (#DC244C).
+  - Two red (#DC244C) arrows between the app and the cylinder, labeled
+    "write" and "recall"; one thin arrow from the app to the model,
+    labeled "context".
   - Outside the device container, top-right corner: a small desaturated
     gray (#4E5366) cloud with a hand-drawn ✕ through it.
 ```
@@ -89,10 +93,13 @@ diagram spec (16:9, left-to-right):
 
 Here's the mental model for the whole course. The model's weights are
 frozen — they're the same for everyone, and they don't change when your
-day happens. Memory is a separate store that sits beside the model, on the
-same device: the model reads from it and writes to it, and it grows over
-time. Memory is not the model's weights — it's the notebook the model
-keeps beside it. Everything we build in this course is that notebook.
+day happens. Around the model sits your application, the assistant. The
+application turns what the device captures into vectors and writes them
+to a memory store on the same device; when you ask a question, it recalls
+the closest memories and hands them to the model as context. The memory
+grows; the weights never change. Memory is not the model's weights — it's
+the notebook kept beside the model. Everything we build in this course is
+that notebook, and the application code that writes and reads it.
 
 ---
 

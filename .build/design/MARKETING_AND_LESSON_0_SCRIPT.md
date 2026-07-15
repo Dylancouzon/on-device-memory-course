@@ -28,8 +28,8 @@ turn retrieval concepts into systems they can run and inspect.
 
 Thanks, Andrew. In this course, you'll learn how to build persistent AI memory
 that runs inside an application. You'll store information on local disk,
-retrieve it by meaning, combine semantic search with filters such as time and
-location, and keep recall available when the network is off.
+retrieve it by meaning, combine semantic search with filters such as category
+and price, and keep recall available when the network is off.
 
 We'll use Qdrant Edge as the implementation, but the methods apply more
 broadly: separate memory from model weights, choose the right embedding space

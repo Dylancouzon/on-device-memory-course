@@ -5,6 +5,13 @@
 `SLIDE_STYLE.md`. Demo beats reference `SHOTLIST.md`; production
 direction lives there, never here.
 
+**STATUS: PROVISIONAL.** The robot app, hardware, and shoot are pending
+(`.build/PLAN.md` separate track). Every demo claim below — scores, the
+threshold behavior, persistence, "same stack" — must be reconciled
+against the recorded robot output before this script is finalized or
+anything is recorded. Numbers on screen are the evidence; the script
+never claims what the footage doesn't show.
+
 A synthesis lecture that happens to have a robot. The robot runs the
 course's exact stack — CLIP for image (512-d), Nomic for text (768-d),
 Whisper for audio, Qdrant Edge as the store, the same 0.80 threshold — so
@@ -143,11 +150,14 @@ up — the spoken sentence, the stored memory appearing.
 Watch the teach beat once more, slowly, because it's the course in one
 interaction. I hold up the object and say "this is my mug." The camera
 crops it and CLIP embeds it — that's the image vector. Whisper turns my
-sentence into text and Nomic embeds it — that's the note, exactly like a
-voice memo from L4. Both land in one memory: one point, an image vector,
-and a spoken payload. Next time the robot sees the mug from any angle,
-the nearest-match check clears the threshold, and what comes back isn't
-just a label — it's what I told it, in my words.
+sentence into text and Nomic embeds it — that's a text vector, exactly
+like a voice memo from L4. Both land in one memory: one point carrying
+both named vectors — `image` and `text` — searchable by sight and by
+what was said,
+and my sentence in the payload. Next time the robot sees the mug from
+another angle — the one you'll watch it recognize — the nearest-match
+check clears the threshold, and what comes back isn't just a label —
+it's what I told it, in my words.
 
 ---
 

@@ -48,3 +48,21 @@ The hands-on arc lands: L2 through L5 read as a single field being taught — st
 | nit 2: L1 production direction in SCRIPT.md | **Fixed** — L1 gets its own SHOTLIST.md; script keeps neutral "Footage (shotlist #n)" pointers; "Instructor to camera" lines dropped in L1/L6. |
 
 All four notebooks re-executed after the helper changes; payoffs re-verified against PAYOFF_REGISTRY.md.
+
+---
+
+## Codex pass (M6 stage 2) — findings and disposition
+
+| # | Severity | Finding | Outcome |
+|---|---|---|---|
+| 1 | blocker | Notebooks partially executed (mid-fix state Codex observed) | **Fixed** — final Restart & Run All L2→L5 after all edits; registry recomputed. |
+| 2 | blocker | Offline claim overstated vs `no_network()`'s real scope | **Fixed in narration** — L2 beat 9 and L5 beat 15 now say "blocks new Python socket creation"; receipts already said `python_socket_access: blocked`. Air-gapped container run + baked weights stays a DLAI open item (CLAUDE.md). |
+| 3 | blocker | L6 script speaks as if the robot exists | **Fixed** — PROVISIONAL banner added (reconcile every claim against recorded output before finalizing); "from any angle" narrowed to the tested angle. |
+| 4 | major | Teach-by-voice storage contract ambiguous | **Fixed** — narration + shotlist now specify one point with both named vectors (`image` + `text`) and the transcript in the payload, visible on screen. |
+| 5 | major | `filler_points` still built `Point`s in the helper | **Fixed** — helper is now `filler_vectors()` (raw vectors); L2 §7 builds the `Point`s and upserts in the cell. |
+| 6 | major | L5 `teach`/`recognize` hid the global-shard swap | **Fixed** — explicit `object_shard`/`assistant_shard` names; both functions take the shard as their first argument at every call site. |
+| 7 | major | L1 mental model had the model reading/writing memory | **Fixed** — "assistant app" node added to the slide; narration puts writes/recall in the application, weights stay frozen. |
+| 8 | major | Threshold narration generalized beyond the curated evidence | **Fixed** — claim scoped to the bundled objects; students told to leave 0.80 fixed; production calibration named. |
+| 9 | minor | Marketing promised time/location filters; L3 history metadata overstated | **Fixed** — marketing now says category and price; L3 beat 13 says price/location "where they apply". |
+| 10 | minor | L2 wrap blurred write vs delete operations | **Fixed** — recap names `upsert_points` and `delete_points` explicitly. |
+| 11 | nit | CLAUDE.md pinned a volatile latency number | **Fixed** — CLAUDE.md defers to PAYOFF_REGISTRY.md for the exact value. |

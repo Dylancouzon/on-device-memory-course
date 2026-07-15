@@ -189,9 +189,10 @@ Run the `no_network()` cell.
 
 **NARRATION:**
 
-`no_network()` blocks sockets, so any network call inside the block fails
-loudly. Run the cell, and recall still returns the standup note with Sarah.
-Both embedding and search ran in this process, with the network disabled.
+`no_network()` blocks new Python socket creation inside the block, so
+Python code that tries to reach the network fails loudly. Run the cell, and
+recall still returns the standup note with Sarah. Both embedding and search
+ran in this process, and neither asked for a socket.
 
 ---
 
@@ -253,9 +254,9 @@ can run yourself.
 
 That's the full lifecycle of a memory, in one lesson: store, recall, forget,
 persist. You've seen the Edge API once, end to end: `EdgeConfig` and
-`EdgeShard.create` to build the store, `Point` and `UpdateOperation` to
-write and delete, `QueryRequest` and `Query.Nearest` to recall, `close()`
-and `EdgeShard.load` to persist. Those calls stay visible in the notebook
+`EdgeShard.create` to build the store, `Point` with `upsert_points` to
+write and `delete_points` to forget, `QueryRequest` and `Query.Nearest` to
+recall, `close()` and `EdgeShard.load` to persist. Those calls stay visible in the notebook
 cells, so you can see exactly what the shard is doing. The helpers handle
 only the supporting plumbing: embeddings, charts, and the offline guard.
 

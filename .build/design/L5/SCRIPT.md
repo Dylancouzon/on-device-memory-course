@@ -176,7 +176,7 @@ Run the evidence cell.
 
 **NARRATION**
 
-A recognition should be inspectable, so look at the evidence as a chart. Two taught objects, queried from views we never stored: the flower's held-out angle and the backpack's second photo — remember, the backpack was taught from a single view — both score above the line. Then images the device was never taught — a different plant, a book, a coffee cup — all land below it. That's the point: recognized objects and unknowns fall into two groups with a clear gap, and 0.80 sits inside that gap. It isn't a magic number; it's a known-versus-unknown line you can move as you teach more objects.
+A recognition should be inspectable, so look at the evidence as a chart. Two taught objects, queried from views we never stored: the flower's held-out angle and the backpack's second photo — remember, the backpack was taught from a single view — both score above the line. Then images the device was never taught — a different plant, a book, a coffee cup — all land below it. For these bundled objects, taught and never-taught fall into two groups with a clear gap, and 0.80 sits inside it. It isn't a magic number, and it isn't universal: leave it fixed in this lab, and know that a production system calibrates its threshold against a much larger held-out set of knowns and unknowns.
 
 ---
 
@@ -226,7 +226,7 @@ Run the persistence cell.
 
 **NARRATION**
 
-One last check, the one that makes it real. Close the shard, block the network, reopen from disk, and run both skills again: the recall still finds the ramen place, and the backpack is still recognized. Everything this assistant knows lives on the device and survives a restart, with no server in the loop.
+One last check, the one that makes it real. Close the shard, block Python socket creation with the offline guard, reopen from disk, and run both skills again: the recall still finds the ramen place, and the backpack is still recognized. Everything this assistant knows lives on the device and survives a restart, with no server in the loop.
 
 ---
 

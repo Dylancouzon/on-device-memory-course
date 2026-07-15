@@ -14,21 +14,16 @@ from pathlib import Path
 from qdrant_edge import Point, UpdateOperation
 
 
-def filler_points(count, dim, vector_name="text", start_id=1000, seed=0):
-    """Random filler points that grow the shard so a latency number is credible.
+def filler_vectors(count, dim, seed=0):
+    """Random vectors that grow the shard so a latency number is credible.
 
     Content is irrelevant to latency, it tracks how many vectors there are and
-    how wide they are. The notebook upserts these itself, so the write stays
-    visible in the cell.
+    how wide they are. The notebook builds the points and upserts them itself,
+    so every write stays visible in the cell.
     """
     import numpy as np
     rng = np.random.default_rng(seed)
-    vecs = rng.normal(size=(count, dim)).astype("float32")
-    return [
-        Point(id=start_id + i, vector={vector_name: vecs[i].tolist()},
-              payload={"kind": "filler"})
-        for i in range(count)
-    ]
+    return rng.normal(size=(count, dim)).astype("float32").tolist()
 
 
 def fresh_start(directory):
