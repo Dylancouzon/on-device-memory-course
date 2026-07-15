@@ -27,7 +27,7 @@ Run in order; each folder is self-contained.
 | 2 | An Embedded Memory Engine | A store that recalls offline and survives a restart |
 | 3 | Multimodal Memory: Text and Photos | Find a photo by describing it; the right model per modality |
 | 4 | Contextual Filtering for Memory | Time and payload filters inside one query |
-| 5 | Lab: Smartphone Assistant | A day of photos, voice, and text notes; ask and add your own memories |
+| 5 | Lab: On-Device Assistant | A day of photos, voice, and text notes; ask and add your own memories |
 | 6 | Lab: Teach a Device a New Object | Teach an object from a few photos, recognize it from a new angle, no retraining |
 
 ## Setup

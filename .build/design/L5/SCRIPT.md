@@ -1,6 +1,6 @@
-# L5 — Lab: Your Smartphone Assistant — script
+# L5 — Lab: Your On-Device Assistant — script
 
-**Target runtime:** ~12 min
+**Target runtime:** ~11 min
 
 This lab is built to be student-driven: they see the store, the point, and
 the recall built in the open, then ask their own question and add their own
@@ -23,10 +23,9 @@ memory. No slides — the notebook and its live output carry the whole lesson.
 | 9 | NOTEBOOK §8 | Your turn: ask a question | 45 |
 | 10 | NOTEBOOK §9 | **The payoff:** add your own memory, then recall it | 60 |
 | 11 | NOTEBOOK §10 | **The payoff:** forget a memory (delete by id, re-recall) | 40 |
-| 12 | NOTEBOOK §11 | Persistence: reopen and recall, offline | 45 |
-| 13 | WRAP | Wrap-up + pointer to L6 | 40 |
+| 12 | WRAP | Wrap-up + pointer to L6 | 40 |
 
-Total: ~585 sec (~10 min narration; ~12–13 min with the two editable cells
+Total: ~540 sec (~9 min narration; ~11–12 min with the two editable cells
 run live). No slides, down from three: the architecture is L3's, and the
 query and results read more clearly as code and live output than as a diagram.
 
@@ -37,7 +36,8 @@ query and results read more clearly as code and live output than as a diagram.
 **NARRATION**
 
 This lab brings together everything you've built so far. You'll store photos,
-a voice note, and text notes from one day in a single on-device shard, then
+a voice note, and text notes from one day — the kind of day a phone or a pair
+of smart glasses captures — in a single on-device shard, then
 ask it your own questions and add your own memories — all offline. Let's
 build something.
 
@@ -49,7 +49,7 @@ Run the captures cell.
 
 **NARRATION**
 
-> A day starts with 17 photos, five voice notes, and 20 text notes: 42 captures in all. Each capture carries the same metadata: source type, timestamp, location, category, price when relevant, and store. The voice notes arrive as audio, so a small Whisper model transcribes them on-device — the kind of speech-to-text a phone runs, no server and no account. From there Nomic embeds the transcript exactly like any other text. Three source types, two embedding paths.
+> A day starts with 17 photos, five voice notes, and 20 text notes: 42 captures in all. Each capture carries the same metadata: source type, timestamp, location, category, price when relevant, and store. The voice notes arrive as audio, so a small Whisper model transcribes them on-device — the kind of speech-to-text a phone or a pair of smart glasses runs, no server and no account. From there Nomic embeds the transcript exactly like any other text. Three source types, two embedding paths.
 
 ---
 
@@ -144,17 +144,9 @@ Run the delete cell.
 
 ---
 
-## Beat 12 — NOTEBOOK §11. Persistence: reopen and recall
+## Beat 12 — WRAP
 
-Run the persistence cell, then the cleanup cell.
-
-**NARRATION**
-
-> One last check, quickly — L2 already proved this, so we keep it short. Close the shard, disable the network, reopen the same path from disk, and recall the memory you just added. The receipt: the count is unchanged, the recall still returns your note, and no Python socket was opened. Your added memory survived the restart, offline.
-
----
-
-## Beat 13 — WRAP
+Run the cleanup cell.
 
 **NARRATION**
 
