@@ -1,27 +1,35 @@
-# L3 — Multimodal Memory: Text and Photos — Script
+# L3 — Finding the Right Memory — script
 
-**Target runtime:** ~6 min (≈ 365 sec)
+**Target runtime:** ~8 min
 
 NOTEBOOK beats reference the section numbers as they appear in the
 executed `L3.ipynb`.
+
+Two ways to find the right memory in one lesson: describe what you mean
+(cross-modal recall over photos), and constrain what comes back (a payload
+filter riding inside the query). Slides: the endpoint teaser, two encoders
+one shard, cross-modal recall, and filters inside the query.
 
 ## Beat map
 
 | # | Type | Content | Est. sec |
 |---|---|---|---|
-| 1 | INTRO | From text memories to photos | 30 |
-| 2 | NOTEBOOK §1 | Which model for which memory? (table) | 45 |
-| 3 | SLIDE 1 | Two encoders, one shard | 30 |
-| 4 | NOTEBOOK §2 | A single shard, two named vectors (visible EdgeConfig) | 40 |
-| 5 | NOTEBOOK §3 | Store text notes (Nomic) | 25 |
-| 6 | NOTEBOOK §4 | Store photos (CLIP): first point by hand, then batch | 35 |
-| 7 | NOTEBOOK §5 | **The payoff:** find a photo by describing it | 50 |
-| 8 | SLIDE 2 | Cross-modal recall | 30 |
-| 9 | NOTEBOOK §6 | The photos on hand (gallery, seen before describing) | 20 |
-| 10 | NOTEBOOK §7 | Your turn: describe a photo (editable) | 25 |
-| 11 | NOTEBOOK §8 | Two spaces, shown side by side — never merged | 40 |
-| 12 | WRAP | Wrap: summary, what's next | 40 |
-| | | **Total** | **~410 (6.8 min)** |
+| 1 | INTRO | Endpoint teaser + from words to photos | 35 |
+| 2 | SLIDE 1 | The memory loop, this lesson's piece highlighted | 15 |
+| 3 | SLIDE 2 | Two encoders, one shard | 35 |
+| 4 | NOTEBOOK §1 | A single shard, two named vectors (visible EdgeConfig) | 35 |
+| 5 | NOTEBOOK §2 | Store text notes (Nomic) | 20 |
+| 6 | NOTEBOOK §3 | Store photos (CLIP): first point by hand, then batch | 35 |
+| 7 | NOTEBOOK §4 | **The payoff:** find a photo by describing it | 50 |
+| 8 | SLIDE 3 | Cross-modal recall | 30 |
+| 9 | NOTEBOOK §5 | The photos on hand (gallery, seen before describing) | 20 |
+| 10 | NOTEBOOK §6 | Your turn: describe a photo (editable) | 25 |
+| 11 | SLIDE 4 | Filters run inside the query, not after it | 30 |
+| 12 | NOTEBOOK §7 | **The payoff:** recall with a filter (index + food under $15) | 60 |
+| 13 | NOTEBOOK §8 | Your turn: filter weeks of history (editable) | 40 |
+| 14 | WRAP | Two ways to find the right memory; reference table pointer | 35 |
+
+Total: ~465 sec (~7.8 min).
 
 ---
 
@@ -29,37 +37,35 @@ executed `L3.ipynb`.
 
 **NARRATION:**
 
-In L2, we stored text notes. But your memory of a day isn't only words — half
-of it is what you saw. So this lesson adds photos, without changing the
-storage pattern. You'll use the right encoder for each kind of memory, then
-find a photo by describing what is in it. Let's code!
+In L2, we stored text notes. But your memory of a day isn't only words —
+half of it is what you saw. So this lesson adds photos, without changing
+the storage pattern, and then narrows recall down: not just "something
+about food", but food, under fifteen dollars. Two ways to find the right
+memory: describe it, or constrain it. Let's code!
 
 ---
 
-## Beat 2 — NOTEBOOK §1: which model for which memory?
+## Beat 2 — SLIDE 1: the memory loop, this lesson highlighted
 
-Scroll to "## 1." and its table (recreate or narrate over the markdown
-table: text notes → Nomic → `text`; photos → CLIP → `image`; voice notes →
-Whisper → transcript → Nomic → `text`).
+```slide-brief
+slug: l3-00-endpoint
+purpose: the endpoint teaser — the same loop diagram as L2's teaser,
+  with the embed and recall stages highlighted for this lesson.
+on-slide text: node labels only — "capture", "embed", "store", "recall",
+  small tag "this lesson". No headline.
+diagram spec (8:9): identical layout to slide l2-00-endpoint; the
+  highlight moves to "embed" (a second encoder joins) and "recall"
+  (described and filtered). Other nodes at reduced opacity.
+```
 
 **NARRATION:**
 
-Different memory types use different vector spaces. Nomic and CLIP scores
-are not comparable, so each modality has its own named vector and is
-searched separately.
-
-Text notes use Nomic-Embed-Text, in a vector called `text`. Photos use CLIP
-ViT-B/32, in a vector called `image`. Voice notes, which you'll see in L5,
-go through Whisper to a transcript, then Nomic — so they end up back in
-that same `text` vector.
-
-A text question actually gets embedded twice: once with Nomic, to search
-`text`, once with CLIP, to search `image`. The results are shown per
-modality, never blended into one score list.
+Same loop as last time. Today the highlight moves: a second encoder joins
+at the embed stage, and recall learns two new tricks.
 
 ---
 
-## Beat 3 — SLIDE 1: two encoders, one shard
+## Beat 3 — SLIDE 2: two encoders, one shard
 
 ```slide-brief
 slug: two-encoders-one-shard
@@ -83,14 +89,16 @@ diagram spec (8:9, stack top-to-bottom):
 
 **NARRATION:**
 
-Picture it as one shard with two rows. Nomic takes in text and produces a
-vector in the `text` row. CLIP takes in an image and produces a vector in
-the `image` row. Same cylinder, same EdgeShard — two named vectors living
-side by side.
+Different memory types use different vector spaces. Text notes use
+Nomic-Embed-Text, in a vector called `text`. Photos use CLIP, in a vector
+called `image`. Nomic and CLIP scores are not comparable, so each modality
+has its own named vector, is searched on its own, and the results are never
+blended into one score list. Picture it as one shard with two rows — same
+cylinder, two named vectors living side by side.
 
 ---
 
-## Beat 4 — NOTEBOOK §2: a single shard, two named vectors
+## Beat 4 — NOTEBOOK §1: a single shard, two named vectors
 
 Run the config cell.
 
@@ -104,19 +112,19 @@ change.
 
 ---
 
-## Beat 5 — NOTEBOOK §3: store text notes (Nomic)
+## Beat 5 — NOTEBOOK §2: store text notes
 
 Run the add-text-notes cell.
 
 **NARRATION:**
 
 Text notes go in exactly like L2: embed with Nomic, add to the `text`
-vector. The coffee-place note is back again — we're keeping it for a recall
-in L5.
+vector. The coffee-place note is back — every lesson builds its own store,
+so nothing depends on what you ran before.
 
 ---
 
-## Beat 6 — NOTEBOOK §4: store photos (CLIP)
+## Beat 6 — NOTEBOOK §3: store photos
 
 Run the two photo cells: the first builds one point by hand, the second
 batches the rest.
@@ -126,21 +134,21 @@ batches the rest.
 Now the new part. First we build one photo point by hand — an id, the CLIP
 vector under the `image` name, and a payload — so you can see a point is the
 same shape whichever vector it uses. CLIP's vision encoder turns the photo
-into a vector in a space it shares with text, which is what makes cross-modal
-recall possible. Notice this point carries only an `image` vector, no `text`.
-Then the rest of the photos go in one batch. Check the total: text notes plus
-photos, all in one shard.
+into a vector in a space it shares with text, which is what makes
+cross-modal recall possible. Notice this point carries only an `image`
+vector, no `text`. Then the rest of the photos go in one batch. Check the
+total: text notes plus photos, all in one shard.
 
 ---
 
-## Beat 7 — NOTEBOOK §5: The payoff — find a photo by describing it
+## Beat 7 — NOTEBOOK §4: The payoff — find a photo by describing it
 
 Run the cross-modal query cell. Point at `show_photo_results` — the ranked
 photos with scores. Name this as the payoff.
 
 **NARRATION:**
 
-Here's the payoff. No tags, no filenames. We take a plain text
+Here's the first payoff. No tags, no filenames. We take a plain text
 description — "black and white sneakers" — embed it with CLIP's
 text encoder, not Nomic, and search the `image` vector. Look at the
 results: the sneakers photo comes back on top, ranked purely by how well
@@ -149,7 +157,7 @@ metadata written by hand.
 
 ---
 
-## Beat 8 — SLIDE 2: cross-modal recall
+## Beat 8 — SLIDE 3: cross-modal recall
 
 ```slide-brief
 slug: cross-modal-recall
@@ -179,19 +187,19 @@ space, two doors in.
 
 ---
 
-## Beat 9 — NOTEBOOK §6: the photos on hand
+## Beat 9 — NOTEBOOK §5: the photos on hand
 
 Run the gallery cell.
 
 **NARRATION:**
 
 Before you describe a photo, here are the ones now in the store — all
-seventeen, laid out so you're choosing from photos you've actually seen. Pick
-one that catches your eye; you'll describe it in the next cell.
+seventeen, laid out so you're choosing from photos you've actually seen.
+Pick one that catches your eye; you'll describe it in the next cell.
 
 ---
 
-## Beat 10 — NOTEBOOK §7: your turn — describe a photo
+## Beat 10 — NOTEBOOK §6: your turn — describe a photo
 
 Run the editable cell.
 
@@ -199,32 +207,95 @@ Run the editable cell.
 
 Now try it yourself. The default is `my_description = "a bowl of noodles"`.
 Change it to anything in the photo set — a bicycle, a dog, or a train — and
-re-run. The same CLIP text encoder embeds your words and searches the `image`
-vector. There's a safe default, so the cell always returns something.
+re-run. The same CLIP text encoder embeds your words and searches the
+`image` vector. There's a safe default, so the cell always returns
+something.
 
 ---
 
-## Beat 11 — NOTEBOOK §8: two spaces, shown side by side
+## Beat 11 — SLIDE 4: filters run inside the query
 
-Run the dual-query cell and `memory_inbox`.
+```slide-brief
+slug: filters-inside-query
+purpose: show that a filter runs inside the same query as the vector
+  search, not as a second pass afterward.
+on-slide text: gate and node labels only — "filter (indexed field)",
+  "one pass", crossed-out "filter in your code / second pass".
+  No headline.
+diagram spec (8:9, stack top-to-bottom):
+  - Top: a single red curved arrow labeled "query" entering from above.
+  - Center: a violet hand-drawn cylinder (EdgeShard), dashed-border
+    container labeled "shard". Embedded near the top of the cylinder: a
+    small teal rounded-rectangle "gate" node with a funnel/filter icon,
+    labeled "filter (indexed field)". The red query arrow passes visibly
+    THROUGH this teal gate before continuing down into the cylinder body,
+    which shows a few small result rows highlighted teal.
+  - Arrow label at the gate: "one pass".
+  - Below the cylinder, a separate smaller panel showing the crossed-out
+    alternative: a gray dashed cylinder labeled "all results" (desaturated
+    gray #4E5366, no fill), a gray arrow to a second gray box labeled
+    "filter in your code" with a hand-drawn ✕ struck through the whole
+    panel, small label "second pass".
+  - Include the small spiral-notebook motif icon near the shard, tiny,
+    non-dominant.
+```
 
 **NARRATION:**
 
-One more useful pattern: send one query, "coffee," to both named vectors.
-Nomic searches the text notes and CLIP searches the photos. We do not merge
-the scores into one ranked list because they come from different vector
-spaces. The memory inbox keeps the results grouped by modality.
+Similarity finds what you mean; it can't enforce what you need. "Somewhere
+to eat" is meaning; "under fifteen dollars" is structure. The filter
+passes through the query on its way into the shard, so filtering and
+vector search happen in one pass. The alternative is to retrieve a large
+set of results and filter them later in your own code — more work, and a
+separate step to maintain.
 
 ---
 
-## Beat 12 — WRAP
+## Beat 12 — NOTEBOOK §7: The payoff — recall with a filter
+
+Run the index cell, then the filter cell. The filter is written out in
+full — no helper.
 
 **NARRATION:**
 
-The memory store didn't change at all here — same EdgeShard, same API.
-Only the embedding models changed with the modality. Named vectors keep
-text and image apart, cross-modal recall works because CLIP puts them in
-one shared space, and we never merge scores across modalities.
+First, index the payload fields we'll filter on: category and location as
+keywords, timestamp and price as floats. Indexing is what makes the filter
+efficient — the engine narrows candidates through the index instead of
+scanning every point. Then the payoff: the honest form of "somewhere to
+eat under fifteen dollars" is two explicit pieces. A semantic search for
+"somewhere to eat", narrowed by a `Filter` with two conditions: category
+equals food, price below fifteen — raw `FieldCondition`, `MatchValue`, and
+`RangeFloat` types, dropped straight into the `QueryRequest` next to the
+vector query. There's no hidden natural-language-to-filter translation.
+The first list shows what similarity alone returns; below it, what's left
+once the filter runs alongside it.
 
-Next lesson, L4 adds filters: "photos from last Tuesday near the office"
-isn't similarity alone — it's similarity plus structure.
+---
+
+## Beat 13 — NOTEBOOK §8: your turn — filter weeks of history
+
+Run the load-history cell, then the editable cell.
+
+**NARRATION:**
+
+A real assistant carries weeks of notes, not a single day. So we load a
+few weeks of earlier notes into the same shard — about a hundred more,
+each already carrying the same category, timestamp, and price fields. Now
+your turn. Change `my_category`, re-run, and the cell builds the filter
+directly from your value. Try food, travel, shopping, home, or health, and
+watch the list change — now across weeks of memory, not just today. A safe
+default is set, so the cell always returns something.
+
+---
+
+## Beat 14 — WRAP
+
+**NARRATION:**
+
+Two ways to find the right memory, one store. Describing works because
+CLIP puts words and pictures in one shared space; constraining works
+because the payload filter rides inside the same on-device query. The
+reference table at the bottom of the notebook has the whole filter
+vocabulary you'll need — keyword matches and numeric ranges, combined with
+`must` for AND and `should` for OR. Next, in L4, we put the whole day
+together — photos, voice notes, and text notes, in a single assistant.

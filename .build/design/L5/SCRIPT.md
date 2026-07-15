@@ -1,33 +1,45 @@
-# L5 — Lab: Your On-Device Assistant — script
+# L5 — Teaching It to See — script
 
 **Target runtime:** ~11 min
 
-This lab is built to be student-driven: they see the store, the point, and
-the recall built in the open, then ask their own question and add their own
-memory. No slides — the notebook and its live output carry the whole lesson.
+NOTEBOOK beats reference the section numbers as they appear in the
+executed `L5.ipynb`.
 
----
+The device learns a new object by *writing memory*, not by retraining. The
+lesson's arc is one live reveal: an object the device fails to recognize, a
+few lines that teach it, and the same object recognized from a different
+angle seconds later. Then you teach one yourself — and the finale is the
+course capstone: everything you built, assembled into one assistant that
+answers questions and recognizes what you taught it, offline.
+
+Everything runs on the bundled object photos in `data/objects/`, so the
+whole lab works offline in the course container. On the video, the
+instructor captures object views live on camera; the student path uses the
+same bundled photos.
 
 ## Beat map
 
 | # | Type | Content | Est. sec |
 |---|---|---|---|
-| 1 | INTRO | Bring a day's memories together | 30 |
-| 2 | NOTEBOOK §1 | A day's captures — photos, voice note, text notes | 45 |
-| 3 | NOTEBOOK §2 | The day at a glance (timeline, for inspection) | 40 |
-| 4 | NOTEBOOK §3 | One shard, two named vectors + indexed fields | 40 |
-| 5 | NOTEBOOK §4 | Store the day: one text + one photo by hand, then batch | 55 |
-| 6 | NOTEBOOK §5 | Inspect a stored point | 35 |
-| 7 | NOTEBOOK §6 | How recall works (QueryRequest for both spaces) | 55 |
-| 8 | NOTEBOOK §7 | **The payoff:** sneakers under $50 (raw hits, then inbox) | 55 |
-| 9 | NOTEBOOK §8 | Your turn: ask a question | 45 |
-| 10 | NOTEBOOK §9 | **The payoff:** add your own memory, then recall it | 60 |
-| 11 | NOTEBOOK §10 | **The payoff:** forget a memory (delete by id, re-recall) | 40 |
-| 12 | WRAP | Wrap-up + pointer to L6 | 40 |
+| 1 | INTRO | Endpoint teaser + learn an object by writing memory | 40 |
+| 2 | SLIDE 1 | The memory loop, this lesson's piece highlighted | 15 |
+| 3 | SLIDE 2 | Teach → store → recognize | 35 |
+| 4 | NOTEBOOK §1 | An object-memory shard (image vector + threshold) | 35 |
+| 5 | NOTEBOOK §2 | The objects on hand (gallery, seen up front) | 25 |
+| 6 | NOTEBOOK §3 | Teach what it already knows (two views — and just one) | 50 |
+| 7 | NOTEBOOK §4 | Show it something new — not recognized yet | 50 |
+| 8 | NOTEBOOK §5 | Teach it the new object | 35 |
+| 9 | NOTEBOOK §6 | **The payoff:** recognize it from a new angle | 55 |
+| 10 | NOTEBOOK §7 | Inspect the threshold gap (score bars) | 50 |
+| 11 | NOTEBOOK §8 | Your turn: teach an object yourself | 45 |
+| 12 | NOTEBOOK §9 | Assemble the assistant: a day + weeks + the taught object | 45 |
+| 13 | NOTEBOOK §10 | **The payoff:** ask it about your day (cross-modal recall) | 50 |
+| 14 | NOTEBOOK §11 | **The payoff:** show it what you taught (recognition + note) | 40 |
+| 15 | NOTEBOOK §12 | **The payoff:** it all persists, offline | 40 |
+| 16 | WRAP | Wrap the course's hands-on arc | 45 |
 
-Total: ~540 sec (~9 min narration; ~11–12 min with the two editable cells
-run live). No slides, down from three: the architecture is L3's, and the
-query and results read more clearly as code and live output than as a diagram.
+Total: ~655 sec (~11 min). The longest lesson — a deliberate call for
+the students' capstone.
 
 ---
 
@@ -35,119 +47,191 @@ query and results read more clearly as code and live output than as a diagram.
 
 **NARRATION**
 
-This lab brings together everything you've built so far. You'll store photos,
-a voice note, and text notes from one day — the kind of day a phone or a pair
-of smart glasses captures — in a single on-device shard, then
-ask it your own questions and add your own memories — all offline. Let's
-build something.
+Every lesson so far stored a memory you already had words or a picture
+for. This one does something different: it teaches the device a brand-new
+object it has never seen — without retraining or fine-tuning any model. It
+just writes a few example vectors to memory. And at the end, everything
+you've built in this course lands in one place: a single assistant that
+answers questions about your day and recognizes what you taught it, with
+the network off. Let's teach a device to see.
 
 ---
 
-## Beat 2 — NOTEBOOK §1. A day's captures
+## Beat 2 — SLIDE 1: the memory loop, this lesson highlighted
 
-Run the captures cell.
+```slide-brief
+slug: l5-00-endpoint
+purpose: the endpoint teaser — the same loop diagram as the earlier
+  teasers; a "teach" arrow joins the loop and the whole loop is active.
+on-slide text: node labels only — "capture", "embed", "store", "recall",
+  new arrow label "teach", small tag "this lesson". No headline.
+diagram spec (8:9): identical layout to slide l2-00-endpoint; all nodes
+  active, plus a new orange arrow labeled "teach" dropping from
+  "capture" directly into the "store" cylinder. Tag reads "this lesson:
+  teach — then assemble everything".
+```
 
 **NARRATION**
 
-> A day starts with 17 photos, five voice notes, and 20 text notes: 42 captures in all. Each capture carries the same metadata: source type, timestamp, location, category, price when relevant, and store. The voice notes arrive as audio, so a small Whisper model transcribes them on-device — the kind of speech-to-text a phone or a pair of smart glasses runs, no server and no account. Play the clip and read what the model heard, side by side. From there Nomic embeds the transcript exactly like any other text. Three source types, two embedding paths.
+The loop, one last time in a notebook. Today a new arrow joins it:
+teaching, where a capture writes straight into memory as an example to
+recognize by. And at the end of this lesson, the loop closes for good —
+you assemble every piece you've built into one assistant.
 
 ---
 
-## Beat 3 — NOTEBOOK §2. The day at a glance
+## Beat 3 — SLIDE 2
 
-Run `day_timeline`.
+```slide-brief
+slug: teach-store-recognize
+purpose: show the whole lesson as a three-step loop — teach an object by
+  storing example views, then recognize a new view by nearest match.
+on-slide text: node labels only — "views (teach)", "CLIP", cylinder
+  "object shard", "new view (recognize)", "nearest match > threshold".
+  No headline.
+diagram spec (8:9, stack top-to-bottom):
+  - Top: two small light-blue photo icons side by side labeled
+    "views (teach)", curved orange arrow down into an orange (#FF9800)
+    node "CLIP".
+  - Middle: the orange CLIP node feeds a violet (#6047FF) cylinder labeled
+    "object shard", drawn with a small strip of vector cells and a payload
+    tag "label".
+  - Bottom: a single light-blue photo icon labeled "new view (recognize)",
+    curved red (#DC244C) arrow up through CLIP into the cylinder, returning
+    a teal (#009688) check node labeled "nearest match > threshold".
+  - The teach path (orange, top-down) and the recognize path (red,
+    bottom-up) share the same CLIP node and the same cylinder — one shared
+    space.
+```
 
 **NARRATION**
 
-> Before asking anything, here's the raw material laid flat: photos in the upper lane as thumbnails, in the order they were taken, and the voice and text notes below as numbered markers. This is what a day of on-device capture looks like — nothing recalled yet, just what's there. It's for orientation, not a result.
+> Here's the whole idea in one picture. To teach, you embed a few views of an object with CLIP and store the vectors, tagged with a label. To recognize, you embed a new view the same way and find its nearest stored vector. If that match is close enough — above a threshold — the device knows what it's looking at. Teaching and recognizing use the exact same embedding space; the only difference is whether you're writing or reading.
 
 ---
 
-## Beat 4 — NOTEBOOK §3. One shard, two named vectors
+## Beat 4 — NOTEBOOK §1. An object-memory shard
 
-Run the shard-and-index cell.
+Run the shard cell.
 
 **NARRATION**
 
-> One shard holds the whole day, with the two named vectors from L3: `text` for Nomic, `image` for CLIP. Then we index the four payload fields we'll filter on — category and location as keywords, timestamp and price as floats. That index is what lets the filters in a few cells' time run inside the query.
+> One shard, one named vector this time — `image`, the CLIP space from L3. Each stored point is one view of an object, with a payload saying which object it is and which view. And one number that turns similarity into a decision: a recognition threshold. Above it, a query image counts as recognized; below it, the device says it doesn't know.
 
 ---
 
-## Beat 5 — NOTEBOOK §4. Store the day
+## Beat 5 — NOTEBOOK §2. The objects on hand
 
-Run the three cells: one text note and one photo by hand, the batch, then the
-photo gallery.
+Run the gallery cell.
 
 **NARRATION**
 
-> Store the day in two steps. First, one of each by hand — a text note embedded with Nomic under the `text` vector, and one photo embedded with CLIP under the `image` vector — so you can see a memory is the same `Point` whichever modality it came from. Then the rest go in two batches, text and image. Check the total: 42 memories, one shard. The last cell lays out all seventeen photos, so when a recall returns one later you've already seen it.
+> Before teaching anything, here are the objects this lab uses, laid out so you've seen every one before it's stored or queried. A couple of plants, a backpack, and a few everyday things — a rubber duck, a ceramic vase, a hard hat — each photographed from slightly different angles. Nothing is recognized yet; this is just what's on hand.
 
 ---
 
-## Beat 6 — NOTEBOOK §5. Inspect a stored point
+## Beat 6 — NOTEBOOK §3. Teach what it already knows
 
-Run the scroll cell.
+Run the `teach` cell.
 
 **NARRATION**
 
-> Pull one point back out and look at it. Its id, the named vectors it actually carries — this one is a text note, so only `text` — and its full payload. A photo point would show `image` instead. This is the raw shape everything else in the lab searches over.
+> Teaching is the mechanism worth slowing down on, and it's short: `teach` embeds each view with CLIP and upserts one point per view, with the object's id, label, and file in the payload. That's the whole learning step — an upsert, not a training run. We seed the shard with two objects: the lithops gets two views, and the backpack gets just one — plus a note about where it was bought; hold onto that note, it comes back at the finale. One view is already enough to recognize against; more views just make the memory more robust. You'll see both hold up later.
 
 ---
 
-## Beat 7 — NOTEBOOK §6. How recall works
+## Beat 7 — NOTEBOOK §4. Show it something new — not recognized yet
 
-Run the cell that defines `recall` and `show_raw`.
+Run the recognize cell on the new object.
 
 **NARRATION**
 
-> Now build recall in the open. It embeds the question twice — Nomic for the `text` vector, CLIP for the `image` vector — and runs one `QueryRequest` against each, with the same filter. The two result lists stay separate, grouped as photos, voice notes, and text notes, because Nomic and CLIP scores are not on the same scale. `show_raw` prints the plain evidence — which space, the score, the id, the payload — so you always see the hits before any rendering.
+> Now `recognize`: embed a query image, search the `image` vector for the nearest stored view, and compare the top score to the threshold. We show the device a flower it has never been taught, and put the query next to the closest thing it knows. That nearest match is well below the threshold, so the verdict is UNKNOWN. That's the honest starting point — the device doesn't pretend to recognize something it has no memory of.
 
 ---
 
-## Beat 8 — NOTEBOOK §7. The payoff: sneakers under $50
+## Beat 8 — NOTEBOOK §5. Teach it the new object
 
-Run the cell. Raw hits print first, then the memory inbox renders.
+Run the teach-the-flower cell.
 
 **NARRATION**
 
-> First payoff: "black and white sneakers under fifty dollars." The filter is spelled out in code: `Filter(must=[...])` with category equal to `shopping` and price below 50, using raw `FieldCondition`, `MatchValue`, and `RangeFloat` types. Look at `show_raw` first: the space searched, the score, the id, the payload, in plain text. Then the same hits rendered as the memory inbox. The evidence comes before the presentation, never the other way round.
+> So we teach it. Give the new object a label — you can change it — and store two views. Two lines, and the device now has a memory of this object. No model was retrained; no weights changed. We only added vectors.
 
 ---
 
-## Beat 9 — NOTEBOOK §8. Your turn: ask a question
+## Beat 9 — NOTEBOOK §6. The payoff: recognize it from a new angle
 
-Run the editable cell, then change it and run again.
+Run the recognize cell again on the same held-out view.
 
 **NARRATION**
 
-> Your turn. The cell lists a handful of questions the day can answer — where you parked the bike, the gym locker code, when the dentist is — so you can start from one that lands. Change `my_question` to any of them or to your own, and set `my_category` to filter, or `None` to search everything. Re-run, and you get the same raw hits and the same inbox for your question.
+> The first payoff, and the heart of the lesson: run the exact same query image that came back UNKNOWN a moment ago, side by side with the view it now matches. This query was never stored — it's a different angle from the two we taught. Now the nearest match is well above the threshold, and the device recognizes the object by its label. Same image, same threshold; the only thing that changed is that the device now has a memory to match against.
 
 ---
 
-## Beat 10 — NOTEBOOK §9. The payoff: add your own memory, then recall it
+## Beat 10 — NOTEBOOK §7. Inspect the threshold gap
 
-Run the editable cell.
+Run the evidence cell.
 
 **NARRATION**
 
-> The second payoff, and the one that makes it yours: add a memory. Change `my_note` and its metadata, embed it, build a `Point`, and upsert it into the same shard. Then recall it right away. The memory you just wrote comes back at the top — the store didn't need a rebuild or a restart to know something new. That's the whole promise of on-device memory: it grows as you use it.
+> A recognition should be inspectable, so look at the evidence as a chart. Two taught objects, queried from views we never stored: the flower's held-out angle and the backpack's second photo — remember, the backpack was taught from a single view — both score above the line. Then images the device was never taught — a different plant, a book, a coffee cup — all land below it. That's the point: recognized objects and unknowns fall into two groups with a clear gap, and 0.80 sits inside that gap. It isn't a magic number; it's a known-versus-unknown line you can move as you teach more objects.
 
 ---
 
-## Beat 11 — NOTEBOOK §10. The payoff: forget a memory
+## Beat 11 — NOTEBOOK §8. Your turn: teach an object yourself
 
-Run the delete cell.
+Run the editable cell, then change `my_object` and run again.
 
 **NARRATION**
 
-> Growing is only half of memory — the other half is forgetting. Wrong notes, stale ones, anything you no longer want: you delete it by id, then optimize the shard. Delete the sneakers photo, then run the very same recall from a moment ago. The sneakers photo disappears from the Photos lane, while the note about the shoes and other shopping memories can still be recalled. Forgetting removes exactly what you deleted, not every trace. Memory you can write, filter, grow — and forget.
+> Your turn. Pick any object from the gallery with three views — the rubber duck, the vase, the hard hat — and teach two of them. Then hand it the third, an angle it never saw, and let it recognize what you just taught. Change `my_object`, re-run, and you get the same teach-and-recognize loop, now driven by you.
 
 ---
 
-## Beat 12 — WRAP
+## Beat 12 — NOTEBOOK §9. Assemble the assistant
 
-Run the cleanup cell.
+Run the assemble cell.
 
 **NARRATION**
 
-> So: one `EdgeShard` held a whole day across three source types and two vector spaces. You built the store, inspected a point, and wrote the recall yourself; you asked your own question, added your own memory, and forgot one — all offline. Next, the final lesson takes the same API to a new job — teaching a device to recognize a brand-new object by writing memory, without retraining a model.
+> Here is where the whole course comes together, and you're building it yourself. One shard with both vectors — `text` for notes and voice, `image` for photos — the same design as L4. Into it goes the full day of captures, plus a few weeks of earlier notes, so the assistant has real history to draw on. Then we teach it today's object, the backpack: its view goes in the image vector with that note attached. One shard now holds everything you built — recorded memories and a taught object, side by side.
+
+---
+
+## Beat 13 — NOTEBOOK §10. The payoff: ask it about your day
+
+Run the recall cell.
+
+**NARRATION**
+
+> This assistant does two things. The first is answering a question about your day. The question — "the ramen place downtown" — goes into both vector spaces at once. It comes back with the photo you took, the voice memo you left, and the notes you wrote, all about the same place, drawn from today and from weeks ago. One question, every kind of memory, on the device.
+
+---
+
+## Beat 14 — NOTEBOOK §11. The payoff: show it what you taught
+
+Run the recognition cell.
+
+**NARRATION**
+
+> The second thing it does is recognize what you show it. We hand it a new photo of the backpack, a different angle than the one we taught. It matches above the threshold, and because we stored a note with the object, it doesn't just name the backpack — it recalls it: "I remember this, bought at SportsWorld, forty-five dollars." Asking and recognizing, both reading from the same local memory. That's the difference between a classifier and a memory: "I know what this is" becomes "I remember this."
+
+---
+
+## Beat 15 — NOTEBOOK §12. The payoff: it all persists, offline
+
+Run the persistence cell.
+
+**NARRATION**
+
+> One last check, the one that makes it real. Close the shard, block the network, reopen from disk, and run both skills again: the recall still finds the ramen place, and the backpack is still recognized. Everything this assistant knows lives on the device and survives a restart, with no server in the loop.
+
+---
+
+## Beat 16 — WRAP
+
+**NARRATION**
+
+> That's the hands-on arc of the course, and you just closed it. You started with text notes in an embedded shard, added photos and cross-modal recall, combined meaning with structured filters, assembled a full day into an assistant — and now you've taught a device a new object by writing memory instead of retraining, and folded that into the same assistant. The through-line is one idea: with vector search on the device, memory is something an AI writes, reads, filters, grows, and forgets — private, persistent, and offline. In the final lesson, you'll see this exact design walking around on a robot.

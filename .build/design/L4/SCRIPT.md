@@ -1,27 +1,34 @@
-# L4 — Contextual Filtering for Memory — script
+# L4 — Your On-Device Assistant — script
 
-**Target runtime:** ~6–7 min
+**Target runtime:** ~8 min
 
----
+NOTEBOOK beats reference the section numbers as they appear in the
+executed `L4.ipynb`.
+
+This lab is built to be student-driven: they see the store, the point, and
+the recall built in the open, then ask their own question and add their own
+memory. One slide — the endpoint teaser; the notebook and its live output
+carry the rest.
 
 ## Beat map
 
 | # | Type | Content | Est. sec |
 |---|---|---|---|
-| 1 | INTRO | Why similarity alone is not enough | 30 |
-| 2 | SLIDE 1 | Filters run inside the query, not after it | 35 |
-| 3 | NOTEBOOK §1 | Memories with metadata — payload fields | 45 |
-| 4 | NOTEBOOK §2 | Store, and index the fields we'll filter on | 30 |
-| 5 | NOTEBOOK §3 | The payoff (a): time window, as a raw filter request | 65 |
-| 6 | NOTEBOOK §4 | The payoff (b): semantic query + payload filter | 55 |
-| 7 | NOTEBOOK §5 | A few weeks of history (load recent_days) | 25 |
-| 8 | NOTEBOOK §6 | Your turn: change the filter (editable) | 25 |
-| 9 | NOTEBOOK §7 | Filter fields reference table | 30 |
-| 10 | WRAP | Wrap-up + pointer to L5 | 45 |
+| 1 | INTRO | Endpoint teaser + bring a day's memories together | 35 |
+| 2 | SLIDE 1 | The memory loop, this lesson's piece highlighted | 15 |
+| 3 | NOTEBOOK §1 | A day's captures — voice notes transcribed on-device | 50 |
+| 4 | NOTEBOOK §2 | The day at a glance (timeline, for inspection) | 35 |
+| 5 | NOTEBOOK §3 | One shard, two named vectors + indexed fields | 35 |
+| 6 | NOTEBOOK §4 | Store the day: two batches, then the gallery | 45 |
+| 7 | NOTEBOOK §5 | Inspect a stored point | 30 |
+| 8 | NOTEBOOK §6 | How recall works (QueryRequest for both spaces) | 50 |
+| 9 | NOTEBOOK §7 | **The payoff:** sneakers under $50 (raw hits, then inbox) | 55 |
+| 10 | NOTEBOOK §8 | Your turn: ask a question | 45 |
+| 11 | NOTEBOOK §9 | **The payoff:** add your own memory, then recall it | 55 |
+| 12 | WRAP | Wrap-up + pointer to L5 | 35 |
 
-Total: ~385 sec (~6.5 min). One slide, down from three: the time-window and
-filter-toolbox slides are cut — a bracket on a timeline and a list of raw
-conditions both read more clearly from the code and the reference table.
+Total: ~485 sec (~8 min narration; a little more with the editable cells
+run live).
 
 ---
 
@@ -29,123 +36,129 @@ conditions both read more clearly from the code and the reference table.
 
 **NARRATION**
 
-Here is a question similarity search cannot answer by itself: where did I get
-coffee this morning? A search for "coffee" can find yesterday's espresso just
-as easily as this morning's cup. In this lesson, you'll combine similarity
-with details such as time, place, category, and price. Let's get to it!
+This lab brings together everything you've built so far. You'll store
+photos, a voice note, and text notes from one day — the kind of day a phone
+or a pair of smart glasses captures — in a single on-device shard, then ask
+it your own questions and add your own memories — all offline. By the end
+of this lesson, the assistant from the course teaser exists; L5 teaches it
+to see. Let's build something.
 
 ---
 
-## Beat 2 — SLIDE 1
+## Beat 2 — SLIDE 1: the memory loop, this lesson highlighted
 
-```
-Slide brief
-slug: filters-inside-query
-purpose: show that a filter runs inside the same query as the vector search, not as a second pass afterward
-on-slide text: gate and node labels only — "filter (indexed field)",
-  "one pass", crossed-out "filter in your code / second pass, slower".
-  No headline.
-diagram spec:
-  - Top: a single red curved arrow labeled "query" entering from above.
-  - Center: a violet hand-drawn cylinder (EdgeShard), dashed-border container labeled "shard".
-    Embedded near the top of the cylinder: a small teal rounded-rectangle "gate" node
-    with a funnel/filter icon, labeled "filter (indexed field)". The red query arrow
-    passes visibly THROUGH this teal gate before continuing down into the cylinder body,
-    which shows a few small result rows highlighted teal.
-  - Arrow label at the gate: "one pass".
-  - Below/beside the cylinder, a separate smaller panel showing the crossed-out alternative:
-    a gray dashed cylinder labeled "all results" (desaturated gray #4E5366, no fill),
-    a gray arrow to a second gray box labeled "filter in your code" with a hand-drawn ✕
-    struck through the whole panel, small label "second pass, slower".
-  - Vertical stack for 8:9: query arrow top, shard-with-gate large in the middle,
-    crossed-out alternative small at the bottom.
-  - Include the small spiral-notebook motif icon near the shard, tiny, non-dominant.
+```slide-brief
+slug: l4-00-endpoint
+purpose: the endpoint teaser — the same loop diagram as the earlier
+  teasers, with the capture stage joining and the whole loop now active.
+on-slide text: node labels only — "capture", "embed", "store", "recall",
+  small tag "this lesson: the whole loop". No headline.
+diagram spec (8:9): identical layout to slide l2-00-endpoint; all four
+  nodes at full strength for the first time, "capture" annotated with
+  three tiny icons (photo, waveform, note). Tag reads "this lesson: the
+  whole loop".
 ```
 
 **NARRATION**
 
-The query passes through the filter on its way into the shard. The alternative
-is to retrieve a large set of results and filter them later in your own code.
-That means more work and a separate step to maintain. With Edge, filtering
-and vector search happen in one query.
+The loop again — and for the first time, all of it at once. Three kinds of
+capture, two embedding paths, one store, one recall.
 
 ---
 
-## Beat 3 — NOTEBOOK §1. Memories with metadata
+## Beat 3 — NOTEBOOK §1. A day's captures
 
-Run the memories cell.
+Run the captures cell.
 
 **NARRATION**
 
-> Start with 25 text and voice memories — a cappuccino, a standup, a shopping trip, and so on. Each one carries a note or transcript, plus payload fields such as category, location, a timestamp in epoch seconds, and a price. Notice this is nothing exotic: it's the same payload pattern from L2, just with fields we're about to filter on.
+> A day starts with 17 photos, five voice notes, and 20 text notes: 42 captures in all. Each capture carries the same metadata: source type, timestamp, location, category, price when relevant, and store. The voice notes arrive as audio, so a small Whisper model transcribes them on-device — the kind of speech-to-text a phone or a pair of smart glasses runs, no server and no account. Play the clip and read what the model heard, side by side. From there the transcript embeds exactly like any other text. The helper frees the speech model as soon as transcription is done — on a small device, you load what you need and release what you don't. Three source types, two embedding paths.
 
 ---
 
-## Beat 4 — NOTEBOOK §2. Store, and index the fields we'll filter on
+## Beat 4 — NOTEBOOK §2. The day at a glance
 
-Run the store-and-index cell.
+Run `day_timeline`.
 
 **NARRATION**
 
-> Store those 25 memories the usual way, then index the four fields we'll filter on: category and location as keywords, timestamp and price as floats. One call to optimize, and the shard is ready. Passing a filter to the query is what runs it inside the search; indexing these fields is what makes that filtering efficient, so the engine uses the index to narrow candidates instead of scanning every point.
+> Before asking anything, here's the raw material laid flat: photos in the upper lane as thumbnails, in the order they were taken, and the voice and text notes below as numbered markers. This is what a day of on-device capture looks like — nothing recalled yet, just what's there. It's for orientation, not a result.
 
 ---
 
-## Beat 5 — NOTEBOOK §3. The payoff (a): time window, as a raw filter request
+## Beat 5 — NOTEBOOK §3. One shard, two named vectors
 
-Run the cell. This is the one to slow down on — the filter is written out
-in full, no helper.
+Run the shard-and-index cell.
 
 **NARRATION**
 
-> Here's the first payoff, and it's the cell to slow down on. The question is "where did I get coffee." Similarity alone surfaces coffee mentions from any time of day, including yesterday's coffee run and the reminder to buy coffee for home. Now look at the filter, written out in full from Qdrant Edge's own types: `Filter(must=[FieldCondition(key="timestamp", range=RangeFloat(gte=at(7), lte=at(12)))])`, dropped straight into the `QueryRequest` next to the vector query. Nothing is hidden in a helper here — this is the whole request the shard runs. With the window applied, this morning's cappuccino jumps to the top. Same query, same shard; the only thing added is the filter riding along inside it. The first list is similarity only, with an x on what the filter removes; below it, what comes back once the window applies.
+> One shard holds the whole day, with the two named vectors from L3: `text` for Nomic, `image` for CLIP. Then we index the four payload fields we'll filter on — category and location as keywords, timestamp and price as floats. That index is what lets the filters in a few cells' time run inside the query.
 
 ---
 
-## Beat 6 — NOTEBOOK §4. The payoff (b): semantic query + payload filter
+## Beat 6 — NOTEBOOK §4. Store the day
 
-Run the cell.
+Run the three cells: the text batch, the photo batch, then the photo
+gallery.
 
 **NARRATION**
 
-> The second payoff is the honest form of "somewhere to eat under fifteen dollars." It's not one clever fuzzy query — it's two explicit pieces. A semantic search for "somewhere to eat," narrowed by `Filter(must=[...])`: `FieldCondition(key="category", match=MatchValue(value="food"))`, and `FieldCondition(key="price", range=RangeFloat(lt=15))`. There's no hidden natural-language-to-filter translation. The first list shows what similarity alone returns; below it, what's left once the filter runs alongside it.
+> Store the day in two batches. The notes and transcripts embed with Nomic and land under the `text` vector; the photos embed with CLIP and land under `image`. Same `Point`, same upsert, whichever modality it came from — you built one by hand in L3, so here the batches can just run. Check the total: 42 memories, one shard. The last cell lays out all seventeen photos, so when a recall returns one later you've already seen it.
 
 ---
 
-## Beat 7 — NOTEBOOK §5. A few weeks of history
+## Beat 7 — NOTEBOOK §5. Inspect a stored point
 
-Run the load-history cell.
+Run the scroll cell.
 
 **NARRATION**
 
-> One thing before your turn: a real assistant carries weeks of notes, not a single day. So we load a few weeks of earlier text and voice notes into the same shard — about a hundred more, each already carrying the same category, timestamp, and price fields. Now the filters have a realistic pile of memory to sift, and your own queries in the next cell have somewhere to land.
+> Pull one point back out and look at it. Its id, the named vectors it actually carries — this one is a text note, so only `text` — and its full payload. A photo point would show `image` instead. This is the raw shape everything else in the lab searches over.
 
 ---
 
-## Beat 8 — NOTEBOOK §6. Your turn: change the filter
+## Beat 8 — NOTEBOOK §6. How recall works
+
+Run the cell that defines `recall`.
+
+**NARRATION**
+
+> Now build recall in the open. It embeds the question twice — Nomic for the `text` vector, CLIP for the `image` vector — and runs one `QueryRequest` against each, with the same filter. The two result lists stay separate, grouped as photos, voice notes, and text notes, because Nomic and CLIP scores are not on the same scale. The helper's `show_raw` prints the plain evidence — which space, the score, the id, the payload — so you always see the hits before any rendering.
+
+---
+
+## Beat 9 — NOTEBOOK §7. The payoff: sneakers under $50
+
+Run the cell. Raw hits print first, then the memory inbox renders.
+
+**NARRATION**
+
+> First payoff: "black and white sneakers under fifty dollars." The filter is spelled out in code: `Filter(must=[...])` with category equal to `shopping` and price below 50, using raw `FieldCondition`, `MatchValue`, and `RangeFloat` types. Look at `show_raw` first: the space searched, the score, the id, the payload, in plain text. Then the same hits rendered as the memory inbox. The evidence comes before the presentation, never the other way round.
+
+---
+
+## Beat 10 — NOTEBOOK §8. Your turn: ask a question
+
+Run the editable cell, then change it and run again.
+
+**NARRATION**
+
+> Your turn. The cell lists a handful of questions the day can answer — where you parked the bike, the gym locker code, when the dentist is — so you can start from one that lands. Change `my_question` to any of them or to your own, and set `my_category` to filter, or `None` to search everything. Re-run, and you get the same raw hits and the same inbox for your question.
+
+---
+
+## Beat 11 — NOTEBOOK §9. The payoff: add your own memory, then recall it
 
 Run the editable cell.
 
 **NARRATION**
 
-> Your turn. Change `my_category`, then re-run. The cell builds `Filter(must=[FieldCondition(key="category", match=MatchValue(value=my_category))])` directly from your value. Try food, travel, shopping, home, or health and watch the list change — now across weeks of memory, not just today. A safe default is set, so the cell always returns something.
+> The second payoff, and the one that makes it yours: add a memory. Change `my_note` and its metadata, embed it, build a `Point`, and upsert it into the same shard. Then recall it right away. The memory you just wrote comes back at the top — the store didn't need a rebuild or a restart to know something new. That's the whole promise of on-device memory: it grows as you use it.
 
 ---
 
-## Beat 9 — NOTEBOOK §7. The filter fields, for reference
-
-Run or scroll to the reference table.
+## Beat 12 — WRAP
 
 **NARRATION**
 
-> One reference table before we move on. Category and location are keyword fields; price and timestamp are floats. The table shows the raw `FieldCondition` form for each: `MatchValue` for an exact value and `RangeFloat` for a numeric range. Combine conditions with `Filter(must=[...])` for AND or `Filter(should=[...])` for OR. That's the whole filter vocabulary you need for the rest of the course.
-
----
-
-## Beat 10 — WRAP
-
-Run the cleanup cell (final action).
-
-**NARRATION**
-
-> So: memory retrieval is similarity plus filters. The vector finds what you mean; the payload filter enforces when, where, and how much. Two recipes cover most of what you'll need — a time window, and a semantic query with a payload filter — and because the fields are indexed, the filter rides along inside the same on-device query, in a single pass. Filters are always composed explicitly in code: the query shows exactly what it asked for. Next, in L5, we put all of this together — photos, a voice note, and text notes from one day, in a single assistant.
+> So: one `EdgeShard` held a whole day across three source types and two vector spaces. You built the store, inspected a point, and wrote the recall yourself; you asked your own question and added your own memory — all offline. Next, the final lab takes the same API to a new job — teaching a device to recognize a brand-new object by writing memory, without retraining a model — and then assembles everything you've built into one assistant.
