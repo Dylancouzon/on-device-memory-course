@@ -15,12 +15,10 @@ ROOT = BUILD.parent
 
 # Modules each lesson imports from (whole-module include: safe, self-contained).
 LESSONS = {
-    "L1": ["embeddings"],
     "L2": ["embeddings", "qdrant_helpers", "viz"],
     "L3": ["embeddings", "qdrant_helpers", "viz"],
-    "L4": ["embeddings", "qdrant_helpers", "viz"],
-    "L5": ["embeddings", "qdrant_helpers", "viz", "audio"],
-    "L6": ["embeddings", "qdrant_helpers", "viz"],
+    "L4": ["embeddings", "qdrant_helpers", "viz", "audio"],
+    "L5": ["embeddings", "qdrant_helpers", "viz"],
 }
 
 HEADER = (

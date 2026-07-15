@@ -1,8 +1,0 @@
-# Core memory layer (validated against 0.7.2)
-qdrant-edge-py>=0.7.2,<0.8
-# Local text embeddings for L2+ (Nomic via FastEmbed, no account or network after download)
-fastembed>=0.7.0
-# Visualization + data
-matplotlib>=3.7.0
-numpy>=1.24.0
-Pillow>=10.0.0

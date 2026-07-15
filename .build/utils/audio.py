@@ -1,4 +1,4 @@
-"""On-device speech-to-text for L5's voice notes.
+"""On-device speech-to-text for L4's voice notes.
 
 A voice note is audio until a speech model turns it into text. This runs a small
 Whisper model exported to ONNX through onnxruntime (already present for
@@ -19,3 +19,16 @@ def _asr_model():
 def transcribe(audio_path):
     """Transcribe one audio file to text with a local Whisper model."""
     return _asr_model().recognize(audio_path).strip()
+
+
+def transcribe_notes(memories, audio_dir):
+    """Transcribe every voice note in place, then free the speech model.
+
+    Releasing Whisper before the embedding models load keeps the notebook
+    inside the 4 GB sandbox budget.
+    """
+    voice = [m for m in memories if m["source_type"] == "voice"]
+    for m in voice:
+        m["transcript"] = transcribe(f"{audio_dir}/{m['audio_file']}")
+    _asr_model.cache_clear()
+    return voice

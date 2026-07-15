@@ -408,6 +408,55 @@ def memory_inbox(sections, image_dir, min_score=None):
         'border-radius:12px;padding:12px 16px">' + header + "".join(blocks) + "</div>")
 
 
+def show_raw(hits):
+    """Print the plain evidence for a grouped recall: space, score, id, text."""
+    for space, rows in hits.items():
+        for h in rows:
+            p = h.payload
+            label = (p.get("store") or p.get("note")
+                     or p.get("transcript") or p.get("file", ""))[:34]
+            print(f"{space:11} {h.score:.3f} id={h.id}  {label}")
+
+
+def score_gap_chart(taught, foreign, threshold, save=None):
+    """Horizontal score bars for recognition evidence: taught held-out views
+    vs never-taught images, with the threshold line drawn inside the gap.
+
+    `taught` and `foreign` are lists of (label, score); scores are measured
+    live in the notebook.
+    """
+    rows = [(lbl, s, True) for lbl, s in taught] + \
+           [(lbl, s, False) for lbl, s in foreign]
+    fig, ax = plt.subplots(figsize=(8.5, 0.55 * len(rows) + 1.2))
+    ys = range(len(rows))
+    ax.barh(list(ys),
+            [s for _, s, _ in rows],
+            color=["#009688" if t else "#8F98B2" for _, _, t in rows],
+            height=0.6)
+    for y, (_, s, _) in zip(ys, rows):
+        ax.text(s + 0.008, y, f"{s:.3f}", va="center", fontsize=9)
+    ax.set_yticks(list(ys))
+    ax.set_yticklabels([lbl for lbl, _, _ in rows])
+    ax.invert_yaxis()
+    ax.axvline(threshold, color=QDRANT_RED, lw=2, ls="--")
+    ax.text(threshold, -0.7, f"threshold {threshold}", color=QDRANT_RED,
+            ha="center", fontsize=10, fontweight="bold")
+    ax.set_xlim(0, 1.0)
+    ax.set_xlabel("similarity to nearest stored view")
+    ax.spines[["top", "right"]].set_visible(False)
+    handles = [Patch(color="#009688", label="taught (held-out view)"),
+               Patch(color="#8F98B2", label="never taught")]
+    ax.legend(handles=handles, loc="lower right", fontsize=9)
+    label, color = BADGES["measured"]
+    ax.text(1.0, 1.02, label, transform=ax.transAxes, ha="right", va="bottom",
+            fontsize=8, color="white",
+            bbox=dict(boxstyle="round,pad=0.3", fc=color, ec="none"))
+    fig.tight_layout()
+    if save:
+        fig.savefig(save, dpi=120, bbox_inches="tight")
+    plt.show()
+
+
 def show_images(paths, captions=None, height=2.2, per_row=6):
     """One row of images with optional captions under each, wrapping to a new
     row past `per_row`. White background, axes off. For showing inputs a student
@@ -431,26 +480,3 @@ def show_images(paths, captions=None, height=2.2, per_row=6):
                 ax.set_title(str(captions[i]), fontsize=8, fontweight="bold")
     fig.tight_layout()
     plt.show()
-
-# --- audio ----------------------------------------
-"""On-device speech-to-text for L5's voice notes.
-
-A voice note is audio until a speech model turns it into text. This runs a small
-Whisper model exported to ONNX through onnxruntime (already present for
-FastEmbed), so transcription is local and offline after the first download. The
-model loads lazily and once.
-"""
-from functools import lru_cache
-
-WHISPER_MODEL = "whisper-base"
-
-
-@lru_cache(maxsize=1)
-def _asr_model():
-    import onnx_asr
-    return onnx_asr.load_model(WHISPER_MODEL, providers=["CPUExecutionProvider"])
-
-
-def transcribe(audio_path):
-    """Transcribe one audio file to text with a local Whisper model."""
-    return _asr_model().recognize(audio_path).strip()
