@@ -87,3 +87,19 @@ def load_image(url_or_path):
 def embed_query_clip(text):
     """Embed a text query into CLIP's space, to search the image vector."""
     return next(_clip_text().query_embed([text])).tolist()
+
+
+EXAMPLE_OBJECT = "../data/objects/gaillardia_"
+
+
+def object_photos(teach_urls, test_url):
+    """Resolve object photos to local files, ready to embed and show.
+
+    Paste image URLs to teach your own object: two or more angles in
+    `teach_urls`, one more in `test_url`. Leave them empty to fall back to
+    the bundled example. URLs are fetched once; local paths pass through.
+    """
+    if not (teach_urls and test_url):
+        teach_urls = [EXAMPLE_OBJECT + "1.jpg", EXAMPLE_OBJECT + "2.jpg"]
+        test_url = EXAMPLE_OBJECT + "3.jpg"
+    return [load_image(u) for u in teach_urls], load_image(test_url)

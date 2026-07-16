@@ -28,7 +28,7 @@ video lessons with no notebook.
 | 2 | Store and Recall | One question, asked three times: recall by meaning, then forget on purpose |
 | 3 | Finding the Right Memory | Find a photo by describing it; narrow recall with filters inside one query |
 | 4 | Your On-Device Assistant | A day of photos, voice, and text notes; on-device transcription; ask and add your own memories |
-| 5 | Teaching It to See | Teach an object from a few photos, recognize a new angle, then assemble the full assistant, offline |
+| 5 | Teaching It to See | Teach it an object from your own photos, assemble the full assistant offline, and send memory to the cloud only by choice |
 | 6 | The Robot | Video: the same design walking around, every stage mapped back to the lesson that built it |
 
 ## Setup
@@ -51,8 +51,9 @@ L2/ … L5/            one folder per notebook lesson
   requirements.txt   the lesson's dependencies
 data/memories.json   one day of text, voice, and photo memories (L2–L5)
 data/recent_days.json  a few weeks of earlier notes (L5)
+data/bank/           everyday photos for L3's describe-a-photo bank
 data/audio/          the voice-note recordings L4 transcribes on-device
-data/images/         scene photos (L3, L4, L5)
+data/images/         scene photos (L4, L5)
 data/objects/        multi-view object photos (L5)
 requirements.txt     every dependency the course uses
 ```
@@ -72,4 +73,4 @@ Python developers who know the basics of embeddings and vector search. It picks 
 
 ## Image credits
 
-Sample photos are used under their licenses (CC0 or CC BY-SA), with full attribution in `data/images/CREDITS.json` and `data/objects/CREDITS.json`.
+Sample photos are used under their licenses (CC0 or CC BY-SA), with full attribution in `data/bank/CREDITS.json`, `data/images/CREDITS.json`, and `data/objects/CREDITS.json`.

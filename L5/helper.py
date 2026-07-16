@@ -95,6 +95,22 @@ def embed_query_clip(text):
     """Embed a text query into CLIP's space, to search the image vector."""
     return next(_clip_text().query_embed([text])).tolist()
 
+
+EXAMPLE_OBJECT = "../data/objects/gaillardia_"
+
+
+def object_photos(teach_urls, test_url):
+    """Resolve object photos to local files, ready to embed and show.
+
+    Paste image URLs to teach your own object: two or more angles in
+    `teach_urls`, one more in `test_url`. Leave them empty to fall back to
+    the bundled example. URLs are fetched once; local paths pass through.
+    """
+    if not (teach_urls and test_url):
+        teach_urls = [EXAMPLE_OBJECT + "1.jpg", EXAMPLE_OBJECT + "2.jpg"]
+        test_url = EXAMPLE_OBJECT + "3.jpg"
+    return [load_image(u) for u in teach_urls], load_image(test_url)
+
 # --- qdrant_helpers ----------------------------------------
 """Non-Qdrant plumbing for the lessons: an offline guard, benchmark filler, and
 cleanup.
@@ -466,8 +482,8 @@ def score_gap_chart(taught, foreign, threshold, save=None):
     ax.set_yticklabels([lbl for lbl, _, _ in rows])
     ax.invert_yaxis()
     ax.axvline(threshold, color=QDRANT_RED, lw=2, ls="--")
-    ax.text(threshold, -0.7, f"threshold {threshold}", color=QDRANT_RED,
-            ha="center", fontsize=10, fontweight="bold")
+    ax.text(threshold - 0.012, -0.7, f"threshold {threshold}",
+            color=QDRANT_RED, ha="right", fontsize=10, fontweight="bold")
     ax.set_xlim(0, 1.0)
     ax.set_xlabel("similarity to nearest stored view")
     ax.spines[["top", "right"]].set_visible(False)
@@ -476,6 +492,35 @@ def score_gap_chart(taught, foreign, threshold, save=None):
     ax.legend(handles=handles, loc="lower right", fontsize=9)
     label, color = BADGES["measured"]
     ax.text(1.0, 1.02, label, transform=ax.transAxes, ha="right", va="bottom",
+            fontsize=8, color="white",
+            bbox=dict(boxstyle="round,pad=0.3", fc=color, ec="none"))
+    fig.tight_layout()
+    if save:
+        fig.savefig(save, dpi=120, bbox_inches="tight")
+    plt.show()
+
+
+def latency_hist(timings_ms, points_count, save=None):
+    """Histogram of live recall timings with the median marked.
+
+    `timings_ms` are per-query latencies measured in the notebook; the median
+    is the course's one honest local latency number, so it is drawn on the
+    chart rather than printed beside it.
+    """
+    timings = sorted(timings_ms)
+    median = timings[len(timings) // 2]
+    fig, ax = plt.subplots(figsize=(8.5, 3.2))
+    ax.hist(timings, bins=30, color="#8F98B2", edgecolor="white")
+    ax.axvline(median, color=QDRANT_RED, lw=2, ls="--")
+    ax.text(median, ax.get_ylim()[1] * 0.92, f"  median {median:.2f} ms",
+            color=QDRANT_RED, fontsize=11, fontweight="bold", va="top")
+    ax.set_title(f"Vector lookup at {points_count:,} memories "
+                 f"({len(timings)} queries, CPU only)", loc="left")
+    ax.set_xlabel("milliseconds per lookup (query embedding not included)")
+    ax.set_ylabel("queries")
+    ax.spines[["top", "right"]].set_visible(False)
+    label, color = BADGES["measured"]
+    ax.text(1.0, 1.04, label, transform=ax.transAxes, ha="right", va="bottom",
             fontsize=8, color="white",
             bbox=dict(boxstyle="round,pad=0.3", fc=color, ec="none"))
     fig.tight_layout()
