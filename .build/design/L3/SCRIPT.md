@@ -1,14 +1,15 @@
 # L3 — Finding the Right Memory — script
 
-**Target runtime:** ~8 min
+**Target runtime:** ~7 min
 
 NOTEBOOK beats reference the section numbers as they appear in the
 executed `L3.ipynb`.
 
 Two ways to find the right memory in one lesson: describe what you mean
-(cross-modal recall over photos), and constrain what comes back (a payload
-filter riding inside the query). Slides: the endpoint teaser, two encoders
-one shard, cross-modal recall, and filters inside the query.
+(cross-modal recall over a photo bank), and constrain what comes back (a
+payload filter riding inside the query). Filters are taught once, in §5; L6
+brings the same idea back on the robot. Slides: the endpoint teaser,
+two encoders one shard, cross-modal recall, and filters inside the query.
 
 ## Beat map
 
@@ -19,17 +20,14 @@ one shard, cross-modal recall, and filters inside the query.
 | 3 | SLIDE 2 | Two encoders, one shard | 35 |
 | 4 | NOTEBOOK §1 | A single shard, two named vectors (visible EdgeConfig) | 35 |
 | 5 | NOTEBOOK §2 | Store text notes (Nomic) | 20 |
-| 6 | NOTEBOOK §3 | Store photos (CLIP): first point by hand, then batch | 35 |
-| 7 | NOTEBOOK §4 | **The payoff:** find a photo by describing it | 50 |
+| 6 | NOTEBOOK §3 | Store a photo library (CLIP), one batch | 35 |
+| 7 | NOTEBOOK §4 | Find a photo by describing it (type anything, bank) | 55 |
 | 8 | SLIDE 3 | Cross-modal recall | 30 |
-| 9 | NOTEBOOK §5 | The photos on hand (gallery, seen before describing) | 20 |
-| 10 | NOTEBOOK §6 | Your turn: describe a photo (editable) | 25 |
-| 11 | SLIDE 4 | Filters run inside the query, not after it | 30 |
-| 12 | NOTEBOOK §7 | **The payoff:** recall with a filter (index + food under $15) | 60 |
-| 13 | NOTEBOOK §8 | Your turn: filter weeks of history (editable) | 40 |
-| 14 | WRAP | Two ways to find the right memory; reference table pointer | 35 |
+| 9 | SLIDE 4 | Filters run inside the query, not after it | 30 |
+| 10 | NOTEBOOK §5 | Recall with a filter (index + food under $15) | 60 |
+| 11 | WRAP | Two ways to find the right memory; L4 hands you the recall | 35 |
 
-Total: ~465 sec (~7.8 min).
+Total: ~380 sec (~6.3 min).
 
 ---
 
@@ -124,36 +122,43 @@ so nothing depends on what you ran before.
 
 ---
 
-## Beat 6 — NOTEBOOK §3: store photos
+## Beat 6 — NOTEBOOK §3: store a photo library
 
-Run the two photo cells: the first builds one point by hand, the second
-batches the rest.
+Run the photo cell.
 
 **NARRATION:**
 
-Now the new part. First we build one photo point by hand — an id, the CLIP
-vector under the `image` name, and a payload — so you can see a point is the
-same shape whichever vector it uses. CLIP's vision encoder turns the photo
-into a vector in a space it shares with text, which is what makes
-cross-modal recall possible. Notice this point carries only an `image`
-vector, no `text`. Then the rest of the photos go in one batch. Check the
-total: text notes plus photos, all in one shard.
+Now the new part: photos. Same store pattern as the notes, but a different
+encoder — we load CLIP's vision model and call `embed` ourselves, exactly as
+L2 did with Nomic. Each photo becomes a 512-dimensional vector under the
+`image` name, not `text`. CLIP places words and pictures in one shared
+space, which is what makes the next cell's cross-modal recall possible. Each
+photo point carries only its `image` vector; the two named vectors live side
+by side in the shard, each searched on its own. This time it's a bank of
+everyday photos, not just a handful, so you can describe almost anything and
+see the closest one — all embedded in one batch. Check the total: text notes
+plus the photo bank, all in one shard.
 
 ---
 
-## Beat 7 — NOTEBOOK §4: The payoff — find a photo by describing it
+## Beat 7 — NOTEBOOK §4: Find a photo by describing it
 
-Run the cross-modal query cell. Point at `show_photo_results` — the ranked
-photos with scores. Name this as the payoff.
+Run the cross-modal query cell, then change `my_description` and run it
+again.
 
 **NARRATION:**
 
-Here's the first payoff. No tags, no filenames. We take a plain text
-description — "black and white sneakers" — embed it with CLIP's
-text encoder, not Nomic, and search the `image` vector. Look at the
-results: the sneakers photo comes back on top, ranked purely by how well
-the words match the picture. That's retrieval by description, with zero
-metadata written by hand.
+Now find a photo by describing it — and this cell is yours to drive. No
+tags, no filenames. It starts on "a red bicycle": we embed that text with
+CLIP's text encoder, not Nomic, and search the `image` vector. The bicycle
+photo comes back on top, ranked purely by how well the words match the
+picture — retrieval by description, with zero metadata written by hand. Now
+type your own description and re-run. The photo bank is broad, so try a
+slice of pizza, a puppy, a sunflower, a sailboat. And notice the score: if
+what you describe isn't really in the bank, the closest photo still comes
+back, just with a lower number — that number is the honest signal of how
+good the match is. This bank is an example set, not the whole world, so
+you'll see near-misses; that's cross-modal similarity showing its work.
 
 ---
 
@@ -164,17 +169,17 @@ slug: cross-modal-recall
 purpose: show a text query embedded by CLIP's text tower landing directly
   in image vector space, retrieving a photo.
 on-slide text: labels in the diagram only — the query text, "CLIP text
-  tower", the highlighted "image" row, "sneakers.jpg". No headline.
+  tower", the highlighted "image" row, "bicycle.jpg". No headline.
 diagram spec (8:9, stack top-to-bottom):
   - Top: light-blue (#03A9F4) node, speech-bubble icon, label
-    "\"black and white sneakers\"".
+    "\"a red bicycle\"".
   - Curved arrow (Qdrant Red #DC244C) down into an orange (#FF9800) node
     labeled "CLIP text tower".
   - Same red arrow continues down into a violet (#6047FF) cylinder, landing
     specifically in a highlighted "image" row (draw this row with a red
     outline accent to show it's the one being hit).
   - Arrow continues out of the cylinder to a teal (#009688) node, photo
-    icon, label "sneakers.jpg" with a small checkmark.
+    icon, label "bicycle.jpg" with a small checkmark.
   - Label the long red arrow path once, small: "text query → image space".
 ```
 
@@ -187,33 +192,7 @@ space, two doors in.
 
 ---
 
-## Beat 9 — NOTEBOOK §5: the photos on hand
-
-Run the gallery cell.
-
-**NARRATION:**
-
-Before you describe a photo, here are the ones now in the store — all
-seventeen, laid out so you're choosing from photos you've actually seen.
-Pick one that catches your eye; you'll describe it in the next cell.
-
----
-
-## Beat 10 — NOTEBOOK §6: your turn — describe a photo
-
-Run the editable cell.
-
-**NARRATION:**
-
-Now try it yourself. The default is `my_description = "a bowl of noodles"`.
-Change it to anything in the photo set — a bicycle, a dog, or a train — and
-re-run. The same CLIP text encoder embeds your words and searches the
-`image` vector. There's a safe default, so the cell always returns
-something.
-
----
-
-## Beat 11 — SLIDE 4: filters run inside the query
+## Beat 9 — SLIDE 4: filters run inside the query
 
 ```slide-brief
 slug: filters-inside-query
@@ -251,52 +230,35 @@ separate step to maintain.
 
 ---
 
-## Beat 12 — NOTEBOOK §7: The payoff — recall with a filter
+## Beat 10 — NOTEBOOK §5: Recall with a filter
 
 Run the index cell, the cell that defines `search`, then the filter cell.
 The filter is written out in full — no helper.
 
 **NARRATION:**
 
-First, index the payload fields we'll filter on: category and location as
-keywords, timestamp and price as floats. Indexing is what makes the filter
-efficient — the engine narrows candidates through the index instead of
-scanning every point. Then the payoff: the honest form of "somewhere to
-eat under fifteen dollars" is two explicit pieces. A semantic search for
-"somewhere to eat", narrowed by a `Filter` with two conditions: category
-equals food, price below fifteen — raw `FieldCondition`, `MatchValue`, and
-`RangeFloat` types, dropped straight into the `QueryRequest` next to the
-vector query. There's no hidden natural-language-to-filter translation.
-The first list shows what similarity alone returns; below it, what's left
-once the filter runs alongside it.
+First, index the two fields we'll filter on: category as a keyword, price
+as a float. Indexing is what makes the filter efficient — the engine
+narrows candidates through the index instead of scanning every point. Then
+the recall itself: the honest form of "somewhere to eat under fifteen
+dollars" is two explicit pieces. A semantic search for "somewhere to eat",
+narrowed by a `Filter` with two conditions: category equals food, price
+below fifteen — raw `FieldCondition`, `MatchValue`, and `RangeFloat` types,
+dropped straight into the `QueryRequest` next to the vector query. There's
+no hidden natural-language-to-filter translation. The first list shows what
+similarity alone returns; below it, what's left once the filter runs
+alongside it.
 
 ---
 
-## Beat 13 — NOTEBOOK §8: your turn — filter weeks of history
-
-Run the load-history cell, then the editable cell.
-
-**NARRATION:**
-
-A real assistant carries weeks of notes, not a single day. So we load a
-few weeks of earlier notes into the same shard — about a hundred more,
-each carrying a category and a timestamp, with price and location where
-they apply. Now
-your turn. Change `my_category`, re-run, and the cell builds the filter
-directly from your value. Try food, travel, shopping, home, or health, and
-watch the list change — now across weeks of memory, not just today. A safe
-default is set, so the cell always returns something.
-
----
-
-## Beat 14 — WRAP
+## Beat 11 — WRAP
 
 **NARRATION:**
 
 Two ways to find the right memory, one store. Describing works because
 CLIP puts words and pictures in one shared space; constraining works
-because the payload filter rides inside the same on-device query. The
-reference table at the bottom of the notebook has the whole filter
-vocabulary you'll need — keyword matches and numeric ranges, combined with
-`must` for AND and `should` for OR. Next, in L4, we put the whole day
-together — photos, voice notes, and text notes, in a single assistant.
+because the payload filter rides inside the same on-device query. And
+that's the whole filter vocabulary you need: a keyword match, a numeric
+range, combined with `must`. Next, in L4, we put the whole day together —
+photos, voice notes, and text notes in a single assistant — and the
+recall becomes yours to drive.

@@ -27,7 +27,7 @@ Total: ~300 sec (~5 min).
 
 ## Beat 1 — INTRO
 
-Footage (shotlist #1): the L5 finale, payoff first.
+Footage (shotlist #1): the L5 finale, endpoint first.
 
 **NARRATION:**
 
@@ -99,7 +99,11 @@ to a memory store on the same device; when you ask a question, it recalls
 the closest memories and hands them to the model as context. The memory
 grows; the weights never change. Memory is not the model's weights — it's
 the notebook kept beside the model. Everything we build in this course is
-that notebook, and the application code that writes and reads it.
+that notebook, and the application code that writes and reads it. One
+thing this picture leaves out on purpose: a language model generating
+answers. Nothing in this course generates text — memory and retrieval do
+the work, and memory alone gets you surprisingly far. When you add a
+language model later, this store is the memory it reads from.
 
 ---
 
@@ -109,7 +113,10 @@ No slide.
 
 **NARRATION:**
 
-So what does that notebook have to do? Five verbs. It writes — a photo, a
+So what does that notebook have to do? The naive answer is to hand the
+model your whole day in the prompt. But a prompt has a ceiling, and even
+under it you get the right fact at the wrong moment. What the device needs
+instead is retrieval, and retrieval takes five verbs. It writes — a photo, a
 voice note, a text note becomes an entry. It reads — you ask in plain
 words, and the closest memories come back by meaning, not by keyword. It
 filters — "food, under fifteen dollars" is structure, not similarity. It

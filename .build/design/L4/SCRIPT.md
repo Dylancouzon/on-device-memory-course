@@ -18,16 +18,15 @@ carry the rest.
 | 2 | SLIDE 1 | The memory loop, this lesson's piece highlighted | 15 |
 | 3 | NOTEBOOK §1 | A day's captures — voice notes transcribed on-device | 50 |
 | 4 | NOTEBOOK §2 | The day at a glance (timeline, for inspection) | 35 |
-| 5 | NOTEBOOK §3 | One shard, two named vectors + indexed fields | 35 |
-| 6 | NOTEBOOK §4 | Store the day: two batches, then the gallery | 45 |
+| 5 | NOTEBOOK §3 | Set up the day's shard (two named vectors) | 30 |
+| 6 | NOTEBOOK §4 | Store the day: two batches | 45 |
 | 7 | NOTEBOOK §5 | Inspect a stored point | 30 |
 | 8 | NOTEBOOK §6 | How recall works (QueryRequest for both spaces) | 50 |
-| 9 | NOTEBOOK §7 | **The payoff:** sneakers under $50 (raw hits, then inbox) | 55 |
-| 10 | NOTEBOOK §8 | Your turn: ask a question | 45 |
-| 11 | NOTEBOOK §9 | **The payoff:** add your own memory, then recall it | 55 |
-| 12 | WRAP | Wrap-up + pointer to L5 | 35 |
+| 9 | NOTEBOOK §7 | Your turn: recall your day (editable) | 60 |
+| 10 | NOTEBOOK §8 | Add your own memory, then recall it | 55 |
+| 11 | WRAP | Wrap-up + pointer to L5 | 35 |
 
-Total: ~485 sec (~8 min narration; a little more with the editable cells
+Total: ~420 sec (~7 min narration; a little more with the editable cells
 run live).
 
 ---
@@ -72,7 +71,7 @@ Run the captures cell.
 
 **NARRATION**
 
-A day starts with 17 photos, five voice notes, and 20 text notes: 42 captures in all. Each capture carries the same metadata: source type, timestamp, location, category, price when relevant, and store. The voice notes arrive as audio, so a small Whisper model transcribes them on-device — the kind of speech-to-text a phone or a pair of smart glasses runs, no server and no account. Play the clip and read what the model heard, side by side. From there the transcript embeds exactly like any other text. The helper frees the speech model as soon as transcription is done — on a small device, you load what you need and release what you don't. Three source types, two embedding paths.
+A day starts with 17 photos, five voice notes, and 20 text notes: 42 captures in all. Each capture carries the same metadata: source type, timestamp, location, category, price when relevant, and store. The voice notes arrive as audio, so first we load a small Whisper model and call `recognize` ourselves on one clip — speech-to-text on-device, the kind a phone or a pair of smart glasses runs, no server and no account. Play the clip and read what the model heard, side by side. Then the helper runs that same call over every voice note and frees the model as soon as it's done — on a small device, you load what you need and release what you don't. From there each transcript embeds exactly like any other text. Three source types, two embedding paths.
 
 ---
 
@@ -86,24 +85,23 @@ Before asking anything, here's the raw material laid flat: photos in the upper l
 
 ---
 
-## Beat 5 — NOTEBOOK §3. One shard, two named vectors
+## Beat 5 — NOTEBOOK §3. Set up the day's shard
 
-Run the shard-and-index cell.
+Run the shard cell.
 
 **NARRATION**
 
-One shard holds the whole day, with the two named vectors from L3: `text` for Nomic, `image` for CLIP. Then we index the four payload fields we'll filter on — category and location as keywords, timestamp and price as floats. That index is what lets the filters in a few cells' time run inside the query.
+One shard holds the whole day, with the two named vectors from L3: `text` for Nomic, `image` for CLIP. One `EdgeShard.create`, and the store is ready to hold the day across both spaces.
 
 ---
 
 ## Beat 6 — NOTEBOOK §4. Store the day
 
-Run the three cells: the text batch, the photo batch, then the photo
-gallery.
+Run the two cells: the text batch, then the photo batch.
 
 **NARRATION**
 
-Store the day in two batches. The notes and transcripts embed with Nomic and land under the `text` vector; the photos embed with CLIP and land under `image`. Same `Point`, same upsert, whichever modality it came from — you built one by hand in L3, so here the batches can just run. Check the total: 42 memories, one shard. The last cell lays out all seventeen photos, so when a recall returns one later you've already seen it.
+Store the day in two batches. The notes and transcripts embed with Nomic and land under the `text` vector; the photos embed with CLIP and land under `image`. Same `Point`, same upsert, whichever modality it came from — you wrote this upsert by hand in the earlier labs, so here the batches can just run. Check the total: 42 memories, one shard. You already saw every photo on the timeline, so when a recall returns one later it's a face you know.
 
 ---
 
@@ -123,41 +121,31 @@ Run the cell that defines `recall`.
 
 **NARRATION**
 
-Now build recall in the open. It embeds the question twice — Nomic for the `text` vector, CLIP for the `image` vector — and runs one `QueryRequest` against each, with the same filter. The two result lists stay separate, grouped as photos, voice notes, and text notes, because Nomic and CLIP scores are not on the same scale. The helper's `show_raw` prints the plain evidence — which space, the score, the id, the payload — so you always see the hits before any rendering.
+Now build recall in the open. It embeds the question twice — Nomic for the `text` vector, CLIP for the `image` vector — and runs one `QueryRequest` against each. The two result lists stay separate, grouped as photos, voice notes, and text notes, because Nomic and CLIP scores are not on the same scale. The helper's `show_raw` prints the plain evidence — which space, the score, the id, the payload — so you always see the hits before any rendering.
 
 ---
 
-## Beat 9 — NOTEBOOK §7. The payoff: sneakers under $50
+## Beat 9 — NOTEBOOK §7. Your turn: recall your day
 
-Run the cell. Raw hits print first, then the memory inbox renders.
+Run the cell to see it work, then change it and run again.
 
 **NARRATION**
 
-First payoff: "black and white sneakers under fifty dollars." The filter is spelled out in code: `Filter(must=[...])` with category equal to `shopping` and price below 50, using raw `FieldCondition`, `MatchValue`, and `RangeFloat` types. Look at `show_raw` first: the space searched, the score, the id, the payload, in plain text. Then the same hits rendered as the memory inbox. The evidence comes before the presentation, never the other way round.
+Recall against the whole day — and this cell is yours to drive. It starts on "the ramen place downtown" so you see it work: recall queries both the `text` and `image` vectors, and the day answers in three voices at once — the voice memo you left about the ramen, the note you typed, and the photo of the place. Look at `show_raw` first: the space searched, the score, the id, the payload, in plain text. Then the same hits as the memory inbox — the evidence comes before the presentation, never the other way round. Now change `my_question` to one of the prompts listed — where you parked the bike, the gym locker code, when the dentist is — or your own, and re-run.
 
 ---
 
-## Beat 10 — NOTEBOOK §8. Your turn: ask a question
-
-Run the editable cell, then change it and run again.
-
-**NARRATION**
-
-Your turn. The cell lists a handful of questions the day can answer — where you parked the bike, the gym locker code, when the dentist is — so you can start from one that lands. Change `my_question` to any of them or to your own, and set `my_category` to filter, or `None` to search everything. Re-run, and you get the same raw hits and the same inbox for your question.
-
----
-
-## Beat 11 — NOTEBOOK §9. The payoff: add your own memory, then recall it
+## Beat 10 — NOTEBOOK §8. Add your own memory, then recall it
 
 Run the editable cell.
 
 **NARRATION**
 
-The second payoff, and the one that makes it yours: add a memory. Change `my_note` and its metadata, embed it, build a `Point`, and upsert it into the same shard. Then recall it right away. The memory you just wrote comes back at the top — the store didn't need a rebuild or a restart to know something new. That's the whole promise of on-device memory: it grows as you use it.
+The one that makes it yours: add a memory. Change `my_note` and its metadata, embed it, build a `Point`, and upsert it into the same shard. Then recall it right away. The memory you just wrote comes back at the top — the store didn't need a rebuild or a restart to know something new. That's the whole promise of on-device memory: it grows as you use it.
 
 ---
 
-## Beat 12 — WRAP
+## Beat 11 — WRAP
 
 **NARRATION**
 

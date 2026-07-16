@@ -12,10 +12,12 @@ angle seconds later. Then you teach one yourself — and the finale is the
 course capstone: everything you built, assembled into one assistant that
 answers questions and recognizes what you taught it, offline.
 
-Everything runs on the bundled object photos in `data/objects/`, so the
-whole lab works offline in the course container. On the video, the
-instructor captures object views live on camera; the student path uses the
-same bundled photos.
+The taught lab runs on the bundled object photos in `data/objects/`, so
+the core lesson works offline in the course container. The one exception is
+§7, your turn: there you bring two photos of an object of your own, uploaded
+or pasted as image URLs, with the bundled photos as the default. On the
+video, the instructor captures object views live on camera; the student
+path uses the bundled photos, then their own in §7.
 
 ## Beat map
 
@@ -25,20 +27,19 @@ same bundled photos.
 | 2 | SLIDE 1 | The memory loop, this lesson's piece highlighted | 15 |
 | 3 | SLIDE 2 | Teach → store → recognize | 35 |
 | 4 | NOTEBOOK §1 | An object-memory shard (image vector + threshold) | 35 |
-| 5 | NOTEBOOK §2 | The objects on hand (gallery, seen up front) | 25 |
-| 6 | NOTEBOOK §3 | Teach what it already knows (two views — and just one) | 50 |
-| 7 | NOTEBOOK §4 | Show it something new — not recognized yet | 50 |
-| 8 | NOTEBOOK §5 | Teach it the new object | 35 |
-| 9 | NOTEBOOK §6 | **The payoff:** recognize it from a new angle | 55 |
-| 10 | NOTEBOOK §7 | Inspect the threshold gap (score bars) | 50 |
-| 11 | NOTEBOOK §8 | Your turn: teach an object yourself | 45 |
-| 12 | NOTEBOOK §9 | Assemble the assistant: a day + weeks + the taught object | 45 |
-| 13 | NOTEBOOK §10 | **The payoff:** ask it about your day (cross-modal recall) | 50 |
-| 14 | NOTEBOOK §11 | **The payoff:** show it what you taught (recognition + note) | 40 |
-| 15 | NOTEBOOK §12 | **The payoff:** it all persists, offline | 40 |
-| 16 | WRAP | Wrap the course's hands-on arc | 45 |
+| 5 | NOTEBOOK §2 | Teach what it already knows (two views — and just one) | 50 |
+| 6 | NOTEBOOK §3 | Show it something new — not recognized yet | 50 |
+| 7 | NOTEBOOK §4 | Teach it the new object | 35 |
+| 8 | NOTEBOOK §5 | Recognize it from a new angle | 55 |
+| 9 | NOTEBOOK §6 | Inspect the threshold gap (score bars) | 50 |
+| 10 | NOTEBOOK §7 | Your turn: teach your own object | 45 |
+| 11 | NOTEBOOK §8 | Assemble the assistant: a day + weeks + the taught object | 45 |
+| 12 | NOTEBOOK §9 | Ask it about your day (cross-modal recall) | 50 |
+| 13 | NOTEBOOK §10 | Show it what you taught (recognition + note) | 40 |
+| 14 | NOTEBOOK §11 | It all persists, offline | 40 |
+| 15 | WRAP | Wrap the course's hands-on arc | 45 |
 
-Total: ~655 sec (~11 min). The longest lesson — a deliberate call for
+Total: ~630 sec (~10.5 min). The longest lesson — a deliberate call for
 the students' capstone.
 
 ---
@@ -120,27 +121,17 @@ One shard, one named vector this time — `image`, the CLIP space from L3. Each 
 
 ---
 
-## Beat 5 — NOTEBOOK §2. The objects on hand
-
-Run the gallery cell.
-
-**NARRATION**
-
-Before teaching anything, here are the objects this lab uses, laid out so you've seen every one before it's stored or queried. A couple of plants, a backpack, and a few everyday things — a rubber duck, a ceramic vase, a hard hat — each photographed from slightly different angles. Nothing is recognized yet; this is just what's on hand.
-
----
-
-## Beat 6 — NOTEBOOK §3. Teach what it already knows
+## Beat 5 — NOTEBOOK §2. Teach what it already knows
 
 Run the `teach` cell.
 
 **NARRATION**
 
-Teaching is the mechanism worth slowing down on, and it's short: `teach` embeds each view with CLIP and upserts one point per view, with the object's id, label, and file in the payload. That's the whole learning step — an upsert, not a training run. We seed the shard with two objects: the lithops gets two views, and the backpack gets just one — plus a note about where it was bought; hold onto that note, it comes back at the finale. One view is already enough to recognize against; more views just make the memory more robust. You'll see both hold up later.
+Teaching is the mechanism worth slowing down on, and it's short: `teach` embeds each view with CLIP and upserts one point per view, with the object's id, label, and file in the payload. That's the whole learning step — an upsert, not a training run. We seed the shard with two objects: the lithops gets two views, and the backpack gets just one. One view is already enough to recognize against; more views just make the memory more robust. You'll see both hold up later.
 
 ---
 
-## Beat 7 — NOTEBOOK §4. Show it something new — not recognized yet
+## Beat 6 — NOTEBOOK §3. Show it something new — not recognized yet
 
 Run the recognize cell on the new object.
 
@@ -150,7 +141,7 @@ Now `recognize`: embed a query image, search the `image` vector for the nearest 
 
 ---
 
-## Beat 8 — NOTEBOOK §5. Teach it the new object
+## Beat 7 — NOTEBOOK §4. Teach it the new object
 
 Run the teach-the-flower cell.
 
@@ -160,17 +151,17 @@ So we teach it. Give the new object a label — you can change it — and store 
 
 ---
 
-## Beat 9 — NOTEBOOK §6. The payoff: recognize it from a new angle
+## Beat 8 — NOTEBOOK §5. Recognize it from a new angle
 
 Run the recognize cell again on the same held-out view.
 
 **NARRATION**
 
-The first payoff, and the heart of the lesson: run the exact same query image that came back UNKNOWN a moment ago, side by side with the view it now matches. This query was never stored — it's a different angle from the two we taught. Now the nearest match is well above the threshold, and the device recognizes the object by its label. Same image, same threshold; the only thing that changed is that the device now has a memory to match against.
+The heart of the lesson: run the exact same query image that came back UNKNOWN a moment ago, side by side with the view it now matches. This query was never stored — it's a different angle from the two we taught. Now the nearest match is well above the threshold, and the device recognizes the object by its label. Same image, same threshold; the only thing that changed is that the device now has a memory to match against.
 
 ---
 
-## Beat 10 — NOTEBOOK §7. Inspect the threshold gap
+## Beat 9 — NOTEBOOK §6. Inspect the threshold gap
 
 Run the evidence cell.
 
@@ -180,27 +171,27 @@ A recognition should be inspectable, so look at the evidence as a chart. Two tau
 
 ---
 
-## Beat 11 — NOTEBOOK §8. Your turn: teach an object yourself
+## Beat 10 — NOTEBOOK §7. Your turn: teach your own object
 
-Run the editable cell, then change `my_object` and run again.
+Run the editable cell, then swap in two photos of your own object and run again.
 
 **NARRATION**
 
-Your turn. Pick any object from the gallery with three views — the rubber duck, the vase, the hard hat — and teach two of them. Then hand it the third, an angle it never saw, and let it recognize what you just taught. Change `my_object`, re-run, and you get the same teach-and-recognize loop, now driven by you.
+Your turn, with something of your own. Take two photos of one object from different angles — upload them, or paste two image URLs. The cell teaches the first photo and then hands the device the second, a view it never saw, and prints the score against the threshold. If the score clears the line, it's recognized — you just taught a device to see one of your own things, from one example. If it comes back below the line, that's the threshold doing its job: the two views were too different for the device to be sure, and the fix is the same one from earlier — give it another angle. The default runs on two bundled photos so it works out of the box; replace them and re-run.
 
 ---
 
-## Beat 12 — NOTEBOOK §9. Assemble the assistant
+## Beat 11 — NOTEBOOK §8. Assemble the assistant
 
 Run the assemble cell.
 
 **NARRATION**
 
-Here is where the whole course comes together, and you're building it yourself. One shard with both vectors — `text` for notes and voice, `image` for photos — the same design as L4. Into it goes the full day of captures, plus a few weeks of earlier notes, so the assistant has real history to draw on. Then we teach it today's object, the backpack: its view goes in the image vector with that note attached. One shard now holds everything you built — recorded memories and a taught object, side by side.
+Here is where the whole course comes together, and you're building it yourself. One shard with both vectors — `text` for notes and voice, `image` for photos — the same design as L4. Into it goes the full day of captures, plus a few weeks of earlier notes, so the assistant has real history to draw on. Then we teach it today's object, the backpack — and this time we don't just show it, we tell it something too. Its photo goes into the image vector and a note about it goes into the text vector, both in one memory. That's the first point in this course carrying both vectors at once: one thing the device can find by sight and by what was said about it. One shard now holds everything you built — recorded memories and a taught object, side by side.
 
 ---
 
-## Beat 13 — NOTEBOOK §10. The payoff: ask it about your day
+## Beat 12 — NOTEBOOK §9. Ask it about your day
 
 Run the recall cell.
 
@@ -210,7 +201,7 @@ This assistant does two things. The first is answering a question about your day
 
 ---
 
-## Beat 14 — NOTEBOOK §11. The payoff: show it what you taught
+## Beat 13 — NOTEBOOK §10. Show it what you taught
 
 Run the recognition cell.
 
@@ -220,7 +211,7 @@ The second thing it does is recognize what you show it. We hand it a new photo o
 
 ---
 
-## Beat 15 — NOTEBOOK §12. The payoff: it all persists, offline
+## Beat 14 — NOTEBOOK §11. It all persists, offline
 
 Run the persistence cell.
 
@@ -230,7 +221,7 @@ One last check, the one that makes it real. Close the shard, block Python socket
 
 ---
 
-## Beat 16 — WRAP
+## Beat 15 — WRAP
 
 **NARRATION**
 

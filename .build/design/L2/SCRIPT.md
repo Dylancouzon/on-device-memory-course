@@ -1,34 +1,31 @@
 # L2 — Store and Recall — script
 
-**Target runtime:** ~9 min
+**Target runtime:** ~7 min
 
 NOTEBOOK beats reference the section numbers as they appear in the
 executed `L2.ipynb`.
 
 One question threads the lesson: "where can I sit outside for a latte?"
-It is asked four times — of the empty store, after storing, after
-forgetting, and after a restart. Slides: the endpoint teaser and the
-anatomy of a point.
+It is asked three times — of the empty store, after storing, and after
+forgetting. Slides: the endpoint teaser and the anatomy of a point.
 
 ## Beat map
 
 | # | Type | Content | Est. sec |
 |---|---|---|---|
-| 1 | INTRO | Endpoint teaser + what you'll build | 40 |
+| 1 | INTRO | What you'll build + the one question, three times | 25 |
 | 2 | SLIDE 1 | The memory loop, this lesson's piece highlighted | 20 |
-| 3 | NOTEBOOK §1 | Ask before there's memory — the empty shard returns nothing | 40 |
+| 3 | NOTEBOOK §1 | Build the store, then ask the empty shard — nothing back | 55 |
 | 4 | NOTEBOOK §2 | The memories — a day's notes | 25 |
-| 5 | NOTEBOOK §3 | Embed the notes locally | 30 |
+| 5 | NOTEBOOK §3 | Embed the notes locally, shown in the open | 40 |
 | 6 | SLIDE 2 | Anatomy of a point | 30 |
 | 7 | NOTEBOOK §4 | Store the memories (Point, upsert, optimize) | 35 |
-| 8 | NOTEBOOK §5 | **The payoff:** ask again — keyword search fails, meaning succeeds | 55 |
-| 9 | NOTEBOOK §6 | **The payoff:** recall with the network off | 40 |
-| 10 | NOTEBOOK §7 | **The payoff:** local recall at 5,000 memories | 40 |
-| 11 | NOTEBOOK §8 | **The payoff:** forget a memory (third ask) | 55 |
-| 12 | NOTEBOOK §9 | **The payoff:** a restart keeps what you kept, not what you forgot | 55 |
-| 13 | WRAP | The lifecycle, what's next | 40 |
+| 8 | NOTEBOOK §5 | Ask again, now it remembers (second ask) | 40 |
+| 9 | NOTEBOOK §6 | Local recall at 5,000 memories | 40 |
+| 10 | NOTEBOOK §7 | Forget a memory (third ask) | 55 |
+| 11 | WRAP | The lifecycle, persistence, what's next | 40 |
 
-Total: ~505 sec (~8.5 min).
+Total: ~405 sec (~6.75 min).
 
 ---
 
@@ -36,13 +33,10 @@ Total: ~505 sec (~8.5 min).
 
 **NARRATION:**
 
-By the end of this course, you'll have an assistant that answers a question
-like "the ramen place downtown" with the photo you took, the voice memo you
-left, and the notes you wrote — all from memory that lives on the device.
-This lesson builds the first piece: a store for personal notes. One question
-will carry us through the whole lifecycle of a memory. We'll ask it four
-times: before anything is stored, after storing, after forgetting, and after
-a restart. Let's build something.
+This lesson builds the first piece of that assistant: a store for personal
+notes. One question will carry us through the whole lifecycle of a memory.
+We'll ask it three times: before anything is stored, after storing, and
+after forgetting. Let's build something.
 
 ---
 
@@ -68,8 +62,8 @@ diagram spec (8:9, stack top-to-bottom):
 **NARRATION:**
 
 Here's the loop the whole course builds: capture something, embed it, store
-it, recall it. Today is the store-and-recall half — plus the two verbs that
-make it a memory and not a log: forgetting, and surviving a restart.
+it, recall it. Today is the store-and-recall half — plus forgetting, the
+verb that turns a log into a memory.
 
 ---
 
@@ -79,17 +73,25 @@ Run the setup cell, then the cold-open query cell.
 
 **NARRATION:**
 
-Before we store a single thing, let's ask the assistant a question. First
-the store itself. The config declares one named vector called `text`: 768
-dimensions to match the text embedding model, compared by cosine distance.
-`EdgeShard.create` builds the store in a local directory — a shard is the
-unit a Qdrant collection is made of; on a server a collection spans many
-shards, and Edge gives you exactly one, running inside your process. No
-server to start, no account to connect.
+Before we store a single thing, let's ask the assistant a question. But
+first we build the store itself.
+
+`EdgeConfig` is the blueprint: it says what every memory in this store will
+look like. It declares one named vector called `text`, sized 768 to match
+the text embedding model we'll use — the model produces vectors of exactly
+that length. Cosine is how two vectors get compared: it measures whether
+they point the same way, which is what "close in meaning" comes down to. We
+give the vector a name because a single memory will soon hold more than one
+kind — text now, photos in the next lesson — and the names keep them apart.
+
+`EdgeShard.create` takes that blueprint and builds the store in a local
+directory. A shard is the unit a Qdrant collection is made of: on a server a
+collection spans many shards, and Edge gives you exactly one, running inside
+your process. No server to start, no account to connect.
 
 Now ask, "where can I sit outside for a latte?" Zero results. The model is
 already loaded, but there is nothing to recall yet. Hold onto that exact
-question — we'll ask it three more times, and nothing about the model will
+question — we'll ask it two more times, and nothing about the model will
 change between the asks.
 
 ---
@@ -112,10 +114,13 @@ Run the embed cell.
 
 **NARRATION:**
 
-To search by meaning rather than by exact words, we turn each note into a
-vector. FastEmbed runs Nomic-Embed-Text v1.5 locally and produces 20 vectors
-of the same size. After the model is available locally, embedding runs
-offline; the helper keeps the loading details out of the way.
+To search by meaning instead of by exact words, we turn each note into a
+vector. This is the one place we do it in the open. We load
+Nomic-Embed-Text v1.5 through FastEmbed — a small model that runs on the
+device — and call `embed` on the twenty notes. Back come twenty vectors,
+768 numbers each: the note's meaning as coordinates. From here on a helper
+wraps this same call to keep the cells short, but the work never changes —
+text goes in, vectors come out, and none of it leaves the machine.
 
 ---
 
@@ -164,39 +169,24 @@ does this for you in the background.
 
 ---
 
-## Beat 8 — NOTEBOOK §5: The payoff — ask again, now it remembers
+## Beat 8 — NOTEBOOK §5: Ask again, now it remembers
 
-Run the keyword cell, then the recall cell.
-
-**NARRATION:**
-
-First, try it the old way: a literal search for the word "latte" across all
-twenty notes. Zero matches — no note contains it. Now ask the exact same
-question from the cold open: "where can I sit outside for a latte?" This
-time the coffee place on 5th comes back on top. The model didn't change
-between these two cells — the memory did. We embed the question with
-`embed_query`, not `embed_text`: Nomic treats queries and documents
-differently, and `embed_query` adds the prefix the model expects. And look
-closely — not one word of the question, "sit", "outside", or "latte",
-appears in that note. The keyword search you just ran proved it returns
-nothing; the vector matched the meaning. This is the query grep can't run.
-
----
-
-## Beat 9 — NOTEBOOK §6: The payoff — recall with the network off
-
-Run the `no_network()` cell.
+Run the recall cell.
 
 **NARRATION:**
 
-`no_network()` blocks new Python socket creation inside the block, so
-Python code that tries to reach the network fails loudly. Run the cell, and
-recall still returns the standup note with Sarah. Both embedding and search
-ran in this process, and neither asked for a socket.
+Now ask the exact same question from the cold open: "where can I sit outside
+for a latte?" This time the coffee place on 5th comes back on top, at 0.65.
+The model didn't change between the empty ask and this one — the memory did.
+One detail worth naming: we embed the question with `embed_query`, which adds
+the prefix Nomic uses for questions so its score lines up with the stored
+notes. And look closely — not one word of the question, "sit", "outside", or
+"latte", appears in that note. The match is the meaning, not the words. That
+is the search a plain keyword scan can't do.
 
 ---
 
-## Beat 10 — NOTEBOOK §7: The payoff — local recall at scale
+## Beat 9 — NOTEBOOK §6: Local recall at scale
 
 Run the 5,000-memory build-up cell. Point at the printed median-ms line.
 
@@ -212,7 +202,7 @@ in-process, over local files, with nothing leaving the device.
 
 ---
 
-## Beat 11 — NOTEBOOK §8: The payoff — forget a memory
+## Beat 10 — NOTEBOOK §7: Forget a memory
 
 Run the delete cell, then the third-ask cell.
 
@@ -230,35 +220,19 @@ deleted, not every trace.
 
 ---
 
-## Beat 12 — NOTEBOOK §9: The payoff — a restart keeps what you kept
-
-Run the close / files / `EdgeShard.load` cell.
+## Beat 11 — WRAP
 
 **NARRATION:**
 
-Last payoff: does this memory survive a restart — including the forgetting?
-We close the shard, which flushes it to disk and releases the handle. Look
-at what remains: plain files in a local folder. The Python object is gone;
-the memory store is still there. Then we reopen the same directory with
-`EdgeShard.load`, with Python socket creation blocked, and ask the question
-a fourth time. The receipt says it all: the point count matches, the top hit
-is the same one the third ask found, and the note you deleted stays
-forgotten after the restart. That's persistence: not a promise, a check you
-can run yourself.
-
----
-
-## Beat 13 — WRAP
-
-**NARRATION:**
-
-That's the full lifecycle of a memory, in one lesson: store, recall, forget,
-persist. You've seen the Edge API once, end to end: `EdgeConfig` and
-`EdgeShard.create` to build the store, `Point` with `upsert_points` to
-write and `delete_points` to forget, `QueryRequest` and `Query.Nearest` to
-recall, `close()` and `EdgeShard.load` to persist. Those calls stay visible in the notebook
-cells, so you can see exactly what the shard is doing. The helpers handle
-only the supporting plumbing: embeddings, charts, and the offline guard.
+That's the lifecycle of a memory, in one lesson: store it, recall it by
+meaning, and forget it on command. And because the store is just files in a
+local folder, it is still there when you close the app and open it later —
+nothing to sync, nothing to reload from a server. You've seen the Edge API
+in the open: `EdgeConfig` and `EdgeShard.create` to build the store, `Point`
+with `upsert_points` to write and `delete_points` to forget, `QueryRequest`
+and `Query.Nearest` to recall. Those calls stay visible in the cells, so you
+can see exactly what the shard is doing; the helpers handle only the
+supporting plumbing, like the query wrapper and the charts.
 
 Next lesson, we keep this text encoder and add a second one, for photos, so
 you can find a picture by describing it — and filter what comes back.

@@ -58,6 +58,32 @@ def embed_image(paths):
     return [v.tolist() for v in _clip_vision().embed(list(paths))]
 
 
+def load_image(url_or_path):
+    """Return a local image path, fetching http(s) URLs to a temp JPEG first.
+
+    The container has no camera, so pasting an image URL stands in for a
+    capture: the bytes are fetched once, normalized to RGB JPEG, and the
+    local path is returned so it embeds and displays like a bundled photo.
+    """
+    if not str(url_or_path).startswith(("http://", "https://")):
+        return url_or_path
+    import io
+    import os
+    import tempfile
+    import urllib.request
+    from PIL import Image
+
+    req = urllib.request.Request(
+        url_or_path, headers={"User-Agent": "Mozilla/5.0"}
+    )
+    with urllib.request.urlopen(req, timeout=30) as response:
+        image = Image.open(io.BytesIO(response.read())).convert("RGB")
+    fd, path = tempfile.mkstemp(suffix=".jpg")
+    os.close(fd)
+    image.save(path, "JPEG")
+    return path
+
+
 def embed_query_clip(text):
     """Embed a text query into CLIP's space, to search the image vector."""
     return next(_clip_text().query_embed([text])).tolist()

@@ -23,7 +23,7 @@ taught.
 
 | # | Type | Content | Est. sec |
 |---|---|---|---|
-| 1 | INTRO | Endpoint payoff first: fail → teach by voice → recognize | 75 |
+| 1 | INTRO | Endpoint first: fail → teach by voice → recognize | 75 |
 | 2 | SLIDE 1 | The robot's loop: capture → detect → embed → match → teach | 50 |
 | 3 | SLIDE 2 | The lesson map: you already built this | 60 |
 | 4 | NARRATION | The two new pieces: detection, and when to remember | 60 |
@@ -35,7 +35,7 @@ Total: ~425 sec (~7 min narration; ~8 min with demo beats at full length).
 
 ---
 
-## Beat 1 — INTRO: the payoff first
+## Beat 1 — INTRO: the finished robot first
 
 Demo footage (shotlist #1–3): an object the robot has never seen; the
 robot says it doesn't know it; one spoken sentence teaches it; a new
@@ -43,7 +43,7 @@ angle is recognized seconds later.
 
 **NARRATION:**
 
-This is the last lesson, so let's start with the payoff. This robot has
+This is the last lesson, so let's start at the end. This robot has
 never seen this object. It looks — and it says so: it doesn't know. Now I
 teach it, the way you'd teach a person: I show it the object and I tell
 it what it is. One sentence. That's the whole training procedure. Now a
@@ -171,7 +171,11 @@ power cycle, network off, both skills repeated.
 The robot's day is now a memory store, so you can ask it questions. "What
 did you see today?" runs the same filtered recall as your notebooks — a
 time window over the day, results grouped by what was seen and what was
-heard. And the last check is the one you ran in L2 and again in L5:
+heard. And here's the surprising part: no language model answered that.
+The robot matched vectors and grouped what it found — retrieval, not
+generation. Put a language model on top and it would phrase the reply in a
+sentence; the remembering underneath is all memory. And the last check is
+the one you ran in L2 and again in L5:
 reboot. Power off, no network, power on, reopen the shard from disk. The
 mug is still recognized; the day is still there. Memory that survives a
 restart isn't a feature of the demo — it's what makes any of this count
@@ -189,7 +193,9 @@ your own hands: stored and recalled and forgot in L2, found the right
 memory by description and by filter in L3, assembled a whole day in L4,
 and taught a device to see in L5 — finishing with an assistant that keeps
 both skills through a restart, offline. This robot is that same notebook,
-walking around. The build is public — the repo link is below, and it runs
+walking around — and it got this far without a language model writing a
+word; memory and retrieval carried it, and that's the store your own model
+would read from. The build is public — the repo link is below, and it runs
 on hardware that costs about as much as a textbook stack. Take the loop,
 put it on your own device, and teach it something. Thanks for building
 with me.
