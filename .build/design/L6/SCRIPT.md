@@ -7,10 +7,12 @@ direction lives there, never here.
 
 **STATUS: PROVISIONAL.** The robot app, hardware, and shoot are pending
 (`.build/PLAN.md` separate track). Every demo claim below, the scores, the
-threshold behavior, persistence, fleet sync, "same stack", must be
-reconciled against the recorded robot output before this script is
-finalized or anything is recorded. Numbers on screen are the evidence; the
-script never claims what the footage doesn't show.
+threshold behavior, persistence, fleet sync, "same stack", the location
+label shown on recall, must be reconciled against the recorded robot output
+before this script is finalized or anything is recorded. Numbers on screen
+are the evidence; the script never claims what the footage doesn't show. The
+location is a label set when the robot starts (`--location`), the same
+`where` field your L4 captures carried, not a GPS reading, and never faked.
 
 A synthesis lecture that happens to have a robot. The robot runs the
 course's exact stack: CLIP for image (512-d), Nomic for text (768-d),
@@ -29,11 +31,11 @@ it for real, never fake it.
 | 3 | SLIDE 2 | The lesson map: you already built this | 55 |
 | 4 | NARRATION | The two new pieces: detection, and when to remember | 55 |
 | 5 | DEMO | Teach by voice, in full ("this is my mug") | 55 |
-| 6 | DEMO | "What did you see today?" + offline reboot | 60 |
+| 6 | DEMO | "What did you see today?" · "where are my keys?" · offline reboot | 70 |
 | 7 | DEMO | Fleet sync: one robot teaches, another remembers | 45 |
 | 8 | WRAP | The course arc + repo pointer | 50 |
 
-Total: ~445 sec (~7.4 min narration; ~8 min with demo beats at full
+Total: ~455 sec (~7.6 min narration; ~8 min with demo beats at full
 length).
 
 ---
@@ -167,8 +169,9 @@ just a label. It's what I told it, in my words.
 
 ## Beat 6: DEMO, the day, recalled, then a reboot
 
-Demo footage (shotlist #5–6): "what did you see today?" recall; then
-power cycle, network off, both skills repeated.
+Demo footage (shotlist #5–6): "what did you see today?" recall, then the
+"where are my keys?" question that surfaces the location; then power cycle,
+network off, both skills repeated.
 
 **NARRATION:**
 
@@ -177,8 +180,14 @@ did you see today?" is the two ideas you built in L3 and L4 running
 together: cross-modal recall over the day, narrowed by a filter. The
 filter here is a time window, a new field for the same numeric-range
 condition you wrote for "under fifteen dollars", and the results come
-back grouped by what was seen and what was heard. And here's the
-surprising part: no language model answered that. The robot matched
+back grouped by what was seen and what was heard. And every memory also
+carries where it was formed. Earlier I left this robot running in my hotel
+room, and it saw my keys on the desk. So I can ask it something a photo
+alone can't answer: where did I leave my keys? The keys come back, and the
+memory says where it learned them, the hotel room. That's the same location
+field you stored on every capture in L4, set once when the robot starts and
+written onto every memory it forms. And here's the surprising part: no
+language model answered any of that. The robot matched
 vectors and grouped what it found. Retrieval, not generation. Put a
 language model on top and it would phrase the reply in a sentence; the
 remembering underneath is all memory. And the last check is the one you
