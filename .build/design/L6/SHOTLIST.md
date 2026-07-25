@@ -28,13 +28,15 @@ author + license + link per `data/objects/CREDITS.json`.
 | 4 | Teach close-up | Repeat of the teach interaction shot tight: the screen capture full-frame, annotated in edit with the two paths (crop→CLIP→image vector; speech→Whisper→Nomic→note). This is the slow-motion replay the script narrates step by step. |
 | 5 | The day recalled | Presenter asks "what did you see today?" Screen insert: the filtered recall — a time-window query, results grouped as seen (photos/crops) vs heard (notes). At least one result must be something taught earlier in the shoot day, so the day is honestly the robot's own. |
 | 6 | Offline reboot | Visible power-off, network indicator off (airplane-mode toggle or pulled dongle on camera), power on. Re-run shot 3's recognition and shot 5's question. Screen insert: shard reopened from disk (point count), both results identical. No cuts between power-on and the first recognition. |
-| 7 | (Stretch) Fleet sync | Only if Edge→Cloud synchronization is actually wired: teach on this robot, show a second unit recognizing the same object. If the sync isn't built, this shot does not exist — never fake it. |
-| 8 | B-roll | The robot's case open (Jetson + battery + camera visible), the repo README on screen, the robot on a desk beside the notebook lessons on a laptop. |
+| 7 | Forget it | Teach the object a deliberately wrong name, then delete that memory on camera (the **FORGET** control), then re-show the same object. Screen inserts: the wrong label recognized above 0.80, then the point count dropping, then the same object back at **unknown**. Shoot as one take. This is L2's third verb, and the robot already implements it as `delete_points`. |
+| 8 | (Stretch) Fleet sync | Only if Edge→Cloud synchronization is actually wired: teach on this robot, show a second unit recognizing the same object. If the sync isn't built, this shot does not exist — never fake it. |
+| 9 | B-roll | The robot's case open (Jetson + battery + camera visible), the repo README on screen, the robot on a desk beside the notebook lessons on a laptop. |
 
 ## Edit notes
 
 - Beat 1–3 footage opens the lesson (script beat 1) — cut it tight,
   payoff first, before any explanation.
-- Shot 4 plays under script beat 5; shots 5–6 under beat 6.
+- Shot 4 plays under script beat 5; shots 5–6 under beat 6; shot 7
+  under beat 7; shot 8, if it exists, under beat 8.
 - Every on-screen score keeps its real value; no re-typed overlays.
 - End card: repo URL + hardware bill of materials one-liner.
