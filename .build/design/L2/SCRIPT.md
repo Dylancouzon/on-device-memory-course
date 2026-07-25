@@ -21,7 +21,7 @@ forgetting. Slides: the endpoint teaser and the anatomy of a point.
 | 6 | SLIDE 2 | Anatomy of a point | 30 |
 | 7 | NOTEBOOK §4 | Store the memories (Point, upsert, optimize) | 35 |
 | 8 | NOTEBOOK §5 | Ask again, now it remembers (second ask) | 40 |
-| 9 | NOTEBOOK §6 | Local lookup at 5,000 memories | 40 |
+| 9 | NOTEBOOK §6 | Local lookup at 5,000 memories, and the real budget | 55 |
 | 10 | NOTEBOOK §7 | Forget a memory (third ask) | 55 |
 | 11 | WRAP | The lifecycle, persistence, what's next | 40 |
 
@@ -163,14 +163,23 @@ queries; the stored memories did.
 
 ## Beat 9: NOTEBOOK §6, local lookup at scale
 
-Run the 5,000-memory build-up cell. Point at the median line on the chart.
+Run the 5,000-memory build-up cell. Point at the median line, then at the
+budget under the chart.
 
 **NARRATION:**
 
 What happens as the store grows? We add filler until it holds 5,000 memories
-and time 200 searches. The chart measures the lookup only; turning the
-question into a vector happens before the timer starts. On this CPU-only
-machine, the median lookup stays well below a millisecond.
+and time 200 searches. The histogram measures the lookup only, and on this
+CPU-only machine the median stays well below a millisecond.
+
+The lookup is not the whole answer though, so we time the other half as well.
+Turning the question into a vector is the line under the chart, and it costs
+a few milliseconds against a fraction of one for the search. Embedding is
+tens of times the lookup. Sit with that for a second, because it tells you
+where your time really goes when you build this: the search is close to free
+and the encoder is the part you budget for. The total is the number that
+matters, a complete local answer in about five milliseconds, a couple of
+hundred questions a second with no GPU anywhere.
 
 ---
 

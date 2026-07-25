@@ -19,8 +19,8 @@ course's exact stack: CLIP for image (512-d), Nomic for text (768-d),
 Whisper for audio, Qdrant Edge as the store, the same 0.80 threshold. So
 every stage of its loop maps back to a lesson the students built with
 their own hands. Two pieces are genuinely new, and both are named, not
-taught. The fleet-sync beat is committed (L5 §9's upload tees it up): wire
-it for real, never fake it.
+taught. The fleet-sync beat is a stretch shot, teed up by L5's Appendix A
+upload: wire it for real or cut it, never fake it.
 
 ## Beat map
 
@@ -162,7 +162,7 @@ sentence into text and Nomic embeds it: that's a text vector, exactly
 like a voice memo from L4. Both land in one memory: one point carrying
 both named vectors, `image` and `text`, searchable by sight and by what
 was said, with my sentence in the payload. You built exactly this point
-at the end of L5, when you taught the backpack with a note. Next time the
+at the end of L5, when you taught your own subject with a note. Next time the
 robot sees the mug from another angle, the one you'll watch it recognize,
 the nearest-match check clears the threshold, and what comes back isn't
 just a label. It's what I told it, in my words.
@@ -229,9 +229,9 @@ output; if the fleet build isn't ready, this beat is cut, never staged.
 
 **NARRATION:**
 
-One robot learning is memory. Two robots sharing it is a fleet. In the
-last lab, you ran the cell that uploads a shard to the cloud, and you
-flipped that switch yourself. This is the same write, running between
+One robot learning is memory. Two robots sharing it is a fleet. The last lab
+ended with an appendix that uploads a shard to the cloud, with the switch
+left in your hands. This is the same write, running between
 machines: the mug this robot was just taught goes up as points, and the
 second device pulls them down. Now it recognizes an object it has never
 seen, because a teammate remembered for it. Same points, same format,

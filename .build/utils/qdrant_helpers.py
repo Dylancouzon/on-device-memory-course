@@ -6,12 +6,14 @@ written out in the notebooks themselves so the API stays visible. This module
 holds only the supporting pieces that would otherwise clutter a cell. Validated
 against qdrant-edge-py 0.7.2.
 """
+import gc
+import inspect
 import shutil
 import socket
 from contextlib import contextmanager
 from pathlib import Path
 
-from qdrant_edge import Point, UpdateOperation
+from qdrant_edge import EdgeShard, Point, UpdateOperation
 
 
 def filler_vectors(count, dim, seed=0):
@@ -27,7 +29,26 @@ def filler_vectors(count, dim, seed=0):
 
 
 def fresh_start(directory):
-    """Delete any previous run's shard directory and recreate it empty."""
+    """Delete any previous run's shard directory and recreate it empty.
+
+    A shard the notebook still has bound holds its files open, and Edge flushes
+    when that object is dropped. Deleting the files first makes the flush fail
+    inside a destructor, which surfaces as a Rust panic rather than a Python
+    error. So close any shard the caller still holds before removing anything:
+    that makes re-running a setup cell in a live kernel safe, instead of only
+    working on a clean top-to-bottom run.
+    """
+    frame = inspect.stack()[1].frame
+    try:
+        for value in list(frame.f_globals.values()):
+            if isinstance(value, EdgeShard):
+                try:
+                    value.close()
+                except Exception:
+                    pass
+    finally:
+        del frame
+    gc.collect()
     shutil.rmtree(directory, ignore_errors=True)
     Path(directory).mkdir(parents=True, exist_ok=True)
     return directory

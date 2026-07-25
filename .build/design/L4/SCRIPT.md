@@ -117,7 +117,8 @@ Run the editable cell.
 
 Add a memory of your own. Change `my_note` and `my_question`, then write the
 new point to the same shard. Search for it right away. The new note comes
-back first; no rebuild or restart is needed.
+back first, and it is the only card that is not faded: nothing else in the
+day comes close. No rebuild or restart is needed.
 
 ---
 

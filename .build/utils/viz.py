@@ -282,7 +282,7 @@ def show_raw(hits):
 
 
 def score_gap_chart(taught, foreign, threshold, save=None):
-    """Horizontal score bars for recognition evidence: taught held-out views
+    """Horizontal score bars for recognition evidence: taught held-out photos
     vs never-taught images, with the threshold line drawn inside the gap.
 
     `taught` and `foreign` are lists of (label, score); scores are measured
@@ -307,7 +307,7 @@ def score_gap_chart(taught, foreign, threshold, save=None):
     ax.set_xlim(0, 1.0)
     ax.set_xlabel("similarity to nearest stored view")
     ax.spines[["top", "right"]].set_visible(False)
-    handles = [Patch(color="#009688", label="taught (held-out view)"),
+    handles = [Patch(color="#009688", label="taught (held-out photo)"),
                Patch(color="#8F98B2", label="never taught")]
     ax.legend(handles=handles, loc="lower right", fontsize=9)
     label, color = BADGES["measured"]
@@ -320,16 +320,20 @@ def score_gap_chart(taught, foreign, threshold, save=None):
     plt.show()
 
 
-def latency_hist(timings_ms, points_count, save=None):
+def latency_hist(timings_ms, points_count, embed_ms=None, save=None):
     """Histogram of live recall timings with the median marked.
 
     `timings_ms` are per-query latencies measured in the notebook; the median
     is the course's one honest local latency number, so it is drawn on the
-    chart rather than printed beside it.
+    chart rather than printed beside it. Pass `embed_ms`, also measured live,
+    to add the budget line: embedding the question costs far more than the
+    lookup, and a reader planning a real loop needs to see which term wins.
+    Both halves are local, so this stays a where-the-time-goes breakdown and
+    never a comparison against a server.
     """
     timings = sorted(timings_ms)
     median = timings[len(timings) // 2]
-    fig, ax = plt.subplots(figsize=(8.5, 3.2))
+    fig, ax = plt.subplots(figsize=(8.5, 3.2 if embed_ms is None else 3.9))
     ax.hist(timings, bins=30, color="#8F98B2", edgecolor="white")
     ax.axvline(median, color=QDRANT_RED, lw=2, ls="--")
     ax.text(median, ax.get_ylim()[1] * 0.92, f"  median {median:.2f} ms",
@@ -344,6 +348,19 @@ def latency_hist(timings_ms, points_count, save=None):
             fontsize=8, color="white",
             bbox=dict(boxstyle="round,pad=0.3", fc=color, ec="none"))
     fig.tight_layout()
+    if embed_ms is not None:
+        # The budget goes under the axes, where it has the full width and does
+        # not run into the badge.
+        total = embed_ms + median
+        fig.subplots_adjust(bottom=0.36)
+        fig.text(0.012, 0.10,
+                 f"embed {embed_ms:.2f} ms + lookup {median:.2f} ms"
+                 f" = {total:.2f} ms per answer",
+                 fontsize=11, fontweight="bold", color="#28324D")
+        fig.text(0.012, 0.02,
+                 f"embedding is {embed_ms / median:.0f}x the lookup"
+                 f" · about {1000 / total:.0f} answers per second",
+                 fontsize=10, color="#4E5366")
     if save:
         fig.savefig(save, dpi=120, bbox_inches="tight")
     plt.show()

@@ -103,17 +103,18 @@ def embed_query_clip(text):
     return next(_clip_text().query_embed([text])).tolist()
 
 
-EXAMPLE_OBJECT = "../data/objects/gaillardia_"
+EXAMPLE_OBJECT = "../data/objects/rubberduck_"
 
 
-def object_photos(teach_urls, test_url):
-    """Resolve object photos to local files, ready to embed and show.
+def object_photos(teach_photos, test_photo):
+    """Resolve a subject's photos to local files, ready to embed and show.
 
-    Paste image URLs to teach your own object: two or more angles in
-    `teach_urls`, one more in `test_url`. Leave them empty to fall back to
-    the bundled example. URLs are fetched once; local paths pass through.
+    Pass two or more photos of one subject in `teach_photos` and one more in
+    `test_photo`, either as image links or as filenames saved beside the
+    notebook. Leave them empty to fall back to the bundled example. Links
+    are fetched once; local paths pass through.
     """
-    if not (teach_urls and test_url):
-        teach_urls = [EXAMPLE_OBJECT + "1.jpg", EXAMPLE_OBJECT + "2.jpg"]
-        test_url = EXAMPLE_OBJECT + "3.jpg"
-    return [load_image(u) for u in teach_urls], load_image(test_url)
+    if not (teach_photos and test_photo):
+        teach_photos = [EXAMPLE_OBJECT + "1.jpg", EXAMPLE_OBJECT + "2.jpg"]
+        test_photo = EXAMPLE_OBJECT + "3.jpg"
+    return [load_image(p) for p in teach_photos], load_image(test_photo)

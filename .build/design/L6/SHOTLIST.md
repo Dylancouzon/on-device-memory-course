@@ -13,6 +13,13 @@ robot's live view (camera feed + detection crop + match score + memory
 writes) alongside the physical shot. The score and the 0.80 threshold
 must be legible on screen — the numbers are the evidence.
 
+**Required insert, per-frame budget:** at least one shot must show the
+robot's own measured timing for a full pass, broken into detect, embed and
+search, the same breakdown L2 §6 shows for text. This is the number that
+proves the loop closes in real time on the board, and L2 already teaches
+that the encoder dominates while the search is close to free. Capture it
+live from the robot's view; never re-type it in edit.
+
 **Attribution:** none of the `data/objects/` CC images appear in these
 shots (live objects only), so no attribution overlays are needed. If any
 bundled photo appears on the robot's screen in an insert, render its

@@ -71,20 +71,34 @@ def load_image(url_or_path):
     The container has no camera, so pasting an image URL stands in for a
     capture: the bytes are fetched once, normalized to RGB JPEG, and the
     local path is returned so it embeds and displays like a bundled photo.
+    A path to a file already on disk passes straight through.
     """
     if not str(url_or_path).startswith(("http://", "https://")):
         return url_or_path
     import io
     import os
     import tempfile
+    import urllib.parse
     import urllib.request
     from PIL import Image
 
-    req = urllib.request.Request(
-        url_or_path, headers={"User-Agent": "Mozilla/5.0"}
-    )
+    # A search-results link points at a viewer page and carries the real
+    # image URL in its imgurl parameter.
+    query = urllib.parse.parse_qs(urllib.parse.urlparse(url_or_path).query)
+    url = query.get("imgurl", [url_or_path])[0]
+
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
     with urllib.request.urlopen(req, timeout=30) as response:
-        image = Image.open(io.BytesIO(response.read())).convert("RGB")
+        data = response.read()
+    try:
+        image = Image.open(io.BytesIO(data)).convert("RGB")
+    except OSError:
+        raise ValueError(
+            f"This link is a web page, not an image file:\n  {url[:90]}\n"
+            "Right-click the image itself and copy the image address (it "
+            "ends in .jpg or .png), or save your photos into this lesson's "
+            "folder and list their filenames instead of links."
+        ) from None
     fd, path = tempfile.mkstemp(suffix=".jpg")
     os.close(fd)
     image.save(path, "JPEG")
@@ -96,20 +110,21 @@ def embed_query_clip(text):
     return next(_clip_text().query_embed([text])).tolist()
 
 
-EXAMPLE_OBJECT = "../data/objects/gaillardia_"
+EXAMPLE_OBJECT = "../data/objects/rubberduck_"
 
 
-def object_photos(teach_urls, test_url):
-    """Resolve object photos to local files, ready to embed and show.
+def object_photos(teach_photos, test_photo):
+    """Resolve a subject's photos to local files, ready to embed and show.
 
-    Paste image URLs to teach your own object: two or more angles in
-    `teach_urls`, one more in `test_url`. Leave them empty to fall back to
-    the bundled example. URLs are fetched once; local paths pass through.
+    Pass two or more photos of one subject in `teach_photos` and one more in
+    `test_photo`, either as image links or as filenames saved beside the
+    notebook. Leave them empty to fall back to the bundled example. Links
+    are fetched once; local paths pass through.
     """
-    if not (teach_urls and test_url):
-        teach_urls = [EXAMPLE_OBJECT + "1.jpg", EXAMPLE_OBJECT + "2.jpg"]
-        test_url = EXAMPLE_OBJECT + "3.jpg"
-    return [load_image(u) for u in teach_urls], load_image(test_url)
+    if not (teach_photos and test_photo):
+        teach_photos = [EXAMPLE_OBJECT + "1.jpg", EXAMPLE_OBJECT + "2.jpg"]
+        test_photo = EXAMPLE_OBJECT + "3.jpg"
+    return [load_image(p) for p in teach_photos], load_image(test_photo)
 
 # --- qdrant_helpers ----------------------------------------
 """Non-Qdrant plumbing for the lessons: an offline guard, benchmark filler, and
@@ -120,12 +135,14 @@ written out in the notebooks themselves so the API stays visible. This module
 holds only the supporting pieces that would otherwise clutter a cell. Validated
 against qdrant-edge-py 0.7.2.
 """
+import gc
+import inspect
 import shutil
 import socket
 from contextlib import contextmanager
 from pathlib import Path
 
-from qdrant_edge import Point, UpdateOperation
+from qdrant_edge import EdgeShard, Point, UpdateOperation
 
 
 def filler_vectors(count, dim, seed=0):
@@ -141,7 +158,26 @@ def filler_vectors(count, dim, seed=0):
 
 
 def fresh_start(directory):
-    """Delete any previous run's shard directory and recreate it empty."""
+    """Delete any previous run's shard directory and recreate it empty.
+
+    A shard the notebook still has bound holds its files open, and Edge flushes
+    when that object is dropped. Deleting the files first makes the flush fail
+    inside a destructor, which surfaces as a Rust panic rather than a Python
+    error. So close any shard the caller still holds before removing anything:
+    that makes re-running a setup cell in a live kernel safe, instead of only
+    working on a clean top-to-bottom run.
+    """
+    frame = inspect.stack()[1].frame
+    try:
+        for value in list(frame.f_globals.values()):
+            if isinstance(value, EdgeShard):
+                try:
+                    value.close()
+                except Exception:
+                    pass
+    finally:
+        del frame
+    gc.collect()
     shutil.rmtree(directory, ignore_errors=True)
     Path(directory).mkdir(parents=True, exist_ok=True)
     return directory
@@ -462,7 +498,7 @@ def show_raw(hits):
 
 
 def score_gap_chart(taught, foreign, threshold, save=None):
-    """Horizontal score bars for recognition evidence: taught held-out views
+    """Horizontal score bars for recognition evidence: taught held-out photos
     vs never-taught images, with the threshold line drawn inside the gap.
 
     `taught` and `foreign` are lists of (label, score); scores are measured
@@ -487,7 +523,7 @@ def score_gap_chart(taught, foreign, threshold, save=None):
     ax.set_xlim(0, 1.0)
     ax.set_xlabel("similarity to nearest stored view")
     ax.spines[["top", "right"]].set_visible(False)
-    handles = [Patch(color="#009688", label="taught (held-out view)"),
+    handles = [Patch(color="#009688", label="taught (held-out photo)"),
                Patch(color="#8F98B2", label="never taught")]
     ax.legend(handles=handles, loc="lower right", fontsize=9)
     label, color = BADGES["measured"]
@@ -500,16 +536,20 @@ def score_gap_chart(taught, foreign, threshold, save=None):
     plt.show()
 
 
-def latency_hist(timings_ms, points_count, save=None):
+def latency_hist(timings_ms, points_count, embed_ms=None, save=None):
     """Histogram of live recall timings with the median marked.
 
     `timings_ms` are per-query latencies measured in the notebook; the median
     is the course's one honest local latency number, so it is drawn on the
-    chart rather than printed beside it.
+    chart rather than printed beside it. Pass `embed_ms`, also measured live,
+    to add the budget line: embedding the question costs far more than the
+    lookup, and a reader planning a real loop needs to see which term wins.
+    Both halves are local, so this stays a where-the-time-goes breakdown and
+    never a comparison against a server.
     """
     timings = sorted(timings_ms)
     median = timings[len(timings) // 2]
-    fig, ax = plt.subplots(figsize=(8.5, 3.2))
+    fig, ax = plt.subplots(figsize=(8.5, 3.2 if embed_ms is None else 3.9))
     ax.hist(timings, bins=30, color="#8F98B2", edgecolor="white")
     ax.axvline(median, color=QDRANT_RED, lw=2, ls="--")
     ax.text(median, ax.get_ylim()[1] * 0.92, f"  median {median:.2f} ms",
@@ -524,6 +564,19 @@ def latency_hist(timings_ms, points_count, save=None):
             fontsize=8, color="white",
             bbox=dict(boxstyle="round,pad=0.3", fc=color, ec="none"))
     fig.tight_layout()
+    if embed_ms is not None:
+        # The budget goes under the axes, where it has the full width and does
+        # not run into the badge.
+        total = embed_ms + median
+        fig.subplots_adjust(bottom=0.36)
+        fig.text(0.012, 0.10,
+                 f"embed {embed_ms:.2f} ms + lookup {median:.2f} ms"
+                 f" = {total:.2f} ms per answer",
+                 fontsize=11, fontweight="bold", color="#28324D")
+        fig.text(0.012, 0.02,
+                 f"embedding is {embed_ms / median:.0f}x the lookup"
+                 f" · about {1000 / total:.0f} answers per second",
+                 fontsize=10, color="#4E5366")
     if save:
         fig.savefig(save, dpi=120, bbox_inches="tight")
     plt.show()

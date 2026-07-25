@@ -28,7 +28,7 @@ video lessons with no notebook.
 | 2 | Store and Recall | One question, asked three times: recall by meaning, then forget on purpose |
 | 3 | Finding the Right Memory | Find a photo by describing it; narrow recall with filters inside one query |
 | 4 | Your On-Device Assistant | A day of photos, voice, and text notes; on-device transcription; ask and add your own memories |
-| 5 | Teaching It to See | Teach it an object from your own photos, assemble the full assistant offline, and send memory to the cloud only by choice |
+| 5 | Teaching It to See | Teach it to recognize a subject you pick, then assemble the full assistant and check it offline |
 | 6 | The Robot | Video: the same design walking around, every stage mapped back to the lesson that built it |
 
 ## Setup

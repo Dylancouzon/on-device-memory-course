@@ -111,7 +111,8 @@ again.
 **NARRATION:**
 
 Try a description. The starter is “a red bicycle.” We turn those words into
-a CLIP vector and search the photo vectors—no tags or filenames needed. Try
+a CLIP vector and search the photo vectors, with no tags or filenames
+needed. Try
 the suggestions in the cell, then write your own. If the bank does not
 contain what you describe, it still returns its closest photo, so look at
 the image as well as the score.
