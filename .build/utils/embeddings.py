@@ -64,20 +64,34 @@ def load_image(url_or_path):
     The container has no camera, so pasting an image URL stands in for a
     capture: the bytes are fetched once, normalized to RGB JPEG, and the
     local path is returned so it embeds and displays like a bundled photo.
+    A path to a file already on disk passes straight through.
     """
     if not str(url_or_path).startswith(("http://", "https://")):
         return url_or_path
     import io
     import os
     import tempfile
+    import urllib.parse
     import urllib.request
     from PIL import Image
 
-    req = urllib.request.Request(
-        url_or_path, headers={"User-Agent": "Mozilla/5.0"}
-    )
+    # A search-results link points at a viewer page and carries the real
+    # image URL in its imgurl parameter.
+    query = urllib.parse.parse_qs(urllib.parse.urlparse(url_or_path).query)
+    url = query.get("imgurl", [url_or_path])[0]
+
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
     with urllib.request.urlopen(req, timeout=30) as response:
-        image = Image.open(io.BytesIO(response.read())).convert("RGB")
+        data = response.read()
+    try:
+        image = Image.open(io.BytesIO(data)).convert("RGB")
+    except OSError:
+        raise ValueError(
+            f"This link is a web page, not an image file:\n  {url[:90]}\n"
+            "Right-click the image itself and copy the image address (it "
+            "ends in .jpg or .png), or save your photos into this lesson's "
+            "folder and list their filenames instead of links."
+        ) from None
     fd, path = tempfile.mkstemp(suffix=".jpg")
     os.close(fd)
     image.save(path, "JPEG")

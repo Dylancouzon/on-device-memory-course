@@ -33,10 +33,9 @@ Total: ~405 sec (~6.75 min).
 
 **NARRATION:**
 
-This lesson builds the first piece of that assistant: a store for personal
-notes. One question will carry us through the whole lifecycle of a memory.
-We'll ask it three times: before anything is stored, after storing, and
-after forgetting. Let's build something.
+This lesson starts with a simple store for personal notes. We’ll ask one
+question three times: before we store anything, after we store it, and after
+we delete a result.
 
 ---
 
@@ -61,9 +60,8 @@ diagram spec (8:9, stack top-to-bottom):
 
 **NARRATION:**
 
-Here's the loop the whole course builds: capture something, embed it, store
-it, recall it. Today is the store-and-recall half, plus forgetting, the
-verb that turns a log into a memory.
+This is the loop behind the course. Today we focus on storing, finding, and
+deleting a memory.
 
 ---
 
@@ -73,25 +71,13 @@ Run the setup cell, then the cold-open query cell.
 
 **NARRATION:**
 
-Before we store a single thing, let's ask the assistant a question. But
-first we build the store itself.
+First, create an empty store. `EdgeConfig` says it will hold one kind of
+vector, called `text`. The size, 768, matches the model we use to turn notes
+into numbers. Cosine is simply the way we compare those numbers for meaning.
 
-`EdgeConfig` is the blueprint: it says what every memory in this store will
-look like. It declares one named vector called `text`, sized 768 to match
-the text embedding model we'll use; the model produces vectors of exactly
-that length. Cosine is how two vectors get compared: it measures whether
-they point the same way, which is what "close in meaning" comes down to. We
-give the vector a name because a single memory will soon hold more than one
-kind, text now, photos in the next lesson, and the names keep them apart.
-
-`EdgeShard.create` takes that blueprint and builds the store in a local
-directory: a single shard running inside your process. No server to start,
-no account to connect.
-
-Now ask, "where can I sit outside for a latte?" Zero results. The model is
-already loaded, but there is nothing to recall yet. Hold onto that exact
-question. We'll ask it two more times, and nothing about the model will
-change between the asks.
+`EdgeShard.create` makes the store in a local folder. There is no server or
+account involved. Now ask, “where can I sit outside for a latte?” Nothing
+comes back. The model is ready; the memory is empty.
 
 ---
 
@@ -101,9 +87,8 @@ Run the notes cell.
 
 **NARRATION:**
 
-Here are the memories themselves. These are the kinds of notes a phone
-assistant might keep during a day: a coffee shop, a meeting time, a
-reminder, an idea, an address, and a pair of shoes.
+These are ordinary notes from a day: a coffee shop, a meeting, a reminder,
+an idea, an address, and a pair of shoes.
 
 ---
 
@@ -113,13 +98,10 @@ Run the embed cell.
 
 **NARRATION:**
 
-To search by meaning instead of by exact words, we turn each note into a
-vector. This is the one place we do it in the open. We load
-Nomic-Embed-Text v1.5 through FastEmbed, a small model that runs on the
-device, and call `embed` on the twenty notes. Back come twenty vectors,
-768 numbers each: the note's meaning as coordinates. From here on a helper
-wraps this same call to keep the cells short, but the work never changes:
-text goes in, vectors come out, and none of it leaves the machine.
+To search by meaning, we turn each note into a vector: a list of 768 numbers
+that represents the note. We run the text model on the device, once for each
+note. From now on, a helper makes the same call so the notebook stays easy
+to read. The work is unchanged: text in, vectors out.
 
 ---
 
@@ -160,11 +142,9 @@ Run the Point / upsert_points / optimize cell.
 
 **NARRATION:**
 
-Now we turn each note into a `Point`: an ID, the named vector, and a
-payload. The payload holds the note text and its fields. We upsert all 20
-points in one batch, then call `optimize()`. Edge has no background
-optimizer, so we ask for the index build explicitly. On a server, Qdrant
-does this for you in the background.
+Each note becomes a `Point`: an ID, its vector, and its original text with
+other details. We write all 20 points, then call `optimize()` to build the
+local search index.
 
 ---
 
@@ -174,14 +154,10 @@ Run the recall cell.
 
 **NARRATION:**
 
-Now ask the exact same question from the cold open: "where can I sit outside
-for a latte?" This time the coffee place on 5th comes back on top, at 0.65.
-The model didn't change between the empty ask and this one. The memory did.
-One detail worth naming: we embed the question with `embed_query`, which adds
-the prefix Nomic uses for questions so its score lines up with the stored
-notes. And look closely: not one word of the question, "sit", "outside", or
-"latte", appears in that note. The match is the meaning, not the words. That
-is the search a plain keyword scan can't do.
+Ask the same question again. This time, the coffee place on 5th comes back
+first. The question and the note do not share the words “sit,” “outside,” or
+“latte.” They match in meaning. The model did not change between the two
+queries; the stored memories did.
 
 ---
 
@@ -191,16 +167,10 @@ Run the 5,000-memory build-up cell. Point at the median line on the chart.
 
 **NARRATION:**
 
-How fast is this at a realistic scale? A device fills up with memories over
-months, so we grow the store to 5,000 memories, using random filler
-vectors. Content doesn't matter here; latency depends on how many vectors
-there are and how wide they are, not on what they mean. We time 200
-lookups, in the open, and here's the whole distribution as a chart, with
-the median marked. To be precise about what's measured: this is the vector
-lookup itself; embedding the question happens once, before the clock
-starts. Even at 5,000 memories, on this CPU-only container, the lookup
-stays well under a millisecond. It runs in-process, over local files, with
-nothing leaving the device.
+What happens as the store grows? We add filler until it holds 5,000 memories
+and time 200 searches. The chart measures the lookup only; turning the
+question into a vector happens before the timer starts. On this CPU-only
+machine, the median lookup stays well below a millisecond.
 
 ---
 
@@ -210,15 +180,10 @@ Run the delete cell, then the third-ask cell.
 
 **NARRATION:**
 
-Growing is only half of memory. The other half is forgetting. Wrong notes,
-stale ones, anything you no longer want: you delete it by id, then optimize.
-So let's forget the coffee place. `delete_points` takes the id of the top
-hit you just saw, and it's gone. Now the third ask of our question. A
-different memory surfaces, the quiet cafe near the park, at a lower
-score: the store answers with the best it still has. Look at the
-before-and-after: the café note is marked as dropped, and the other notes
-are untouched, same scores as before. Forgetting removes exactly what you
-deleted, not every trace.
+Memory also needs deletion. We delete the coffee place by its ID, then build
+the index again. Ask the same question a third time. A different café now
+comes first. The before-and-after view shows that one note disappeared while
+the others stayed put.
 
 ---
 
@@ -226,13 +191,6 @@ deleted, not every trace.
 
 **NARRATION:**
 
-That's the lifecycle of a memory, in one lesson: store it, recall it by
-meaning, and forget it on command. And because the store is just files in a
-local folder, it is still there when you close the app and open it later.
-Nothing to sync, nothing to reload from a server. Every call the shard made
-stayed visible in the cells, so you can see exactly what it is doing; the
-helpers handle only the supporting plumbing, like the query wrapper and the
-charts.
-
-Next lesson, we keep this text encoder and add a second one, for photos, so
-you can find a picture by describing it, and filter what comes back.
+You have now stored a note, found it by meaning, and deleted it on purpose.
+The store is local files, so it survives a restart. Next, we add photos and
+filters.

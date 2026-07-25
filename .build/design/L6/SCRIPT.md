@@ -19,7 +19,7 @@ course's exact stack: CLIP for image (512-d), Nomic for text (768-d),
 Whisper for audio, Qdrant Edge as the store, the same 0.80 threshold. So
 every stage of its loop maps back to a lesson the students built with
 their own hands. Two pieces are genuinely new, and both are named, not
-taught. The fleet-sync beat is committed (L5 §8's upload tees it up): wire
+taught. The fleet-sync beat is committed (L5 §9's upload tees it up): wire
 it for real, never fake it.
 
 ## Beat map
@@ -32,11 +32,12 @@ it for real, never fake it.
 | 4 | NARRATION | The two new pieces: detection, and when to remember | 55 |
 | 5 | DEMO | Teach by voice, in full ("this is my mug") | 55 |
 | 6 | DEMO | "What did you see today?" · "where are my keys?" · offline reboot | 70 |
-| 7 | DEMO | Fleet sync: one robot teaches, another remembers | 45 |
-| 8 | WRAP | The course arc + repo pointer | 50 |
+| 7 | DEMO | Forget it: teach wrong, delete, back to unknown | 35 |
+| 8 | DEMO | Fleet sync: one robot teaches, another remembers | 45 |
+| 9 | WRAP | The course arc + repo pointer | 50 |
 
-Total: ~455 sec (~7.6 min narration; ~8 min with demo beats at full
-length).
+Total: ~490 sec (~8.2 min narration; trim beat 6 or 8 in edit if it runs
+long).
 
 ---
 
@@ -117,12 +118,13 @@ diagram spec (16:9):
 
 Now the same loop, with the receipts. The microphone-to-transcript path,
 Whisper, then Nomic, is your L4, cell for cell. Store, recall, forget:
-the memory lifecycle you walked in L2 with one repeated question. Frame
-to embedding to nearest-match against a threshold: that's L5's teach and
-recognize, unchanged. Asking about the day across photos, voice, and
-text: the cross-modal recall you built in L3 and L4. And the memory
-itself is one shard with a text vector and an image vector, the exact
-assistant shard you assembled at the end of L5, with a camera and a
+the memory lifecycle you walked in L2 with one repeated question, and
+you'll watch all three of those on this robot before the lesson is out.
+Frame to embedding to nearest-match against a threshold: that's L5's
+teach and recognize, unchanged. Asking about the day across photos,
+voice, and text: the cross-modal recall you built in L3 and L4. And
+the memory itself is one shard with a text vector and an image vector,
+the exact assistant shard you assembled at the end of L5, with a camera and a
 microphone bolted on. The robot's memory code mirrors what you wrote.
 
 ---
@@ -198,9 +200,29 @@ makes any of this count as memory.
 
 ---
 
-## Beat 7: DEMO, fleet sync
+## Beat 7: DEMO, forget it
 
-Demo footage (shotlist #7, pending build): robot A is taught the mug;
+Demo footage (shotlist #7): the robot is taught the wrong label on
+purpose, the memory is deleted on camera, and the same object comes back
+unknown.
+
+**NARRATION:**
+
+One more verb, and it's the one that makes this a memory instead of a log.
+Watch me teach it wrong on purpose: I hold up the object and give it the
+wrong name, and now it's confidently wrong, because it believes what it
+was told. So I delete that memory. One press, and what runs underneath is
+`delete_points` on the ids for that label, the same call you made in L2
+when you forgot the coffee place. Now the same object, same angle, and
+it's unknown again. Nothing lingers, no retraining, no relearning around
+the mistake. A device that can be taught has to be correctable, and on
+this design correcting it is a delete.
+
+---
+
+## Beat 8: DEMO, fleet sync
+
+Demo footage (shotlist #8, pending build): robot A is taught the mug;
 an explicit sync runs; robot B (or a second device) recognizes the mug
 and recalls the spoken note. Every claim here must match the recorded
 output; if the fleet build isn't ready, this beat is cut, never staged.
@@ -217,7 +239,7 @@ same choice: nothing syncs until someone decides it should.
 
 ---
 
-## Beat 8: WRAP
+## Beat 9: WRAP
 
 **NARRATION:**
 

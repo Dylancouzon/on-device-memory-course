@@ -102,8 +102,8 @@ the notebook kept beside the model. Everything we build in this course is
 that notebook, and the application code that writes and reads it. One
 thing this picture leaves out on purpose: a language model generating
 answers. Nothing in this course generates text. Memory and retrieval do
-the work, and memory alone gets you surprisingly far. When you add a
-language model later, this store is the memory it reads from.
+the work. When you add a language model later, this store is the memory it
+reads from.
 
 ---
 
