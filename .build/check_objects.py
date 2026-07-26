@@ -1,11 +1,11 @@
-"""Gate check for data/objects/: the L5 recognition threshold must sit in a real
+"""Gate check for ro_shared_data/objects/: the L5 recognition threshold must sit in a real
 gap. For every object with three views, the held-out third view scores >= 0.82
 against its taught pair, while no other object or scene image scores > 0.75
 against its views. Two-view objects (backpack, lithops) only get the no-collision
 check; the backpack's canonical teach-one/recognize-other stays ~0.86.
 
 Objects are curated by hand from Wikimedia Commons upload series (same physical
-object, multiple views) recorded in data/objects/CREDITS.json. Run after any
+object, multiple views) recorded in ro_shared_data/objects/CREDITS.json. Run after any
 change to that folder: `python .build/check_objects.py`.
 """
 import math
@@ -17,8 +17,8 @@ from utils.embeddings import embed_image
 
 HELD_OUT_MIN = 0.82
 FOREIGN_MAX = 0.75
-OBJ = Path(__file__).parent.parent / "data" / "objects"
-SCENES = Path(__file__).parent.parent / "data" / "images"
+OBJ = Path(__file__).parent.parent / "ro_shared_data" / "objects"
+SCENES = Path(__file__).parent.parent / "ro_shared_data" / "images"
 
 
 def cos(a, b):

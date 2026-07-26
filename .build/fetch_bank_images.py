@@ -10,7 +10,7 @@ fetcher pulls one photo per everyday subject from license-free pools only:
 The license filter is hard: an image is saved only if its license is in
 ALLOWED_LICENSES. Anything requiring attribution (CC BY, CC BY-SA) is skipped,
 so the shipped course carries no per-image credit lines. Provenance is still
-recorded in data/bank/CREDITS.json for our own records.
+recorded in ro_shared_data/bank/CREDITS.json for our own records.
 
 Files that already exist are kept, so a re-run only fills gaps. REFRESH=1
 re-downloads. Downscales to <= MAX_SIDE px to keep the repo light.
@@ -26,7 +26,7 @@ from pathlib import Path
 
 from PIL import Image
 
-OUT = Path("data/bank")
+OUT = Path("ro_shared_data/bank")
 OUT.mkdir(parents=True, exist_ok=True)
 UA = {"User-Agent": "qdrant-edge-course/1.0 (educational sample; contact dylan.couzon@qdrant.com)"}
 MIN_SIDE = 240        # reject thumbnails/icons

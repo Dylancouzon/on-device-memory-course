@@ -1,8 +1,8 @@
-"""Build data/memories.json: one person's day, shared across L2-L5.
+"""Build ro_shared_data/memories.json: one person's day, shared across L2-L5.
 
 Text and voice notes plus photo captures, each with metadata the labs filter on
 (category, location, timestamp, price). Photo entries point at files in
-data/images. Edit the DAY list and re-run: `python .build/build_memories.py`.
+ro_shared_data/images. Edit the DAY list and re-run: `python .build/build_memories.py`.
 
 Timestamps are epoch seconds. BASE is "today 00:00 UTC"; `h` is the hour of day
 (negative = yesterday), so the data reads as times, not raw integers.
@@ -43,7 +43,7 @@ DAY = [
     (10.1, "voice", "Quick memo, the standup is moved to Thursday, tell the rest of the team", "work", "Office", None, None),
     (9.2, "voice", "Parked the bike near the station, second rack from the entrance", "travel", "Station", None, None),
     (19.5, "voice", "Just remembered, we are low on coffee at home, grab a bag on the way back", "errands", "Home", None, None),
-    # --- photo captures (point at data/images) ---
+    # --- photo captures (point at ro_shared_data/images) ---
     (8.2, "photo", "coffee.jpg", "food", "5th St", None, "Blue Cup"),
     (8.1, "photo", "bakery.jpg", "food", "5th St", 4.0, None),
     (13.0, "photo", "restaurant.jpg", "food", "Downtown", None, "Elizabeth's"),
@@ -99,21 +99,21 @@ def build():
 def main():
     memories = build()
     # every photo must point at a real file
-    imgs = {p.name for p in Path("data/images").glob("*.jpg")}
+    imgs = {p.name for p in Path("ro_shared_data/images").glob("*.jpg")}
     missing = [m["file"] for m in memories
                if m["source_type"] == "photo" and m["file"] not in imgs]
     assert not missing, f"photo entries with no image on disk: {missing}"
     # every voice note must point at a real audio clip
-    clips = {p.name for p in Path("data/audio").glob("*.wav")}
+    clips = {p.name for p in Path("ro_shared_data/audio").glob("*.wav")}
     missing_audio = [m["audio_file"] for m in memories
                      if m["source_type"] == "voice" and m["audio_file"] not in clips]
     assert not missing_audio, f"voice entries with no audio on disk: {missing_audio}"
-    Path("data/memories.json").write_text(json.dumps(memories, indent=2) + "\n")
+    Path("ro_shared_data/memories.json").write_text(json.dumps(memories, indent=2) + "\n")
 
     from collections import Counter
     cats = Counter(m["category"] for m in memories)
     kinds = Counter(m["source_type"] for m in memories)
-    print(f"wrote data/memories.json: {len(memories)} memories")
+    print(f"wrote ro_shared_data/memories.json: {len(memories)} memories")
     print("by source:", dict(kinds))
     print("by category:", dict(cats))
 

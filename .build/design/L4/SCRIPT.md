@@ -3,7 +3,7 @@
 **Target runtime:** ~8 min
 
 NOTEBOOK beats reference the section numbers as they appear in the
-executed `L4.ipynb`.
+executed `Lesson4.ipynb`.
 
 This lab is driven by the notebook. Students inspect a day of memories, ask
 their own question, and add a new memory. The live output is the visual:

@@ -2,7 +2,7 @@
 
 Everyday subjects for the day-in-the-life labs (L3 image search, L4 multimodal
 day). One image per topic. Records source URL, license, and attribution in
-data/images/CREDITS.json.
+ro_shared_data/images/CREDITS.json.
 
 Files that already exist are kept as-is, so a re-run only fills gaps and never
 clobbers a vetted photo. Set REFRESH=1 to re-download everything.
@@ -24,7 +24,7 @@ def _strip_html(text):
     return html.unescape(re.sub(r"<[^>]+>", "", text or "")).strip()
 
 
-OUT = Path("data/images")
+OUT = Path("ro_shared_data/images")
 OUT.mkdir(parents=True, exist_ok=True)
 API = "https://commons.wikimedia.org/w/api.php"
 UA = {"User-Agent": "qdrant-edge-course/1.0 (educational sample; contact dylan.couzon@qdrant.com)"}

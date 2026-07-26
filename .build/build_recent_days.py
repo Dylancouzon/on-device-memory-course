@@ -1,8 +1,8 @@
-"""Build data/recent_days.json: a few weeks of text/voice notes before "today".
+"""Build ro_shared_data/recent_days.json: a few weeks of text/voice notes before "today".
 
 Gives the L5 capstone a realistic history to search, so the finished assistant
-feels lived-in. Photos stay in the curated data/images set: this file is text
-and voice only. The hero day (data/memories.json, 42 memories) is untouched, so
+feels lived-in. Photos stay in the curated ro_shared_data/images set: this file is text
+and voice only. The hero day (ro_shared_data/memories.json, 42 memories) is untouched, so
 L2/L4 payoffs and spoken counts hold. Read by L3 §8 and the L5 capstone.
 
 Timestamps share memories.json's BASE ("today 00:00 UTC"); `day` is days before
@@ -146,10 +146,10 @@ def build():
 
 def main():
     memories = build()
-    Path("data/recent_days.json").write_text(json.dumps(memories, indent=2) + "\n")
+    Path("ro_shared_data/recent_days.json").write_text(json.dumps(memories, indent=2) + "\n")
 
     from collections import Counter
-    print(f"wrote data/recent_days.json: {len(memories)} notes")
+    print(f"wrote ro_shared_data/recent_days.json: {len(memories)} notes")
     print("by source:", dict(Counter(m["source_type"] for m in memories)))
     print("by category:", dict(Counter(m["category"] for m in memories)))
 

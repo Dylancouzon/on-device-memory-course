@@ -1,14 +1,216 @@
-"""Course visualizations.
+"""Helper functions for the course notebooks.
 
-Every figure carries a badge saying where its numbers came from, measured
-live in the notebook or illustrative. The badge is drawn into the figure, so
-a chart cannot end up on screen unlabelled.
+Non-Qdrant plumbing only: the on-device embedding models, speech-to-text for
+the voice notes, and the small matplotlib views the lessons print. Every
+Qdrant call lives in the notebooks themselves.
 """
+import gc
+import inspect
+import shutil
+import socket
+from contextlib import contextmanager
+from functools import lru_cache
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
+from qdrant_edge import EdgeShard, Point, UpdateOperation
 
+
+# Embedding models: Nomic for text, CLIP for images --------------------
+NOMIC_MODEL = "nomic-ai/nomic-embed-text-v1.5"
+NOMIC_DIM = 768
+
+
+@lru_cache(maxsize=1)
+def _text_model():
+    from fastembed import TextEmbedding
+    return TextEmbedding(NOMIC_MODEL)
+
+
+def embed_text(texts):
+    """Embed documents for storage. Returns list[list[float]] (one per input)."""
+    return [v.tolist() for v in _text_model().embed(list(texts))]
+
+
+def embed_query(text):
+    """Embed a single query string.
+
+    Nomic uses different task prefixes for documents and queries; FastEmbed's
+    `query_embed` applies the query prefix so retrieval scores line up.
+    """
+    return next(_text_model().query_embed([text])).tolist()
+
+
+# CLIP: one shared text/image space, for cross-modal recall in L3 and later.
+# Nomic and CLIP scores sit on different scales, so photos live in their own
+# named vector and a text query is embedded twice, once per space.
+CLIP_VISION_MODEL = "Qdrant/clip-ViT-B-32-vision"
+CLIP_TEXT_MODEL = "Qdrant/clip-ViT-B-32-text"
+CLIP_DIM = 512
+
+
+@lru_cache(maxsize=1)
+def _clip_vision():
+    from fastembed import ImageEmbedding
+    return ImageEmbedding(CLIP_VISION_MODEL)
+
+
+@lru_cache(maxsize=1)
+def _clip_text():
+    from fastembed import TextEmbedding
+    return TextEmbedding(CLIP_TEXT_MODEL)
+
+
+def embed_image(paths):
+    """Embed image files with CLIP's vision encoder. Returns list[list[float]]."""
+    return [v.tolist() for v in _clip_vision().embed(list(paths))]
+
+
+def load_image(url_or_path):
+    """Return a local image path, fetching http(s) URLs to a temp JPEG first.
+
+    The container has no camera, so pasting an image URL stands in for a
+    capture: the bytes are fetched once, normalized to RGB JPEG, and the
+    local path is returned so it embeds and displays like a bundled photo.
+    A path to a file already on disk passes straight through.
+    """
+    if not str(url_or_path).startswith(("http://", "https://")):
+        return url_or_path
+    import io
+    import os
+    import tempfile
+    import urllib.parse
+    import urllib.request
+    from PIL import Image
+
+    # A search-results link points at a viewer page and carries the real
+    # image URL in its imgurl parameter.
+    query = urllib.parse.parse_qs(urllib.parse.urlparse(url_or_path).query)
+    url = query.get("imgurl", [url_or_path])[0]
+
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as response:
+            data = response.read()
+        image = Image.open(io.BytesIO(data)).convert("RGB")
+    except OSError:
+        raise ValueError(
+            f"No image came back from this link:\n  {url[:90]}\n"
+            "Right-click the image itself and copy the image address (it "
+            "ends in .jpg or .png), or save your photos into this lesson's "
+            "folder and list their filenames instead of links."
+        ) from None
+    fd, path = tempfile.mkstemp(suffix=".jpg")
+    os.close(fd)
+    image.save(path, "JPEG")
+    return path
+
+
+def embed_query_clip(text):
+    """Embed a text query into CLIP's space, to search the image vector."""
+    return next(_clip_text().query_embed([text])).tolist()
+
+
+def embed_query_ms(text, runs=50):
+    """Median time in milliseconds to embed one query, measured live."""
+    from statistics import median
+    from time import perf_counter
+    times = []
+    for _ in range(runs):
+        t0 = perf_counter()
+        embed_query(text)
+        times.append((perf_counter() - t0) * 1000)
+    return median(times)
+
+
+EXAMPLE_OBJECT = "./ro_shared_data/objects/rubberduck_"
+
+
+def object_photos(teach_photos, test_photo):
+    """Resolve a subject's photos to local files, ready to embed and show.
+
+    Pass two or more photos of one subject in `teach_photos` and one more in
+    `test_photo`, either as image links or as filenames saved beside the
+    notebook. Leave them empty to fall back to the bundled example. Links
+    are fetched once; local paths pass through.
+    """
+    example = not (teach_photos or test_photo)
+    if example:
+        teach_photos = [EXAMPLE_OBJECT + "1.jpg", EXAMPLE_OBJECT + "2.jpg"]
+        test_photo = EXAMPLE_OBJECT + "3.jpg"
+    elif not (teach_photos and test_photo):
+        raise ValueError(
+            "Fill in both TEACH_PHOTOS (two or more photos) and TEST_PHOTO "
+            "(one more), or leave both empty to use the bundled example."
+        )
+    resolved = [load_image(p) for p in teach_photos]
+    print(f"{len(resolved)} teach photos + 1 test photo ready"
+          + (" (bundled example: rubber duck)" if example else ""))
+    return resolved, load_image(test_photo)
+
+
+# Shard setup, the offline guard, and benchmark filler -----------------
+def filler_vectors(count, dim, seed=0):
+    """Random vectors that grow the shard so a latency number is credible.
+
+    Content is irrelevant to latency, it tracks how many vectors there are and
+    how wide they are. The notebook builds the points and upserts them itself,
+    so every write stays visible in the cell.
+    """
+    import numpy as np
+    rng = np.random.default_rng(seed)
+    return rng.normal(size=(count, dim)).astype("float32").tolist()
+
+
+def fresh_start(directory):
+    """Delete any previous run's shard directory and recreate it empty.
+
+    A shard the notebook still has bound holds its files open, and Edge flushes
+    when that object is dropped. Deleting the files first makes the flush fail
+    inside a destructor, which surfaces as a Rust panic rather than a Python
+    error. So close any shard the caller still holds before removing anything:
+    that makes re-running a setup cell in a live kernel safe, instead of only
+    working on a clean top-to-bottom run.
+    """
+    frame = inspect.stack()[1].frame
+    try:
+        for value in list(frame.f_globals.values()):
+            if isinstance(value, EdgeShard):
+                try:
+                    value.close()
+                except Exception:
+                    pass
+    finally:
+        del frame
+    gc.collect()
+    shutil.rmtree(directory, ignore_errors=True)
+    Path(directory).mkdir(parents=True, exist_ok=True)
+    return directory
+
+
+@contextmanager
+def no_network():
+    """Block new Python socket creation inside the block.
+
+    Swaps `socket.socket` for one that raises, so any Python code that tries to
+    open a new socket fails loudly. It is a demonstration guard, not an OS-level
+    network cut: it does not touch sockets already open or native code paths.
+    If a query still returns with it active, that query opened no new socket.
+    """
+    original = socket.socket
+
+    def blocked(*args, **kwargs):
+        raise OSError("Python socket creation blocked for this cell")
+
+    socket.socket = blocked
+    try:
+        yield
+    finally:
+        socket.socket = original
+
+
+# The views the lessons print ------------------------------------------
 # provenance -> (label, color)
 BADGES = {
     "measured": ("Measured in notebook", "#008A53"),
@@ -392,12 +594,29 @@ def show_images(paths, captions=None, height=2.2, per_row=6):
     plt.show()
 
 
-def demo():
-    receipt_table([("path", "./coffee_shard"), ("points_before_close", 6),
-                   ("points_after_reopen", 6), ("same_top_result", "✓"),
-                   ("network_calls", 0)])
-    print("viz demo OK (1 figure created)")
+# Speech to text for the voice notes -----------------------------------
+WHISPER_MODEL = "whisper-base"
 
 
-if __name__ == "__main__":
-    demo()
+@lru_cache(maxsize=1)
+def _asr_model():
+    import onnx_asr
+    return onnx_asr.load_model(WHISPER_MODEL, providers=["CPUExecutionProvider"])
+
+
+def transcribe(audio_path):
+    """Transcribe one audio file to text with a local Whisper model."""
+    return _asr_model().recognize(audio_path).strip()
+
+
+def transcribe_notes(memories, audio_dir):
+    """Transcribe every voice note in place, then free the speech model.
+
+    Releasing Whisper before the embedding models load keeps the notebook
+    inside the 4 GB sandbox budget.
+    """
+    voice = [m for m in memories if m["source_type"] == "voice"]
+    for m in voice:
+        m["transcript"] = transcribe(f"{audio_dir}/{m['audio_file']}")
+    _asr_model.cache_clear()
+    return voice

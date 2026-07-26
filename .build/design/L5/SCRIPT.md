@@ -3,7 +3,7 @@
 **Target runtime:** ~11 min
 
 NOTEBOOK beats reference the section numbers as they appear in the
-executed `L5.ipynb`.
+executed `Lesson5.ipynb`.
 
 The device learns something new by writing memory, not by retraining. A
 student starts with an unrecognized photo, stores a few examples under a
@@ -16,10 +16,11 @@ and what the examples have in common is what the label means. That is also
 why the threshold is a knob: tight subjects leave a wide gap, varied ones a
 narrow one.
 
-The lab runs end-to-end on the bundled photos in `data/objects/`, so the
+The lab runs end-to-end on the bundled photos in `ro_shared_data/objects/`, so the
 core lesson works offline in the course container. Bringing your own photos
 (§1, image links or filenames in the first cell) and the cloud upload
-(Appendix A, an `UPLOAD_TO_CLOUD` switch plus `QDRANT_URL`/`QDRANT_API_KEY`)
+(Appendix A, its own notebook in the lesson folder, an `UPLOAD_TO_CLOUD`
+switch plus `QDRANT_URL`/`QDRANT_API_KEY`)
 are the two opt-in beats that leave the container. The lesson arc closes at
 §9, on the offline reboot; the cloud is an appendix so the hands-on course
 ends on memory staying put. The subject is set once, at the top,
@@ -272,8 +273,9 @@ left this machine. The same design appears on a robot in the final lesson.
 
 ## Beat 13: APPENDIX A, send a copy to the cloud
 
-Run the appendix cell. It is outside the lesson arc, so it can be skipped
-on camera and left for students who want it.
+Open `Lesson5_Appendix.ipynb` in the lesson folder and run its one cell. It is
+outside the lesson arc, so it can be skipped on camera and left for
+students who want it.
 
 **NARRATION**
 

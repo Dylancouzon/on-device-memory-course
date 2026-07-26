@@ -32,10 +32,9 @@ def embed_query(text):
     return next(_text_model().query_embed([text])).tolist()
 
 
-# --- CLIP: shared text/image space for cross-modal recall (L3+) -----------------
-# Nomic and CLIP scores are NOT comparable, so photos live in their own named
-# vector and text queries are embedded twice, once per space. See the course
-# cross-modal retrieval policy.
+# CLIP: one shared text/image space, for cross-modal recall in L3 and later.
+# Nomic and CLIP scores sit on different scales, so photos live in their own
+# named vector and a text query is embedded twice, once per space.
 CLIP_VISION_MODEL = "Qdrant/clip-ViT-B-32-vision"
 CLIP_TEXT_MODEL = "Qdrant/clip-ViT-B-32-text"
 CLIP_DIM = 512
@@ -115,7 +114,7 @@ def embed_query_ms(text, runs=50):
     return median(times)
 
 
-EXAMPLE_OBJECT = "../data/objects/rubberduck_"
+EXAMPLE_OBJECT = "./ro_shared_data/objects/rubberduck_"
 
 
 def object_photos(teach_photos, test_photo):

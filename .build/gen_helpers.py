@@ -1,11 +1,17 @@
-"""Generate each lesson's self-contained helper.py from the canonical utils/.
+"""Generate the course's top-level helper.py from the canonical utils/.
 
-Each DLAI lesson folder ships a helper.py next to its notebook so the folder
-runs on its own. This concatenates the utils modules a lesson actually uses
-into one file, drops the intra-package imports (everything is now in-file),
-and strips the module self-checks. Edit utils/ and re-run:
+The DLAI layout keeps one shared helper.py at the repo root and a symbolic
+link to it in every lesson folder, so each folder is self-contained once the
+platform replaces the links with copies.
+
+The output has to read like one hand-written file, because that is what a
+reviewer sees. So this does more than concatenate: it lifts every
+module-level import into a single block at the top, drops each module's own
+docstring in favour of the section headings below, and strips the module
+self-checks and intra-package imports. Edit utils/ and re-run:
 `python .build/gen_helpers.py`.
 """
+import ast
 import re
 from pathlib import Path
 
@@ -13,33 +19,84 @@ BUILD = Path(__file__).parent
 SRC = BUILD / "utils"
 ROOT = BUILD.parent
 
-# Modules each lesson imports from (whole-module include: safe, self-contained).
-LESSONS = {
-    "L2": ["embeddings", "qdrant_helpers", "viz"],
-    "L3": ["embeddings", "qdrant_helpers", "viz"],
-    "L4": ["embeddings", "qdrant_helpers", "viz", "audio"],
-    "L5": ["embeddings", "qdrant_helpers", "viz"],
-}
+# Section heading per module, written by hand so the seams read as structure.
+SECTIONS = [
+    ("embeddings", "Embedding models: Nomic for text, CLIP for images"),
+    ("qdrant_helpers", "Shard setup, the offline guard, and benchmark filler"),
+    ("viz", "The views the lessons print"),
+    ("audio", "Speech to text for the voice notes"),
+]
+LESSONS = ["L2", "L3", "L4", "L5"]
 
-HEADER = (
-    '"""Lesson helpers, generated from .build/utils by gen_helpers.py.\n\n'
-    'Edit the source modules under .build/utils and regenerate; do not edit\n'
-    'this file directly."""\n'
-)
+HEADER = '''"""Helper functions for the course notebooks.
+
+Non-Qdrant plumbing only: the on-device embedding models, speech-to-text for
+the voice notes, and the small matplotlib views the lessons print. Every
+Qdrant call lives in the notebooks themselves.
+"""
+'''
+
+STDLIB = {"gc", "inspect", "shutil", "socket", "contextlib", "functools",
+          "pathlib", "textwrap", "json", "os", "re", "time", "statistics"}
 
 
-def module_src(name):
+def split_module(name):
+    """Return (module-level import lines, body) for one utils module."""
     text = (SRC / f"{name}.py").read_text()
-    text = re.split(r"\ndef demo\(", text)[0]          # drop self-check + __main__
-    lines = [ln for ln in text.splitlines()
-             if not ln.strip().startswith("from .")]   # drop intra-package imports
-    return "\n".join(lines).rstrip()
+    text = re.split(r"\ndef demo\(", text)[0]      # drop self-check + __main__
+
+    # Drop the module docstring: the section heading replaces it.
+    tree = ast.parse(text)
+    lines = text.splitlines()
+    if (tree.body and isinstance(tree.body[0], ast.Expr)
+            and isinstance(tree.body[0].value, ast.Constant)
+            and isinstance(tree.body[0].value.value, str)):
+        del lines[:tree.body[0].end_lineno]
+
+    imports, body = [], []
+    for ln in lines:
+        is_top_import = re.match(r"(import|from)\s", ln)      # column 0 only
+        if is_top_import and not ln.startswith("from ."):
+            imports.append(ln)                                # hoist it
+        elif is_top_import:
+            continue                                          # intra-package
+        else:
+            body.append(ln)
+    return imports, "\n".join(body).strip("\n")
 
 
-for lesson, mods in LESSONS.items():
-    parts = [HEADER]
-    for m in mods:
-        parts.append(f"\n# --- {m} " + "-" * 40 + "\n" + module_src(m))
-    out = ROOT / lesson / "helper.py"
-    out.write_text("\n".join(parts) + "\n")
-    print("wrote", out.relative_to(ROOT), f"({len(mods)} modules)")
+def sort_imports(lines):
+    """Stdlib block, then third-party, `import x` before `from x import y`."""
+    def key(ln):
+        root = re.sub(r"^(?:import|from)\s+([\w.]+).*", r"\1", ln).split(".")[0]
+        return (0 if root in STDLIB else 1, 0 if ln.startswith("import") else 1,
+                root, ln)
+
+    ordered = sorted(set(lines), key=key)
+    out, prev_third_party = [], None
+    for ln in ordered:
+        third_party = key(ln)[0]
+        if prev_third_party is not None and third_party != prev_third_party:
+            out.append("")                       # blank line between blocks
+        out.append(ln)
+        prev_third_party = third_party
+    return out
+
+
+all_imports, sections = [], []
+for name, heading in SECTIONS:
+    imports, body = split_module(name)
+    all_imports += imports
+    rule = "-" * max(3, 69 - len(heading))   # "# " + heading + " " + rule <= 72
+    sections.append(f"# {heading} {rule}\n{body}")
+
+body = "\n\n\n".join(["\n".join(sort_imports(all_imports)), *sections])
+(ROOT / "helper.py").write_text(HEADER + body + "\n")
+print(f"wrote helper.py ({len(SECTIONS)} sections)")
+
+for lesson in LESSONS:
+    link = ROOT / lesson / "helper.py"
+    if link.is_symlink() or link.exists():
+        link.unlink()
+    link.symlink_to("../helper.py")
+    print(f"linked {lesson}/helper.py")

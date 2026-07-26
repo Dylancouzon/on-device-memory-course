@@ -72,8 +72,8 @@ The language, element by element:
 - **Flow** reads top→bottom in this 8:9 format (the references are
   landscape; restack their left→right flows vertically).
 - **Photos** (when a brief calls for one) are the real course photos in
-  `data/images/` — never stock, never generated. Respect the credits in
-  `data/images/CREDITS.json`.
+  `ro_shared_data/images/` — never stock, never generated. Respect the credits in
+  `ro_shared_data/images/CREDITS.json`.
 
 ## The Qdrant palette (accents on white)
 

@@ -3,7 +3,7 @@
 **Target runtime:** ~7 min
 
 NOTEBOOK beats reference the section numbers as they appear in the
-executed `L3.ipynb`.
+executed `Lesson3.ipynb`.
 
 This lesson has two jobs: find a photo with a description, then narrow a
 search with a filter. The notebook output carries most of the explanation;

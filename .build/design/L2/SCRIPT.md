@@ -3,7 +3,7 @@
 **Target runtime:** ~7 min
 
 NOTEBOOK beats reference the section numbers as they appear in the
-executed `L2.ipynb`.
+executed `Lesson2.ipynb`.
 
 One question threads the lesson: "where can I sit outside for a latte?"
 It is asked three times: of the empty store, after storing, and after
