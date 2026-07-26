@@ -106,7 +106,7 @@ Run the scroll cell.
 
 **NARRATION**
 
-Pull one point back out and look at it. Its id, the named vectors it actually carries, this one is a text note, so only `text`, and its full payload. A photo point would show `image` instead. This is the raw shape everything else in the lab searches over.
+Pull one point back out and look at it. Its id, the first few of the 768 numbers in its `text` vector, and its full payload. A photo point would carry `image` instead. This is the raw shape everything else in the lab searches over.
 
 ---
 
