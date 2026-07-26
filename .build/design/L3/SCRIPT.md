@@ -28,12 +28,30 @@ Total: ~415 sec (~6.9 min).
 
 ---
 
-## Beat 1: INTRO
+## Beat 1: INTRO, endpoint teaser
+
+```slide-brief
+slug: l3-00-endpoint
+purpose: the endpoint teaser, recolored from l2-00-endpoint. Same layout,
+  same four nodes; "embed" and "recall" are the highlighted pair.
+on-slide text: node labels only: "capture", "embed", "store", "recall",
+  small tag "this lesson". No headline.
+diagram spec (8:9, stack top-to-bottom):
+  - Identical to l2-00-endpoint: four hand-drawn rounded nodes in a
+    vertical loop, light-blue (#03A9F4) "capture", orange (#FF9800)
+    "embed", violet (#6047FF) cylinder "store", red (#DC244C) "recall",
+    curved arrows connecting them, the recall arrow curving back up
+    toward capture.
+  - Only the highlight moves: "embed" and "recall" get a solid stroke and
+    full-strength fill; "capture" and "store" render at reduced opacity.
+  - The "this lesson" tag points at the highlighted pair. Small
+    spiral-notebook motif beside the cylinder.
+```
 
 **NARRATION:**
 
-L2 stored text notes. This lesson adds photos without changing the storage
-pattern. It also narrows a search from “something about food” to food under
+Same loop, and today the weight sits on encoding and recall. L2 stored text
+notes. This lesson adds photos without changing the storage pattern. It also narrows a search from “something about food” to food under
 fifteen dollars. You can find a memory by describing it or by adding a rule.
 
 ---

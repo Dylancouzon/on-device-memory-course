@@ -6,8 +6,9 @@ NOTEBOOK beats reference the section numbers as they appear in the
 executed `L4.ipynb`.
 
 This lab is driven by the notebook. Students inspect a day of memories, ask
-their own question, and add a new memory. The live output is the visual;
-there is no slide between the opening and the code.
+their own question, and add a new memory. The live output is the visual:
+the opening endpoint teaser is the only slide, and nothing comes between it
+and the code.
 
 ## Beat map
 
@@ -29,13 +30,33 @@ run live).
 
 ---
 
-## Beat 1: INTRO
+## Beat 1: INTRO, endpoint teaser
+
+```slide-brief
+slug: l4-00-endpoint
+purpose: the endpoint teaser, recolored from l2-00-endpoint. Same layout,
+  same four nodes; "capture" and "recall" are the highlighted pair.
+on-slide text: node labels only: "capture", "embed", "store", "recall",
+  small tag "this lesson". No headline.
+diagram spec (8:9, stack top-to-bottom):
+  - Identical to l2-00-endpoint: four hand-drawn rounded nodes in a
+    vertical loop, light-blue (#03A9F4) "capture", orange (#FF9800)
+    "embed", violet (#6047FF) cylinder "store", red (#DC244C) "recall",
+    curved arrows connecting them, the recall arrow curving back up
+    toward capture.
+  - Only the highlight moves: "capture" and "recall" get a solid stroke
+    and full-strength fill; "embed" and "store" render at reduced
+    opacity.
+  - The "this lesson" tag points at the highlighted pair. Small
+    spiral-notebook motif beside the cylinder.
+```
 
 **NARRATION**
 
-This lab puts photos, voice notes, and text notes from one day into one
-local store. You will ask it your own questions, then add a memory of your
-own.
+Back to the loop. This lesson leans on the two ends of it: everything a day
+captures, and asking it a question. This lab puts photos, voice notes, and
+text notes from one day into one local store. You will ask it your own
+questions, then add a memory of your own.
 
 ---
 
