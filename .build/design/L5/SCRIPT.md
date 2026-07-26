@@ -129,8 +129,10 @@ search an image site for something you like, a black cat, a red tractor,
 whatever, and copy two or three image addresses. Photos saved next to the
 notebook work the same way, by filename, and that's the route to take if
 you'd rather teach something you own. Leave both empty and the bundled
-example runs, so the lesson works as-is. Everything below reads from this
-one cell, so you set your subject once, here, and never touch it again.
+example runs, so the lesson works as-is. The label, the note you want the
+device to remember about your subject, and the question you'll ask it later
+all live in this cell too. Everything below reads from here, so you set your
+subject once and never touch it again.
 
 ---
 
@@ -214,17 +216,17 @@ test many known and unknown images before settling on a number.
 
 ## Beat 9: NOTEBOOK §7, assemble the assistant
 
-Run the assemble cell, then the teach cell that adds your subject and prints
-the receipt.
+Run the assemble cell, then the cell that stores your subject and prints the
+receipt.
 
 **NARRATION**
 
 Now build the assistant. One shard has `text` for notes and voice, and
 `image` for photos. We add the day, earlier notes, and the subject you taught
-in the first half. This time it goes in with a note attached, so the point
-carries a photo vector and a text vector at once. That is the first point in
-this course with both, and it is what lets you reach one memory two ways: by
-sight, or by what was said about it.
+in the first half. Look at how that last point is built: one ID, one payload,
+and two vectors, the photo embedded with CLIP and your note embedded with
+Nomic. That is the first point in this course with both, and it is what lets
+you reach one memory two ways: by sight, or by what was said about it.
 
 ---
 

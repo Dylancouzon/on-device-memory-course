@@ -81,13 +81,13 @@ def load_image(url_or_path):
     url = query.get("imgurl", [url_or_path])[0]
 
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=30) as response:
-        data = response.read()
     try:
+        with urllib.request.urlopen(req, timeout=30) as response:
+            data = response.read()
         image = Image.open(io.BytesIO(data)).convert("RGB")
     except OSError:
         raise ValueError(
-            f"This link is a web page, not an image file:\n  {url[:90]}\n"
+            f"No image came back from this link:\n  {url[:90]}\n"
             "Right-click the image itself and copy the image address (it "
             "ends in .jpg or .png), or save your photos into this lesson's "
             "folder and list their filenames instead of links."
