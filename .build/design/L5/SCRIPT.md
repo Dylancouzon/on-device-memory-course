@@ -113,7 +113,7 @@ diagram spec (8:9, stack top-to-bottom):
 
 **NARRATION**
 
-Here's the whole idea in one picture. To teach, you embed a few photos with CLIP and store the vectors, tagged with a label you choose. To recognize, you embed a new photo the same way and find its nearest stored vector. If that match is close enough, above a threshold, the device knows what it's looking at. Be precise about what this is: memory-based recognition. The device stores examples and asks whether a new photo is close enough to one of them. No classifier gets trained, and nothing decides in advance whether your label names one particular thing or a whole kind of thing. Your examples decide that. Teaching and recognizing use the exact same embedding space; the only difference is whether you're writing or reading.
+Here's the whole idea in one picture. To teach, embed a few photos with CLIP and store them with a label you choose. To recognize a new photo, embed it the same way and find the nearest stored photo. If the score clears the threshold, return that label. This is recognition from stored examples, not a newly trained classifier. Your examples decide whether the label means one object or a broader kind of object.
 
 ---
 
@@ -200,17 +200,13 @@ Run the evidence cell.
 
 **NARRATION**
 
-Use the chart to inspect the decision. Your held-out photo sits above the
-line; five photos the device was never taught sit below it. Photo-to-photo
-scores run much higher than the text-to-photo scores in L3, around 0.86 to
-0.96 for a good match against about 0.30 there, so a threshold never
-carries from one task to another. Read the size of the gap, because that is
-what the threshold is really made of, and it depends on what you taught. A
-tight subject like a cat leaves a wide gap. Something visually varied, three
-different chairs, leaves a narrower one, and 0.80 may need to move. If your
-own subject landed below the line, that is the chart doing its job: add
-another photo, or pick examples with more in common. For a real product,
-test many known and unknown images before settling on a number.
+Use this chart to inspect the decision. Your held-out photo sits above the
+line; five photos the device was never taught sit below it. That gap is the
+evidence for the threshold. Photo-to-photo scores run high, around 0.86 to
+0.96 for a good match, so a number from another task means nothing here. If
+your subject landed below the line, add clearer examples, and test more
+known and unknown photos before settling on a number. The threshold itself
+is the `RECOGNIZE_THRESHOLD` line in the shard cell.
 
 ---
 

@@ -168,18 +168,17 @@ budget under the chart.
 
 **NARRATION:**
 
-What happens as the store grows? We add filler until it holds 5,000 memories
-and time 200 searches. The histogram measures the lookup only, and on this
-CPU-only machine the median stays well below a millisecond.
+What happens as the store grows? We add 5,000 filler memories on top of the
+notes and time 200 searches. The histogram measures the lookup only, and on
+this CPU-only machine the median stays well below a millisecond.
 
-The lookup is not the whole answer though, so we time the other half as well.
-Turning the question into a vector is the line under the chart, and it costs
-a few milliseconds against a fraction of one for the search. Embedding is
-tens of times the lookup. Sit with that for a second, because it tells you
-where your time really goes when you build this: the search is close to free
-and the encoder is the part you budget for. The total is the number that
-matters, a complete local answer in under ten milliseconds, more than a
-hundred questions a second with no GPU anywhere.
+The lookup is not the whole answer, so we time the other half too. Turning
+the question into a vector is the line under the chart, and it costs several
+milliseconds against a fraction of one for the lookup. Read the two numbers
+together: the encoder is the part you budget for, and the lookup barely
+registers next to it. The total on the chart is a complete local answer in
+under ten milliseconds, more than a hundred questions a second with no GPU
+anywhere.
 
 ---
 

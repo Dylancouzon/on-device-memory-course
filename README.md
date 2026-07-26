@@ -12,14 +12,15 @@ On-device AI needs **memory**: a place to keep personal facts that grow over tim
 
 ## How it works
 
-- **The store is a file, not a server.** `EdgeShard` runs Qdrant inside your app on local disk. Close it and the memory persists, in the same format as server Qdrant.
+- **The store is a folder of plain files, not a server.** `EdgeShard` runs Qdrant inside your app on local disk. Close it and the memory persists, in the same format as server Qdrant.
 - **One shard, two kinds of memory.** Nomic-Embed-Text encodes text and voice (768-d); CLIP encodes photos (512-d), as two named vectors. Describe a photo in words and find it.
 - **Filter while you search.** Fields like category and price are applied inside the query, so recall is similarity *and* structure.
 - **Everything runs offline** in a small CPU-only container, the same limits a phone, a Pi, or a robot gives you.
 
 ## Lessons
 
-Run the notebooks in order; each folder is self-contained. L1 and L6 are
+Run the notebooks in order; each lesson folder has its own notebook, helper,
+and requirements, and all lessons share the top-level `data/`. L1 and L6 are
 video lessons with no notebook.
 
 | # | Lesson | What it covers |

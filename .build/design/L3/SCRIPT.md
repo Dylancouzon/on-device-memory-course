@@ -50,8 +50,8 @@ diagram spec (8:9, stack top-to-bottom):
 
 **NARRATION:**
 
-Same loop, and today the weight sits on encoding and recall. L2 stored text
-notes. This lesson adds photos without changing the storage pattern. It also narrows a search from “something about food” to food under
+Today we focus on embedding and recall. L2 stored text notes. Now we add
+photos using the same storage pattern, then narrow a search to food under
 fifteen dollars. You can find a memory by describing it or by adding a rule.
 
 ---

@@ -126,10 +126,15 @@ def object_photos(teach_photos, test_photo):
     notebook. Leave them empty to fall back to the bundled example. Links
     are fetched once; local paths pass through.
     """
-    example = not (teach_photos and test_photo)
+    example = not (teach_photos or test_photo)
     if example:
         teach_photos = [EXAMPLE_OBJECT + "1.jpg", EXAMPLE_OBJECT + "2.jpg"]
         test_photo = EXAMPLE_OBJECT + "3.jpg"
+    elif not (teach_photos and test_photo):
+        raise ValueError(
+            "Fill in both TEACH_PHOTOS (two or more photos) and TEST_PHOTO "
+            "(one more), or leave both empty to use the bundled example."
+        )
     resolved = [load_image(p) for p in teach_photos]
     print(f"{len(resolved)} teach photos + 1 test photo ready"
           + (" (bundled example: rubber duck)" if example else ""))

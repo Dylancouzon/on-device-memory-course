@@ -66,7 +66,7 @@ Run the counts cell, then the voice-note cell.
 
 **NARRATION**
 
-A day starts with 17 photos, five voice notes, and 20 text notes: 42 captures in all. Each capture carries a source type, a timestamp, and a location, plus context where it applies, like a category, a price, or a store name. The voice notes arrive as audio, so first we load a small Whisper model and call `recognize` ourselves on one clip. Speech-to-text on-device, the kind a phone or a pair of smart glasses runs, no server and no account. Play the clip, then read what the model heard. Then the helper runs that same call over every voice note and frees the model as soon as it's done. On a small device, you load what you need and release what you don't. From there each transcript embeds exactly like any other text. Three source types, two embedding paths.
+This day has 42 captures: 17 photos, five voice notes, and 20 text notes. Each has a time and place, plus details such as a category or price. Voice notes start as audio, so we load Whisper locally and run `recognize` on one clip. Listen, then read the transcript. The helper repeats that for the remaining voice notes and releases the model. After that, transcripts work like any other text memory.
 
 ---
 
@@ -116,7 +116,7 @@ Run the cell that defines `recall`.
 
 **NARRATION**
 
-Now build recall in the open. It embeds the question twice, Nomic for the `text` vector, CLIP for the `image` vector, and runs one `QueryRequest` against each. The two result lists stay separate, grouped as photos, voice notes, and text notes, because Nomic and CLIP scores are not on the same scale.
+Now build recall in the open. It embeds the question twice, Nomic for the `text` vector, CLIP for the `image` vector, and runs one `QueryRequest` against each. The text query fetches a few extra hits so the voice and text lanes each keep their own top three. The two result lists stay separate, grouped as photos, voice notes, and text notes, because Nomic and CLIP scores are not on the same scale.
 
 ---
 
@@ -126,7 +126,7 @@ Run the cell to see it work, then change it and run again.
 
 **NARRATION**
 
-Recall against the whole day, and this cell is yours to drive. It starts on "the ramen place downtown" so you see it work: recall queries both the `text` and `image` vectors, and the day answers in three voices at once. The voice memo you left about the ramen, the note you typed, and the photo of the place. Look at `show_raw` first: the space searched, the score, the id, the payload, in plain text. Then the same hits as the memory inbox. The evidence comes before the presentation, never the other way round. One thing to notice in the inbox: a card can come back faded, tagged "weaker match". That's the `min_score` we passed, set at 0.6. Recall always returns its closest results, so something always comes back, and a store with nothing relevant in it will hand you its nearest miss with a straight face. Marking the weak ones is how the assistant admits that. Only the text and voice scores get marked, because the photo lane is CLIP and its numbers sit on a different scale. Now change `my_question` to one of the prompts listed, where you parked the bike, the gym locker code, when the dentist is, or your own, and re-run.
+Start with "the ramen place downtown." Recall searches both vector spaces, so results can include the photo, voice memo, and text note. `show_raw` shows the evidence first: space, score, ID, and payload. The inbox then makes the same results easier to scan. A faded text or voice card is below 0.6, so treat it as a weaker match. Change `my_question`, run again, and see which memories come back.
 
 ---
 
