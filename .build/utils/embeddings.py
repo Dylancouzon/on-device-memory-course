@@ -103,6 +103,18 @@ def embed_query_clip(text):
     return next(_clip_text().query_embed([text])).tolist()
 
 
+def embed_query_ms(text, runs=50):
+    """Median time in milliseconds to embed one query, measured live."""
+    from statistics import median
+    from time import perf_counter
+    times = []
+    for _ in range(runs):
+        t0 = perf_counter()
+        embed_query(text)
+        times.append((perf_counter() - t0) * 1000)
+    return median(times)
+
+
 EXAMPLE_OBJECT = "../data/objects/rubberduck_"
 
 
@@ -114,7 +126,11 @@ def object_photos(teach_photos, test_photo):
     notebook. Leave them empty to fall back to the bundled example. Links
     are fetched once; local paths pass through.
     """
-    if not (teach_photos and test_photo):
+    example = not (teach_photos and test_photo)
+    if example:
         teach_photos = [EXAMPLE_OBJECT + "1.jpg", EXAMPLE_OBJECT + "2.jpg"]
         test_photo = EXAMPLE_OBJECT + "3.jpg"
-    return [load_image(p) for p in teach_photos], load_image(test_photo)
+    resolved = [load_image(p) for p in teach_photos]
+    print(f"{len(resolved)} teach photos + 1 test photo ready"
+          + (" (bundled example: rubber duck)" if example else ""))
+    return resolved, load_image(test_photo)

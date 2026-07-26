@@ -54,16 +54,6 @@ def fresh_start(directory):
     return directory
 
 
-def cleanup(shard, directory=None):
-    """Close the shard and optionally delete its directory."""
-    try:
-        shard.close()
-    except Exception:
-        pass
-    if directory:
-        shutil.rmtree(directory, ignore_errors=True)
-
-
 @contextmanager
 def no_network():
     """Block new Python socket creation inside the block.
@@ -110,7 +100,8 @@ def demo():
     shard.close()
     reloaded = EdgeShard.load(d)
     assert reloaded.count(CountRequest(exact=True)) == 2
-    cleanup(reloaded, d)
+    reloaded.close()
+    shutil.rmtree(d, ignore_errors=True)
     print("qdrant_helpers demo OK")
 
 

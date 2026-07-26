@@ -178,7 +178,7 @@ a few milliseconds against a fraction of one for the search. Embedding is
 tens of times the lookup. Sit with that for a second, because it tells you
 where your time really goes when you build this: the search is close to free
 and the encoder is the part you budget for. The total is the number that
-matters, a complete local answer in about five milliseconds, a couple of
+matters, a complete local answer in under ten milliseconds, more than a
 hundred questions a second with no GPU anywhere.
 
 ---

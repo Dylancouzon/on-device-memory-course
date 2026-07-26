@@ -62,7 +62,7 @@ questions, then add a memory of your own.
 
 ## Beat 2: NOTEBOOK §1, a day's captures
 
-Run the captures cell.
+Run the counts cell, then the voice-note cell.
 
 **NARRATION**
 

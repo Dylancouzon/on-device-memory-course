@@ -8,7 +8,6 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
-from matplotlib.lines import Line2D
 
 # provenance -> (label, color)
 BADGES = {
@@ -18,7 +17,7 @@ BADGES = {
 QDRANT_RED = "#DC244C"
 
 
-def receipt_table(rows, title="Restart receipt", provenance="measured", save=None):
+def receipt_table(rows, title="Restart receipt", provenance="measured"):
     """Render a forensic key/value table as a figure with a provenance badge.
 
     `rows` is a list of (label, value) pairs.
@@ -49,9 +48,18 @@ def receipt_table(rows, title="Restart receipt", provenance="measured", save=Non
     ax.text(1.0, 1.04, label, transform=ax.transAxes, ha="right", va="bottom",
             fontsize=8, color="white",
             bbox=dict(boxstyle="round,pad=0.3", fc=color, ec="none"))
-    if save:
-        fig.savefig(save, dpi=120, bbox_inches="tight")
     plt.show()
+
+
+def memory_rows(hits):
+    """Format hits as 'category · price · note' rows, ready to print."""
+    rows = []
+    for h in hits:
+        p = h.payload
+        price = f"${p['price']:.0f}" if "price" in p else "no price"
+        text = p.get("note") or p["transcript"]
+        rows.append(f"{p['category']:>8} · {price:>8}   {text[:52]}")
+    return rows
 
 
 def before_after(query, before_title, before_items, after_title, after_items,
@@ -75,7 +83,7 @@ def before_after(query, before_title, before_items, after_title, after_items,
         print(f"  ✓ {a}")
 
 
-def show_photo_results(hits, image_dir, query, save=None):
+def show_photo_results(hits, image_dir, query):
     """Show the photos a text query retrieved: the top hit as a hero, the rest muted.
 
     The winning photo is large, with its filename and score; runners-up sit in a
@@ -104,8 +112,6 @@ def show_photo_results(hits, image_dir, query, save=None):
 
     fig.suptitle(f'text query -> photos:  "{query}"', fontsize=12, x=0.02, ha="left")
     fig.tight_layout(rect=[0, 0, 1, 0.94])
-    if save:
-        fig.savefig(save, dpi=120, bbox_inches="tight")
     plt.show()
 
 
@@ -124,7 +130,7 @@ def _thumb_data_uri(path, size=120):
     return "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
-def day_timeline(memories, image_dir, save=None):
+def day_timeline(memories, image_dir):
     """Two-lane strip of a day's captured memories, in time order.
 
     Photos sit in an upper lane (thumbnails + store label); voice and text
@@ -194,8 +200,6 @@ def day_timeline(memories, image_dir, save=None):
     fig.subplots_adjust(bottom=bottom, top=0.93)
     fig.text(0.02, 0.02, "\n".join(lines), va="bottom", ha="left",
              fontsize=8.5, family="monospace", color="#333333")
-    if save:
-        fig.savefig(save, dpi=120, bbox_inches="tight")
     plt.show()
 
 
@@ -226,6 +230,7 @@ def memory_inbox(sections, image_dir, min_score=None):
     Scores below `min_score` are dimmed and tagged as weaker matches. Scores are
     measured live in the notebook, so the header carries that provenance badge.
     """
+    import html as html_lib
     from IPython.display import HTML
 
     def card(h):
@@ -241,7 +246,7 @@ def memory_inbox(sections, image_dir, min_score=None):
             uri = _thumb_data_uri(Path(image_dir) / p["file"])
             body = f'<img src="{uri}" style="height:96px;border-radius:6px;display:block;margin-top:4px">'
         else:
-            text = p.get("transcript") or p.get("note") or ""
+            text = html_lib.escape(p.get("transcript") or p.get("note") or "")
             body = f'<div style="max-width:240px;font-size:13px;margin-top:4px">{text}</div>'
         tag = ('<span style="font-size:10px;color:#b08">weaker match</span>' if weak else '')
         score = f'<span style="color:#DC244C;font-weight:700">{h.score:.3f}</span>'
@@ -281,7 +286,7 @@ def show_raw(hits):
             print(f"{space:11} {h.score:.3f} id={h.id}  {label}")
 
 
-def score_gap_chart(taught, foreign, threshold, save=None):
+def score_gap_chart(taught, foreign, threshold):
     """Horizontal score bars for recognition evidence: taught held-out photos
     vs never-taught images, with the threshold line drawn inside the gap.
 
@@ -315,12 +320,10 @@ def score_gap_chart(taught, foreign, threshold, save=None):
             fontsize=8, color="white",
             bbox=dict(boxstyle="round,pad=0.3", fc=color, ec="none"))
     fig.tight_layout()
-    if save:
-        fig.savefig(save, dpi=120, bbox_inches="tight")
     plt.show()
 
 
-def latency_hist(timings_ms, points_count, embed_ms=None, save=None):
+def latency_hist(timings_ms, points_count, embed_ms=None):
     """Histogram of live recall timings with the median marked.
 
     `timings_ms` are per-query latencies measured in the notebook; the median
@@ -361,8 +364,6 @@ def latency_hist(timings_ms, points_count, embed_ms=None, save=None):
                  f"embedding is {embed_ms / median:.0f}x the lookup"
                  f" · about {1000 / total:.0f} answers per second",
                  fontsize=10, color="#4E5366")
-    if save:
-        fig.savefig(save, dpi=120, bbox_inches="tight")
     plt.show()
 
 
