@@ -69,7 +69,7 @@ ro_shared_data/          data used by the notebooks
   objects/               multi-view object photos for Lesson 5
 ```
 
-Lessons link to the shared helper, data, and requirements files. This mirrors
+Each lesson links to the shared helper and data. This mirrors
 the DeepLearning.AI course layout, where each lesson is distributed as a
 self-contained directory.
 
