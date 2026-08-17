@@ -13,8 +13,14 @@ Match that template exactly for the outer frame:
 
 - **Light theme.** White background (`#FFFFFF`). Dark ink for text and
   strokes. This is the DLAI house look — do not use a dark background.
-- **Aspect ratio 8:9** (8" × 9", portrait-ish, narrow). Generous
-  margins; never more than one diagram or chart per slide.
+- **Aspect ratio 8:9** (8" × 9", portrait-ish, narrow) for the notebook
+  lessons, L2 through L5. Generous margins; never more than one diagram
+  or chart per slide.
+- **L1 and L6 are 16:9.** They are video-only lessons with no notebook
+  beside the slide, so the wide format lays their flows out
+  left-to-right where the 8:9 briefs stack top-to-bottom. Every other
+  rule on this page applies to them unchanged, and each brief in those
+  two scripts states its own ratio.
 - **Minimum font size 18 pt** for every text element, including code,
   axis labels, and node labels. Nothing smaller than 18 pt ever.
 - **Title** (when present) is centered near the top, large, bold, dark.

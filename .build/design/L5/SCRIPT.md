@@ -18,8 +18,8 @@ narrow one.
 
 The lab runs end-to-end on the bundled photos in `ro_shared_data/objects/`, so the
 core lesson works offline in the course container. Bringing your own photos
-(§1, image links or filenames in the first cell) and the cloud upload
-(Appendix A, its own notebook in the lesson folder, an `UPLOAD_TO_CLOUD`
+(§1, image links or filenames in the first cell) and the cloud sync
+(Appendix A, its own notebook in the lesson folder, a `USE_CLOUD`
 switch plus `QDRANT_URL`/`QDRANT_API_KEY`)
 are the two opt-in beats that leave the container. The lesson arc closes at
 §9, on the offline reboot; the cloud is an appendix so the hands-on course
@@ -44,7 +44,7 @@ searches an image site or leaves the bundled example in place.
 | 10 | NOTEBOOK §8 | Ask it, then show it | 70 |
 | 11 | NOTEBOOK §9 | It persists, with no server in the loop | 50 |
 | 12 | WRAP | Wrap the course's hands-on arc | 45 |
-| 13 | APPENDIX | Send a copy to the cloud, optional | 30 |
+| 13 | APPENDIX | Cloud sync: one memory, many devices, optional | 45 |
 
 Total: ~615 sec (~10 min). The longest lesson, a deliberate call for
 the students' capstone.
@@ -271,17 +271,21 @@ left this machine. The same design appears on a robot in the final lesson.
 
 ---
 
-## Beat 13: APPENDIX A, send a copy to the cloud
+## Beat 13: APPENDIX A, cloud sync: one memory, many devices
 
-Open `Lesson5_Appendix.ipynb` in the lesson folder and run its one cell. It is
-outside the lesson arc, so it can be skipped on camera and left for
-students who want it.
+Open `Lesson5_Appendix.ipynb` in the lesson folder and run its three
+sections. It is outside the lesson arc, so it can be skipped on camera and
+left for students who want it.
 
 **NARRATION**
 
-One appendix, for when you do want a copy off the device. The switch is off,
-so running it as shipped reports that nothing left. Turn it on and point it
-at your own cluster and it reads the points back out of the shard and upserts
-them to Qdrant Cloud: same points, same format, because Edge and the server
-share it. That is also the doorway to the next lesson, where devices share
-what they have each been taught.
+One appendix, for when you do want memory to travel. The switch is off, so
+running it as shipped reports that nothing left the device. Turn it on and
+point it at your own cluster and three things happen. First, push: the shard's
+points upsert to Qdrant Cloud, same points, same format, because Edge and the
+server share it. Second, a second device, here just a second folder, downloads
+one snapshot and knows everything this one learned: your day, and the subject
+you taught. Third, staying in sync: the device sends a manifest of what it
+has, and the server answers with only what is new. That push-pull loop is
+fleet memory. It runs on real robots today in memory-fleet, and it is the
+doorway to the next lesson, where the robot carries everything you built.

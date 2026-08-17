@@ -66,7 +66,7 @@ Run the counts cell, then the voice-note cell.
 
 **NARRATION**
 
-This day has 42 captures: 17 photos, five voice notes, and 20 text notes. Each has a time and place, plus details such as a category or price. Voice notes start as audio, so we load Whisper locally and run `recognize` on one clip. Listen, then read the transcript. The helper repeats that for the remaining voice notes and releases the model. After that, transcripts work like any other text memory.
+This day has 42 captures: 17 photos, five voice notes, and 20 text notes. Each has a time and place, plus details such as a category or price. Voice notes start as audio, so a small Whisper model runs locally: one helper call transcribes all five and releases the model. Listen to a clip, then read its transcript. After that, transcripts work like any other text memory.
 
 ---
 
@@ -116,7 +116,7 @@ Run the cell that defines `recall`.
 
 **NARRATION**
 
-Now build recall in the open. It embeds the question twice, Nomic for the `text` vector, CLIP for the `image` vector, and runs one `QueryRequest` against each. The text query fetches a few extra hits so the voice and text lanes each keep their own top three. The two result lists stay separate, grouped as photos, voice notes, and text notes, because Nomic and CLIP scores are not on the same scale.
+Now build recall in the open. It embeds the question twice, Nomic for the `text` vector, CLIP for the `image` vector, and runs one search against each. The text query fetches a few extra hits so the voice and text lanes each keep their own top three. The two result lists stay separate, grouped as photos, voice notes, and text notes, because Nomic and CLIP scores are not on the same scale.
 
 ---
 

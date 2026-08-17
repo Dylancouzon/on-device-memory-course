@@ -30,9 +30,10 @@ LESSONS = ["L2", "L3", "L4", "L5"]
 
 HEADER = '''"""Helper functions for the course notebooks.
 
-Non-Qdrant plumbing only: the on-device embedding models, speech-to-text for
-the voice notes, and the small matplotlib views the lessons print. Every
-Qdrant call lives in the notebooks themselves.
+Plumbing for the lessons: the on-device embedding models, speech-to-text for
+the voice notes, the small matplotlib views the lessons print, and the stores
+and searches the lessons repeat. Each Qdrant call is written out in the
+notebook of the lesson that teaches it; after that, the repeat lives here.
 """
 '''
 

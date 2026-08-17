@@ -33,9 +33,11 @@ Total: ~405 sec (~6.75 min).
 
 **NARRATION:**
 
-This lesson starts with a simple store for personal notes. We’ll ask one
-question three times: before we store anything, after we store it, and after
-we delete a result.
+This lesson starts with a simple store for personal notes. Lesson one showed
+you this question already answered: "where can I sit outside for a latte?"
+Now we build the memory that answers it, starting from nothing. We'll ask
+that question three times: before we store anything, after we store it, and
+after we delete a result.
 
 ---
 
@@ -99,9 +101,10 @@ Run the embed cell.
 **NARRATION:**
 
 To search by meaning, we turn each note into a vector: a list of 768 numbers
-that represents the note. We run the text model on the device, once for each
-note. From now on, a helper makes the same call so the notebook stays easy
-to read. The work is unchanged: text in, vectors out.
+that represents the note. One call does it: the text model runs on the
+device, once for each note. The helper hides the model plumbing, and every
+lesson embeds through this same call. The work is simple: text in, vectors
+out.
 
 ---
 

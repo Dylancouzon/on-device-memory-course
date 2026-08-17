@@ -38,3 +38,6 @@ venv/
 
 # ignore the on-disk shards the lessons create when they run
 **/*_shard/
+
+# ignore downloaded shard snapshots
+**/*.snapshot

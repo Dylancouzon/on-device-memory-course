@@ -202,8 +202,9 @@ in your code.
 
 ## Beat 9: NOTEBOOK §5, recall with a filter
 
-Run the index cell, the cell that defines `search`, then the filter cell.
-The filter is written out in full, no helper.
+Run the index cell, the similarity-only cell, then the filter cell. The
+filter is written out in full; the query it narrows runs through the
+`text_search` helper.
 
 **NARRATION:**
 
