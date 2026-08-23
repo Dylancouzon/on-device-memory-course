@@ -1,6 +1,6 @@
-"""Download a bank of freely-licensed everyday-life photos for the L3 image bank.
+"""Download a bank of freely-licensed everyday-life photos for the L4 image bank.
 
-L3 §5 lets students type any description and see the nearest photo. A wider bank
+L4 §5 lets students type any description and see the nearest photo. A wider bank
 makes that feel open instead of limited to a handful of curated shots. This
 fetcher pulls one photo per everyday subject from license-free pools only:
 

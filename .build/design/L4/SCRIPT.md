@@ -1,150 +1,95 @@
-# L4: Your On-Device Assistant (script)
+# L4: Finding the Right Memory (script)
 
-**Target runtime:** ~8 min
+**Target runtime:** ~7 min
 
-NOTEBOOK beats reference the section numbers as they appear in the
-executed `Lesson4.ipynb`.
+Talking points, not narration. Each beat lists what to hit; wording is yours on the day.
 
-This lab is driven by the notebook. Students inspect a day of memories, ask
-their own question, and add a new memory. The live output is the visual:
-the opening endpoint teaser is the only slide, and nothing comes between it
-and the code.
+NOTEBOOK beats reference the section numbers as they appear in the executed `Lesson4.ipynb`. Slide briefs live in `SLIDES.md` in this directory; beats name only the slug.
+
+Two jobs: find a photo with a description, then narrow a search with a filter. The notebook output carries most of the explanation; three diagrams show the relationships code alone cannot.
 
 ## Beat map
 
 | # | Type | Content | Est. sec |
 |---|---|---|---|
-| 1 | INTRO | Endpoint teaser + bring a day's memories together | 35 |
-| 2 | NOTEBOOK §1 | A day's captures, voice notes transcribed on-device | 50 |
-| 3 | NOTEBOOK §2 | The day at a glance | 35 |
-| 4 | NOTEBOOK §3 | Set up the day's shard | 30 |
-| 5 | NOTEBOOK §4 | Store the day | 45 |
-| 6 | NOTEBOOK §5 | Inspect a stored point | 30 |
-| 7 | NOTEBOOK §6 | How recall works | 50 |
-| 8 | NOTEBOOK §7 | Your turn: recall your day | 60 |
-| 9 | NOTEBOOK §8 | Add your own memory, then recall it | 55 |
-| 10 | WRAP | Pointer to L5 | 35 |
+| 1 | INTRO + SLIDE `l4-00-endpoint` | Endpoint teaser + from words to photos | 35 |
+| 2 | SLIDE `two-encoders-one-shard` | Two encoders, one shard | 35 |
+| 3 | NOTEBOOK §1 | A single shard, two named vectors | 35 |
+| 4 | NOTEBOOK §2 | Store text notes | 20 |
+| 5 | NOTEBOOK §3 | Store a photo library | 35 |
+| 6 | NOTEBOOK §4 | Find a photo by describing it | 55 |
+| 7 | SLIDE `cross-modal-recall` | Cross-modal recall | 30 |
+| 8 | SLIDE `filters-inside-query` | Filters run inside the query | 30 |
+| 9 | NOTEBOOK §5 | Recall with a filter | 60 |
+| 10 | WRAP | What to carry into L5 | 35 |
 
-Total: ~420 sec (~7 min narration; a little more with the editable cells
-run live).
-
----
-
-## Beat 1: INTRO, endpoint teaser
-
-```slide-brief
-slug: l4-00-endpoint
-purpose: the endpoint teaser, recolored from l2-00-endpoint. Same layout,
-  same four nodes; "capture" and "recall" are the highlighted pair.
-on-slide text: node labels only: "capture", "embed", "store", "recall",
-  small tag "this lesson". No headline.
-diagram spec (8:9, stack top-to-bottom):
-  - Identical to l2-00-endpoint: four hand-drawn rounded nodes in a
-    vertical loop, light-blue (#03A9F4) "capture", orange (#FF9800)
-    "embed", violet (#6047FF) cylinder "store", red (#DC244C) "recall",
-    curved arrows connecting them, the recall arrow curving back up
-    toward capture.
-  - Only the highlight moves: "capture" and "recall" get a solid stroke
-    and full-strength fill; "embed" and "store" render at reduced
-    opacity.
-  - The "this lesson" tag points at the highlighted pair. Small
-    spiral-notebook motif beside the cylinder.
-```
-
-**NARRATION**
-
-Back to the loop. This lesson leans on the two ends of it: everything a day
-captures, and asking it a question. This lab puts photos, voice notes, and
-text notes from one day into one local store. You will ask it your own
-questions, then add a memory of your own.
+Total: ~415 sec (~6.9 min).
 
 ---
 
-## Beat 2: NOTEBOOK §1, a day's captures
+## Beat 1: INTRO, SLIDE `l4-00-endpoint`
 
-Run the counts cell, then the voice-note cell.
+- This lesson's stages on the loop: embed and recall.
+- L3 stored text notes. Now photos join, same storage pattern.
+- Two ways to narrow memory today: describe what you saw, or add a rule.
 
-**NARRATION**
+## Beat 2: SLIDE `two-encoders-one-shard`
 
-This day has 42 captures: 17 photos, five voice notes, and 20 text notes. Each has a time and place, plus details such as a category or price. Voice notes start as audio, so a small Whisper model runs locally: one helper call transcribes all five and releases the model. Listen to a clip, then read its transcript. After that, transcripts work like any other text memory.
+- Text and photos need different encoders: Nomic for text, CLIP for images.
+- Text goes into the `text` vector, photos into `image`, both in one shard.
+- Their scores sit on different scales, so we search and show them separately.
 
----
+## Beat 3: NOTEBOOK §1, a single shard, two named vectors
 
-## Beat 3: NOTEBOOK §2, the day at a glance
+Run the config cell.
 
-Run `day_timeline`.
+- Same `EdgeConfig` as L3, now with two named vectors: `text` at 768, `image` at 512.
+- One shard holds both.
 
-**NARRATION**
+## Beat 4: NOTEBOOK §2, store text notes
 
-Before asking anything, here's the raw material laid flat: photos in the upper lane as thumbnails, in the order they were taken, and the voice and text notes below as numbered markers. This is what a day of on-device capture looks like. Nothing recalled yet, just what's there. It's for orientation, not a result.
+Run the add-text-notes cell.
 
----
+- Text notes work exactly as in L3: embed with Nomic, store under `text`. Twenty notes.
+- The lesson starts fresh, so it does not depend on an earlier notebook run.
 
-## Beat 4: NOTEBOOK §3, set up the day's shard
+## Beat 5: NOTEBOOK §3, store a photo library
 
-Run the shard cell.
+Run the photo cell.
 
-**NARRATION**
+- Same pattern, different encoder: 165 everyday photos into the `image` vector, 185 memories in the shard.
+- CLIP also places text descriptions in that same space, which is what the next cell uses.
 
-One shard holds the whole day, with the two named vectors from L3: `text` for Nomic, `image` for CLIP. One `EdgeShard.create`, and the store is ready to hold the day across both spaces.
+## Beat 6: NOTEBOOK §4, find a photo by describing it
 
----
+Run the cross-modal query cell, then change `my_description` and run it again.
 
-## Beat 5: NOTEBOOK §4, store the day
+- Starter description: "a red bicycle". Those words become a CLIP vector and search the photo vectors.
+- No tags, no filenames, no captions involved.
+- Try the suggestions in the cell, then write your own.
+- One photo comes back, large, with its score. If the bank holds nothing like your description, that is still its closest photo, so read the image alongside the score.
+- Name the range: CLIP text-to-image scores here run roughly 0.19 to 0.33, and a score only ranks one description against this bank.
 
-Run the two cells: the text batch, then the photo batch.
+## Beat 7: SLIDE `cross-modal-recall`
 
-**NARRATION**
+- The description goes through CLIP's text encoder, not Nomic.
+- It lands in the same space as the photos, which is what lets words retrieve images.
 
-Store the day in two batches. The notes and transcripts embed with Nomic and land under the `text` vector; the photos embed with CLIP and land under `image`. Same `Point`, same upsert, whichever modality it came from. You wrote this upsert by hand in the earlier labs, so here the batches can just run. Check the total: 42 memories, one shard. You already saw every photo on the timeline, so when a recall returns one later it's a face you know.
+## Beat 8: SLIDE `filters-inside-query`
 
----
+- Similarity finds related memories. A filter applies a rule, such as food under $15.
+- The filter runs with the search inside the shard, in one pass, rather than afterward in your code.
 
-## Beat 6: NOTEBOOK §5, inspect a stored point
+## Beat 9: NOTEBOOK §5, recall with a filter
 
-Run the scroll cell.
+Run the index cell, the similarity-only cell, then the filter cell. The filter is written out in full; the query it narrows runs through the `text_search` helper.
 
-**NARRATION**
-
-Pull one point back out and look at it. Its id, the first few of the 768 numbers in its `text` vector, and its full payload. A photo point would carry `image` instead. This is the raw shape everything else in the lab searches over.
-
----
-
-## Beat 7: NOTEBOOK §6, how recall works
-
-Run the cell that defines `recall`.
-
-**NARRATION**
-
-Now build recall in the open. It embeds the question twice, Nomic for the `text` vector, CLIP for the `image` vector, and runs one search against each. The text query fetches a few extra hits so the voice and text lanes each keep their own top three. The two result lists stay separate, grouped as photos, voice notes, and text notes, because Nomic and CLIP scores are not on the same scale.
-
----
-
-## Beat 8: NOTEBOOK §7, your turn: recall your day
-
-Run the cell to see it work, then change it and run again.
-
-**NARRATION**
-
-Start with "the ramen place downtown." Recall searches both vector spaces, so results can include the photo, voice memo, and text note. `show_raw` shows the evidence first: space, score, ID, and payload. The inbox then makes the same results easier to scan. A faded text or voice card is below 0.6, so treat it as a weaker match. Change `my_question`, run again, and see which memories come back.
-
----
-
-## Beat 9: NOTEBOOK §8, add your own memory, then recall it
-
-Run the editable cell.
-
-**NARRATION**
-
-Add a memory of your own. Change `my_note` and `my_question`, then write the
-new point to the same shard. Search for it right away. The new note comes
-back first, and it is the only card that is not faded: nothing else in the
-day comes close. No rebuild or restart is needed.
-
----
+- Index `category` and `price` first: a filter needs an index on the field.
+- Same question twice: "somewhere to eat", then narrowed to food under $15.
+- Every row prints `category · price`, so each drop is explained on screen.
+- Espresso bar at $3 and the bakery at $4 pass. The coffee place and the ramen note carry no price, so they cannot meet a price rule and drop out too.
 
 ## Beat 10: WRAP
 
-**NARRATION**
-
-So: one `EdgeShard` held a whole day across three source types and two vector spaces. You built the store, inspected a point, and wrote the recall yourself; you asked your own question and added your own memory, all offline. Next, the final lab takes the same API to a new job, teaching a device to recognize a brand-new object by writing memory, without retraining a model, and then assembles everything you've built into one assistant.
+- Two ways to narrow memory: describe the photo you want, or add a clear rule.
+- Next: photos, voice notes, and text notes together in one assistant.

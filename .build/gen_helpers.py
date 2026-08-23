@@ -26,12 +26,12 @@ SECTIONS = [
     ("viz", "The views the lessons print"),
     ("audio", "Speech to text for the voice notes"),
 ]
-LESSONS = ["L2", "L3", "L4", "L5"]
+LESSONS = ["L3", "L4", "L5", "L6"]
 
 HEADER = '''"""Helper functions for the course notebooks.
 
 Plumbing for the lessons: the on-device embedding models, speech-to-text for
-the voice notes, the small matplotlib views the lessons print, and the stores
+the voice notes, the result tables and charts the lessons print, and the stores
 and searches the lessons repeat. Each Qdrant call is written out in the
 notebook of the lesson that teaches it; after that, the repeat lives here.
 """

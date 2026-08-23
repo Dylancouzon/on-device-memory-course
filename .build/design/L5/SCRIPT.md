@@ -1,291 +1,104 @@
-# L5: Teaching It to See (script)
+# L5: Your On-Device Assistant (script)
 
-**Target runtime:** ~11 min
+**Target runtime:** ~8 min
 
-NOTEBOOK beats reference the section numbers as they appear in the
-executed `Lesson5.ipynb`.
+Talking points, not narration. Each beat lists what to hit; wording is yours on the day.
 
-The device learns something new by writing memory, not by retraining. A
-student starts with an unrecognized photo, stores a few examples under a
-label of their own, then tests a photo it never saw. The rest of the lesson
-combines that skill with the assistant they built earlier.
+NOTEBOOK beats reference the section numbers as they appear in the executed `Lesson5.ipynb`. The slide brief lives in `SLIDES.md` in this directory; the beat names only the slug.
 
-The label is the point worth landing. Two photos of one object teach that
-object; two different black cats teach black cats. Same call, same store,
-and what the examples have in common is what the label means. That is also
-why the threshold is a knob: tight subjects leave a wide gap, varied ones a
-narrow one.
-
-The lab runs end-to-end on the bundled photos in `ro_shared_data/objects/`, so the
-core lesson works offline in the course container. Bringing your own photos
-(§1, image links or filenames in the first cell) and the cloud sync
-(Appendix A, its own notebook in the lesson folder, a `USE_CLOUD`
-switch plus `QDRANT_URL`/`QDRANT_API_KEY`)
-are the two opt-in beats that leave the container. The lesson arc closes at
-§9, on the offline reboot; the cloud is an appendix so the hands-on course
-ends on memory staying put. The subject is set once, at the top,
-so a single top-to-bottom run teaches it, with no mid-notebook edits. On the
-video, the instructor captures photos live on camera; the student path
-searches an image site or leaves the bundled example in place.
+The notebook drives this lab. Students inspect a day of memories, ask their own question, and add a new memory. The live output is the visual: the opening endpoint teaser is the only slide, and nothing comes between it and the code.
 
 ## Beat map
 
 | # | Type | Content | Est. sec |
 |---|---|---|---|
-| 1 | INTRO | Endpoint teaser + teach it something of your own | 40 |
-| 2 | SLIDE 1 | Teach → store → recognize | 35 |
-| 3 | NOTEBOOK §1 | The subject you'll teach | 20 |
-| 4 | NOTEBOOK §2 | An object-memory shard | 35 |
-| 5 | NOTEBOOK §3 | Give it a few memories first | 50 |
-| 6 | NOTEBOOK §4 | Show it your subject: not recognized yet | 55 |
-| 7 | NOTEBOOK §5 | Teach it, recognize it | 60 |
-| 8 | NOTEBOOK §6 | Inspect the threshold gap | 70 |
-| 9 | NOTEBOOK §7 | Assemble the assistant | 50 |
-| 10 | NOTEBOOK §8 | Ask it, then show it | 70 |
-| 11 | NOTEBOOK §9 | It persists, with no server in the loop | 50 |
-| 12 | WRAP | Wrap the course's hands-on arc | 45 |
-| 13 | APPENDIX | Cloud sync: one memory, many devices, optional | 45 |
+| 1 | INTRO + SLIDE `l5-00-endpoint` | Endpoint teaser + bring a day's memories together | 35 |
+| 2 | NOTEBOOK §1 | A day's captures, voice notes transcribed on-device | 50 |
+| 3 | NOTEBOOK §2 | The day at a glance | 35 |
+| 4 | NOTEBOOK §3 | Set up the day's shard | 30 |
+| 5 | NOTEBOOK §4 | Store the day | 45 |
+| 6 | NOTEBOOK §5 | Inspect a stored point | 30 |
+| 7 | NOTEBOOK §6 | How recall works | 50 |
+| 8 | NOTEBOOK §7 | Your turn: recall your day | 60 |
+| 9 | NOTEBOOK §8 | Add your own memory, then recall it | 55 |
+| 10 | WRAP | Pointer to L6 | 35 |
 
-Total: ~615 sec (~10 min). The longest lesson, a deliberate call for
-the students' capstone.
+Total: ~420 sec (~7 min of talking; a little more with the editable cells run live).
 
 ---
 
-## Beat 1: INTRO, endpoint teaser
+## Beat 1: INTRO, SLIDE `l5-00-endpoint`
 
-```slide-brief
-slug: l5-00-endpoint
-purpose: the endpoint teaser, recolored from l2-00-endpoint. Same layout,
-  same four nodes; all four are highlighted, because the capstone closes
-  the whole loop.
-on-slide text: node labels only: "capture", "embed", "store", "recall",
-  small tag "all of it". No headline.
-diagram spec (8:9, stack top-to-bottom):
-  - Identical to l2-00-endpoint: four hand-drawn rounded nodes in a
-    vertical loop, light-blue (#03A9F4) "capture", orange (#FF9800)
-    "embed", violet (#6047FF) cylinder "store", red (#DC244C) "recall",
-    curved arrows connecting them, the recall arrow curving back up
-    toward capture.
-  - No node is dimmed: every node carries a solid stroke and
-    full-strength fill. This is the only teaser in the course where the
-    whole loop is lit, and that contrast is the beat.
-  - The tag reads "all of it" and points at the closing arrow rather
-    than at one node. Small spiral-notebook motif beside the cylinder.
-```
+- Back to the loop, this time the two ends of it: what a day captures, and asking it a question.
+- One local store holds photos, voice notes, and text notes from a single day.
+- You will ask your own questions, then add a memory of your own.
 
-**NARRATION**
+## Beat 2: NOTEBOOK §1, a day's captures
 
-The loop one last time, lit end to end: this lesson uses every stage of it.
-Every lesson so far stored a memory you already had words or a picture
-for. This one does something different: it teaches the device to recognize
-something it has never seen, without retraining or fine-tuning any model.
-It just writes a few example vectors to memory. And you pick the subject:
-find a couple of photos of anything, give it a name, and teach the device
-yourself. At the end, everything you've built in this course lands in one
-place: a single assistant that answers questions about your day and
-recognizes what you taught it, with the network off. Let's teach a device
-to see.
+Run the counts cell, then the voice-note cell.
 
----
+- 42 captures: 17 photos, 20 text notes, five voice notes. Each carries a time and place, plus fields like category or price.
+- Voice notes start as audio, so a small Whisper model runs locally: one helper call transcribes all five and releases the model.
+- Play a clip, read its transcript. From here a transcript behaves like any other text memory.
 
-## Beat 2: SLIDE 1
+## Beat 3: NOTEBOOK §2, the day at a glance
 
-```slide-brief
-slug: teach-store-recognize
-purpose: show the whole lesson as a three-step loop. Teach an object by
-  storing example photos, then recognize a new photo by nearest match.
-on-slide text: node labels only: "photos (teach)", "CLIP", cylinder
-  "object shard", "new photo (recognize)", "nearest match > threshold".
-  No headline.
-diagram spec (8:9, stack top-to-bottom):
-  - Top: two small light-blue photo icons side by side labeled
-    "photos (teach)", curved orange arrow down into an orange (#FF9800)
-    node "CLIP".
-  - Middle: the orange CLIP node feeds a violet (#6047FF) cylinder labeled
-    "object shard", drawn with a small strip of vector cells and a payload
-    tag "label".
-  - Bottom: a single light-blue photo icon labeled "new photo (recognize)",
-    curved red (#DC244C) arrow up through CLIP into the cylinder, returning
-    a teal (#009688) check node labeled "nearest match > threshold".
-  - The teach path (orange, top-down) and the recognize path (red,
-    bottom-up) share the same CLIP node and the same cylinder: one shared
-    space.
-```
+Run the two cells: the photos, then the notes.
 
-**NARRATION**
+- The raw material laid flat: 17 photos as thumbnails in capture order, then the 25 voice and text notes as a table with their times.
+- Photos and words are separated on purpose, because that is how they are stored: two vectors, two spaces.
+- This is what a day of on-device capture looks like. Orientation, not a result.
 
-Here's the whole idea in one picture. To teach, embed a few photos with CLIP and store them with a label you choose. To recognize a new photo, embed it the same way and find the nearest stored photo. If the score clears the threshold, return that label. This is recognition from stored examples, not a newly trained classifier. Your examples decide whether the label means one object or a broader kind of object.
-
----
-
-## Beat 3: NOTEBOOK §1, the subject you'll teach
-
-Run the first cell (or paste your own image links first).
-
-**NARRATION**
-
-Before anything else, pick what you'll teach. You need two or more photos
-of one subject, and one more held back as a test. The easiest way is to
-search an image site for something you like, a black cat, a red tractor,
-whatever, and copy two or three image addresses. Photos saved next to the
-notebook work the same way, by filename, and that's the route to take if
-you'd rather teach something you own. Leave both empty and the bundled
-example runs, so the lesson works as-is. The label, the note you want the
-device to remember about your subject, and the question you'll ask it later
-all live in this cell too. Everything below reads from here, so you set your
-subject once and never touch it again.
-
----
-
-## Beat 4: NOTEBOOK §2, an object-memory shard
+## Beat 4: NOTEBOOK §3, set up the day's shard
 
 Run the shard cell.
 
-**NARRATION**
+- One shard for the whole day, with L4's two named vectors: `text` at 768 for Nomic, `image` at 512 for CLIP.
+- One `EdgeShard.create` and the store is ready across both spaces.
 
-One shard, one named vector this time: `image`, the CLIP space from L3. Each stored point is one view of an object, with a payload saying which object it is and which view. And one number that turns similarity into a decision: a recognition threshold. Above it, a query image counts as recognized; below it, the device says it doesn't know.
+## Beat 5: NOTEBOOK §4, store the day
 
----
+Run the two cells: the text batch, then the photo batch.
 
-## Beat 5: NOTEBOOK §3, give it a few memories first
+- Two batches: 25 notes and transcripts under `text`, 17 photos under `image`.
+- Same `Point`, same upsert, whichever modality it came from. You wrote that upsert by hand in L3, so these batches just run.
+- Total: 42 memories in one shard. You already saw every photo in the strip, so a recalled photo will be a face you know.
 
-Run the `teach` cell.
+## Beat 6: NOTEBOOK §5, inspect a stored point
 
-**NARRATION**
+Run the scroll cell.
 
-`teach` is short: embed each photo with CLIP, then store one point per photo
-with an ID, label, and file name. That is the learning step: writing
-examples, not training a model. `flush` saves the new memory to disk right
-away. First we give it three everyday things, a bicycle, a chess set, and a
-camera, so the store isn't empty when we test. Notice what a label is here.
-It is whatever you say it is, and what your examples have in common is what
-it comes to mean.
+- Pull one point back out: its id, the first six of 768 numbers in its `text` vector, and its full payload.
+- A photo point would carry `image` instead.
+- This is the raw shape everything else in the lab searches over.
 
----
+## Beat 7: NOTEBOOK §6, how recall works
 
-## Beat 6: NOTEBOOK §4, show it your subject: not recognized yet
+Run the cell that defines `recall`.
 
-Run the cell.
+- Build recall in the open: embed the question twice, Nomic for `text` and CLIP for `image`, one search per space.
+- The text query asks for ten hits so the voice and text lanes each keep their own top three.
+- Results stay grouped as photos, voice notes, and text notes, because Nomic and CLIP scores are not on the same scale.
 
-**NARRATION**
+## Beat 8: NOTEBOOK §7, your turn: recall your day
 
-`recognize` embeds a query image, finds the nearest stored photo, and checks
-the score against the threshold. Your test photo has not been taught yet, so
-the verdict is UNKNOWN, and the chart names the closest thing the device does
-know. That is the honest starting point: it does not pretend to recognize
-something it has no memory of. If your own photo is recognized here, inspect
-the match. You just found out it resembles one of the three starters.
+Run the cell to see it work, then change it and run again.
 
----
+- Start with "the ramen place downtown": the ramen photo, the voice memo at 0.809, and the typed note at 0.786 all come back.
+- `show_raw` shows the evidence first: space, score, id, payload. The inbox then makes the same results scannable.
+- A faded text or voice card scored below 0.6, so treat it as a weaker match. Photo scores are CLIP's, never measured against that cutoff.
+- Change `my_question`, run again, see what comes back.
 
-## Beat 7: NOTEBOOK §5, teach it, recognize it
+## Beat 9: NOTEBOOK §8, add your own memory, then recall it
 
-Run the teach cell, then the recognize cell.
+Run the editable cell.
 
-**NARRATION**
+- Change `my_note` and `my_question` together, then write the new point to the same shard.
+- Ask for it right away: the new note comes back first at 0.757, and it is the only text card that is not faded. Nothing else in the day comes close.
+- No rebuild, no restart.
 
-Now store your example photos under your label. Then run the same held-out
-photo again, the one that came back UNKNOWN a moment ago. It was never
-stored. This time the nearest match clears the threshold and the device
-answers with your label. The model is unchanged; it only has examples to
-compare against now. And notice how far this generalizes. Teach it two
-photos of one thing you own and it knows that thing. Teach it two different
-black cats and it knows black cats, because that is what those two examples
-share. Same call, same store; the examples decide what the label means.
+## Beat 10: WRAP
 
----
-
-## Beat 8: NOTEBOOK §6, inspect the threshold gap
-
-Run the evidence cell.
-
-**NARRATION**
-
-Use this chart to inspect the decision. Your held-out photo sits above the
-line; five photos the device was never taught sit below it. That gap is the
-evidence for the threshold. Photo-to-photo scores run high, around 0.86 to
-0.96 for a good match, so a number from another task means nothing here. If
-your subject landed below the line, add clearer examples, and test more
-known and unknown photos before settling on a number. The threshold itself
-is the `RECOGNIZE_THRESHOLD` line in the shard cell.
-
----
-
-## Beat 9: NOTEBOOK §7, assemble the assistant
-
-Run the assemble cell, then the cell that stores your subject and prints the
-receipt.
-
-**NARRATION**
-
-Now build the assistant. One shard has `text` for notes and voice, and
-`image` for photos. We add the day, earlier notes, and the subject you taught
-in the first half. Look at how that last point is built: one ID, one payload,
-and two vectors, the photo embedded with CLIP and your note embedded with
-Nomic. That is the first point in this course with both, and it is what lets
-you reach one memory two ways: by sight, or by what was said about it.
-
----
-
-## Beat 10: NOTEBOOK §8, ask it, then show it
-
-Run the recall cell, then the recognition cell.
-
-**NARRATION**
-
-Two things, one store. First ask about your day: the ramen place returns the
-photo you took, the voice memo you left, and the note you typed. Then show it
-the held-out photo of your subject, the same one from the object lab, now
-against a shard holding a hundred and forty-five memories. It clears the
-threshold, and because you stored a note with it, it does not just name the
-thing. It tells you what you said about it. Then ask for that note in words.
-The same memory comes back, same ID, reached by sight a moment ago and by
-words now. That is the difference between a classifier and a memory: "I know
-what this is" becomes "I remember this".
-
----
-
-## Beat 11: NOTEBOOK §9, it persists, with no server in the loop
-
-Run the persistence cell.
-
-**NARRATION**
-
-One last check, and it is the one that makes any of this count as memory.
-Close the shard, block Python's sockets, reopen it from disk, and run both
-skills again. The ramen recall still finds the ramen place. Your subject is
-still recognized. Everything this assistant knows lives in files on the
-device and survives being closed, with no server in the loop and nothing to
-reload.
-
----
-
-## Beat 12: WRAP
-
-**NARRATION**
-
-You started with text notes, added photos and filters, then built an
-assistant that can remember a day and recognize something you taught it, and
-it held both through a restart with the network off. Nothing you stored has
-left this machine. The same design appears on a robot in the final lesson.
-
----
-
-## Beat 13: APPENDIX A, cloud sync: one memory, many devices
-
-Open `Lesson5_Appendix.ipynb` in the lesson folder and run its three
-sections. It is outside the lesson arc, so it can be skipped on camera and
-left for students who want it.
-
-**NARRATION**
-
-One appendix, for when you do want memory to travel. The switch is off, so
-running it as shipped reports that nothing left the device. Turn it on and
-point it at your own cluster and three things happen. First, push: the shard's
-points upsert to Qdrant Cloud, same points, same format, because Edge and the
-server share it. Second, a second device, here just a second folder, downloads
-one snapshot and knows everything this one learned: your day, and the subject
-you taught. Third, staying in sync: the device sends a manifest of what it
-has, and the server answers with only what is new. That push-pull loop is
-fleet memory. It runs on real robots today in memory-fleet, and it is the
-doorway to the next lesson, where the robot carries everything you built.
+- One `EdgeShard` held a whole day across three source types and two vector spaces.
+- You built the store, inspected a point, wrote the recall yourself, asked your own question, and added your own memory, all offline.
+- Next: the same API on a new job, teaching a device to recognize a brand-new object by writing memory, then assembling everything into one assistant.

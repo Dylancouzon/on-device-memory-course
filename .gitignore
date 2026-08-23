@@ -41,3 +41,6 @@ venv/
 
 # ignore downloaded shard snapshots
 **/*.snapshot
+
+# ignore photos a student uploads in Lesson 5
+**/my_photos/

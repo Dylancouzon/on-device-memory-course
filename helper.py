@@ -1,7 +1,7 @@
 """Helper functions for the course notebooks.
 
 Plumbing for the lessons: the on-device embedding models, speech-to-text for
-the voice notes, the small matplotlib views the lessons print, and the stores
+the voice notes, the result tables and charts the lessons print, and the stores
 and searches the lessons repeat. Each Qdrant call is written out in the
 notebook of the lesson that teaches it; after that, the repeat lives here.
 """
@@ -44,7 +44,7 @@ def embed_query(text):
     return next(_text_model().query_embed([text])).tolist()
 
 
-# CLIP: one shared text/image space, for cross-modal recall in L3 and later.
+# CLIP: one shared text/image space, for cross-modal recall in L4 and later.
 # Nomic and CLIP scores sit on different scales, so photos live in their own
 # named vector and a text query is embedded twice, once per space.
 CLIP_VISION_MODEL = "Qdrant/clip-ViT-B-32-vision"
@@ -72,10 +72,8 @@ def embed_image(paths):
 def load_image(url_or_path):
     """Return a local image path, fetching http(s) URLs to a temp JPEG first.
 
-    The container has no camera, so pasting an image URL stands in for a
-    capture: the bytes are fetched once, normalized to RGB JPEG, and the
-    local path is returned so it embeds and displays like a bundled photo.
-    A path to a file already on disk passes straight through.
+    A path to a file already on disk passes straight through, so the upload
+    button and a filename typed by hand both land here.
     """
     if not str(url_or_path).startswith(("http://", "https://")):
         return url_or_path
@@ -100,8 +98,7 @@ def load_image(url_or_path):
         raise ValueError(
             f"No image came back from this link:\n  {url[:90]}\n"
             "Right-click the image itself and copy the image address (it "
-            "ends in .jpg or .png), or save your photos into this lesson's "
-            "folder and list their filenames instead of links."
+            "ends in .jpg or .png), or use the upload button instead."
         ) from None
     fd, path = tempfile.mkstemp(suffix=".jpg")
     os.close(fd)
@@ -127,29 +124,88 @@ def embed_query_ms(text, runs=50):
 
 
 EXAMPLE_OBJECT = "./ro_shared_data/objects/rubberduck_"
+TEACH_DIR = "./my_photos/teach"
+TEST_DIR = "./my_photos/test"
+IMAGE_TYPES = (".jpg", ".jpeg", ".png", ".webp")
 
 
-def object_photos(teach_photos, test_photo):
-    """Resolve a subject's photos to local files, ready to embed and show.
+def _uploaded(folder):
+    """Photos sitting in an upload folder, oldest first."""
+    path = Path(folder)
+    if not path.is_dir():
+        return []
+    files = [f for f in path.iterdir() if f.suffix.lower() in IMAGE_TYPES]
+    return sorted(files, key=lambda f: f.stat().st_mtime)
 
-    Pass two or more photos of one subject in `teach_photos` and one more in
-    `test_photo`, either as image links or as filenames saved beside the
-    notebook. Leave them empty to fall back to the bundled example. Links
-    are fetched once; local paths pass through.
+
+def _upload_box(folder, heading, hint):
+    """One labelled upload button that saves into `folder`."""
+    import ipywidgets as widgets
+
+    Path(folder).mkdir(parents=True, exist_ok=True)
+    title = widgets.HTML(f"<b>{heading}</b><br><small>{hint}</small>")
+    button = widgets.FileUpload(accept="image/*", multiple=True)
+    status = widgets.HTML(_upload_status(folder))
+
+    def save(change):
+        for item in change["new"]:
+            (Path(folder) / item["name"]).write_bytes(item["content"])
+        button.value = ()
+        status.value = _upload_status(folder)
+
+    button.observe(save, names="value")
+    return widgets.VBox([title, button, status],
+                        layout=widgets.Layout(width="330px"))
+
+
+def _upload_status(folder):
+    files = _uploaded(folder)
+    if not files:
+        return "<small>Nothing uploaded yet.</small>"
+    return f"<small>{len(files)} ready: {', '.join(f.name for f in files)}</small>"
+
+
+def photo_uploader():
+    """Two upload buttons: the photos to teach with, and the one to test with.
+
+    Photos land in ./my_photos and stay on the device. Holding one photo back
+    is the point of the lab: the device meets it once before it has been
+    taught anything, and once after. Leave both empty for the bundled example.
     """
-    example = not (teach_photos or test_photo)
-    if example:
-        teach_photos = [EXAMPLE_OBJECT + "1.jpg", EXAMPLE_OBJECT + "2.jpg"]
-        test_photo = EXAMPLE_OBJECT + "3.jpg"
-    elif not (teach_photos and test_photo):
+    import ipywidgets as widgets
+    from IPython.display import display
+
+    display(widgets.HBox([
+        _upload_box(TEACH_DIR, "Teach with these",
+                    "Two or more photos of one object, from different "
+                    "angles or in different places."),
+        _upload_box(TEST_DIR, "Test with this one",
+                    "One more photo of the same object. Leave this one out "
+                    "of the teaching photos."),
+    ]))
+
+
+def object_photos():
+    """The photos to teach with, and the one held back to test with.
+
+    Reads the two folders the upload buttons write to, and falls back to the
+    bundled example when both are empty.
+    """
+    teach = [str(f) for f in _uploaded(TEACH_DIR)]
+    test = [str(f) for f in _uploaded(TEST_DIR)]
+    if not teach and not test:
+        example = [EXAMPLE_OBJECT + f"{i}.jpg" for i in (1, 2, 3)]
+        print("Using the bundled example: a rubber duck, 2 photos to teach",
+              "with and 1 to test with")
+        return example[:2], example[2]
+    if len(teach) < 2 or len(test) != 1:
         raise ValueError(
-            "Fill in both TEACH_PHOTOS (two or more photos) and TEST_PHOTO "
-            "(one more), or leave both empty to use the bundled example."
+            f"Found {len(teach)} photo(s) to teach with and {len(test)} to "
+            "test with. Upload two or more on the left and exactly one on "
+            "the right, or leave both empty for the bundled example."
         )
-    resolved = [load_image(p) for p in teach_photos]
-    print(f"{len(resolved)} teach photos + 1 test photo ready"
-          + (" (bundled example: rubber duck)" if example else ""))
-    return resolved, load_image(test_photo)
+    print(f"{len(teach)} photos to teach with, 1 held back to test")
+    return teach, test[0]
 
 
 # Shard setup, the offline guard, and benchmark filler -----------------
@@ -244,6 +300,21 @@ def recall(shard, question):
         "Text Notes": [h for h in text_hits
                        if h.payload.get("source_type") == "text"][:3],
     }
+
+
+def recognize(shard, photo, threshold):
+    """The closest stored photo to this one, and whether it clears the bar.
+
+    The nearest-vector query is Lesson 2's; searching the image vector is
+    Lesson 3's. What Lesson 5 adds is the threshold: below it, the device
+    says it does not know this object rather than guessing.
+    """
+    top = shard.query(QueryRequest(
+        query=Query.Nearest(embed_image([photo])[0], using="image"),
+        limit=1,
+        with_payload=True,
+    ))[0]
+    return top, top.score >= threshold
 
 
 def remember(shard, note, memories, point_id=900):
@@ -377,113 +448,147 @@ def no_network():
 
 
 # The views the lessons print ------------------------------------------
-# provenance -> (label, color)
-BADGES = {
-    "measured": ("Measured in notebook", "#008A53"),
-    "illustrative": ("Illustrative", "#8F98B2"),
-}
 QDRANT_RED = "#DC244C"
+INK = "#28324D"
+MUTED = "#6B7280"
+LINE = "#E5E7EB"
+FONT = "font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif"
+FIG_W = 8.0        # recording frame is 8 wide by 9 high
+
+MODALITY_COLOR = {"photo": QDRANT_RED, "voice": "#8547FF", "text": INK}
+MODALITY_EMOJI = {"photo": "📷", "voice": "🎙️", "text": "📝"}
 
 
-def receipt_table(rows, title="Restart receipt", provenance="measured"):
-    """Render a key/value table as a figure with its provenance badge.
+def _html(markup):
+    from IPython.display import HTML
+    return HTML(markup)
 
-    `rows` is a list of (label, value) pairs.
+
+def _esc(value):
+    import html
+    return html.escape(str(value))
+
+
+def _score_cell(score, peak):
+    """A score with a proportional bar behind it, still selectable as text.
+
+    Pass `peak=None` where the column mixes score scales: a bar would invite
+    a comparison between a CLIP score and a Nomic one, which means nothing.
     """
-    import textwrap
-    # Wrap long values so nothing overflows the value column.
-    wrapped = [(str(label), textwrap.fill(str(value), 44)) for label, value in rows]
-    extra = sum(v.count("\n") for _, v in wrapped)
-    fig, ax = plt.subplots(figsize=(8.5, 0.5 + 0.45 * (len(rows) + extra)))
-    ax.axis("off")
-    ax.set_title(title, fontweight="bold", loc="left", pad=18)
-    table = ax.table(
-        cellText=[[label, value] for label, value in wrapped],
-        colLabels=["", ""], colWidths=[0.42, 0.58], cellLoc="left", loc="center",
-    )
-    table.auto_set_font_size(False)
-    table.set_fontsize(11)
-    table.scale(1, 1.6)
-    for (r, c), cell in table.get_celld().items():
-        cell.set_edgecolor("#dddddd")
-        if r == 0:
-            cell.set_height(0.001)  # hide empty header row
-        if c == 0:
-            cell.set_text_props(color="#555555")
-        else:
-            cell.set_text_props(fontweight="bold")
-    label, color = BADGES[provenance]
-    ax.text(1.0, 1.04, label, transform=ax.transAxes, ha="right", va="bottom",
-            fontsize=8, color="white",
-            bbox=dict(boxstyle="round,pad=0.3", fc=color, ec="none"))
-    plt.show()
+    pct = max(0.0, min(1.0, score / peak)) * 100 if peak else 0
+    return (f'<td style="text-align:right;font-variant-numeric:tabular-nums;'
+            f'font-weight:700;color:{QDRANT_RED};'
+            f'background:linear-gradient(to left,rgba(220,36,76,.14) {pct:.0f}%,'
+            f'transparent {pct:.0f}%)">{score:.3f}</td>')
 
 
-def memory_rows(hits):
-    """Format hits as 'category · price · note' rows, ready to print."""
-    rows = []
-    for h in hits:
-        p = h.payload
-        price = f"${p['price']:.0f}" if "price" in p else "no price"
-        text = p.get("note") or p["transcript"]
-        rows.append(f"{p['category']:>8} · {price:>8}   {text[:52]}")
-    return rows
+def _table(headers, rows, title=None, caption=None):
+    """Render a table as HTML. `rows` holds ready-made <td> strings."""
+    head = "".join(
+        f'<th style="text-align:left;padding:6px 10px;font-size:12px;'
+        f'letter-spacing:.04em;text-transform:uppercase;color:{MUTED};'
+        f'border-bottom:2px solid {QDRANT_RED}">{_esc(h)}</th>'
+        for h in headers)
+    body = "".join(
+        f'<tr style="background:{"#FFFFFF" if i % 2 else "#FAFAFB"}">{r}</tr>'
+        for i, r in enumerate(rows))
+    parts = [f'<div style="{FONT};max-width:760px">']
+    if title:
+        parts.append(f'<div style="font-weight:800;font-size:15px;color:{INK};'
+                     f'margin-bottom:6px">{_esc(title)}</div>')
+    parts.append('<table style="border-collapse:collapse;width:100%;'
+                 f'font-size:13.5px;color:{INK}"><thead><tr>{head}</tr></thead>'
+                 f'<tbody>{body}</tbody></table>')
+    if caption:
+        parts.append(f'<div style="font-size:12px;color:{MUTED};'
+                     f'margin-top:6px">{_esc(caption)}</div>')
+    parts.append("</div>")
+    return "".join(parts)
 
 
-def before_after(query, before_title, before_items, after_title, after_items,
-                 legend="✗ dropped by the filter · ✓ passed the filter"):
-    """Print two result lists stacked one above the other as plain text, so a
-    change's effect reads at a glance.
+def _cell(value, align="left", color=INK, weight=400, size=13.5,
+          nowrap=False):
+    return (f'<td style="padding:6px 10px;text-align:{align};color:{color};'
+            f'font-weight:{weight};font-size:{size}px;'
+            f'{"white-space:nowrap;" if nowrap else ""}'
+            f'border-bottom:1px solid {LINE}">{_esc(value)}</td>')
 
-    Items in `before_items` that are absent from `after_items` are marked with
-    a leading ✗; kept items in the second list get a ✓. Pass `legend` when the
-    change isn't a filter (e.g. a deletion).
+
+def _memory_text(payload):
+    """The words of a memory: its note, its transcript, or its filename."""
+    return payload.get("note") or payload.get("transcript") or payload.get("file", "")
+
+
+def _price(payload):
+    return f"${payload['price']:.0f}" if payload.get("price") is not None else "-"
+
+
+def _has_price(payloads):
+    """Whether the price column is worth a column at all."""
+    return any(p.get("price") is not None for p in payloads)
+
+
+def _result_row(hit, peak, mark=None, muted=False, price=True):
+    """One table row for a search hit, with an optional status mark."""
+    p = hit.payload
+    color = MUTED if muted else INK
+    return ((_cell(mark, color=color, nowrap=True)
+             if mark is not None else "")
+            + _score_cell(hit.score, peak)
+            + _cell(p.get("category", "-"), color=MUTED)
+            + (_cell(_price(p), align="right", color=MUTED) if price else "")
+            + _cell(_memory_text(p), color=color))
+
+
+def results_table(hits, title=None, caption=None):
+    """Show search hits as a table: score, category, price, and the memory."""
+    peak = max((h.score for h in hits), default=1.0)
+    price = _has_price([h.payload for h in hits])
+    rows = [_result_row(h, peak, price=price) for h in hits]
+    headers = ["Score", "Category"] + (["Price"] if price else []) + ["Memory"]
+    return _html(_table(headers, rows, title, caption))
+
+
+def memories_table(memories, title=None):
+    """Show stored memories, which carry no score: category, price, words."""
+    price = _has_price(memories)
+    rows = [_cell(m.get("category", "-"), color=MUTED)
+            + (_cell(_price(m), align="right", color=MUTED) if price else "")
+            + _cell(_memory_text(m)) for m in memories]
+    headers = ["Category"] + (["Price"] if price else []) + ["Memory"]
+    return _html(_table(headers, rows, title))
+
+
+def before_after(query, before_hits, after_hits, title, kept="kept",
+                 dropped="removed"):
+    """One table showing what a change did: every memory from `before_hits`,
+    marked kept or removed by whether it survived into `after_hits`.
+
+    Scores stay the ones each memory scored, so a reader can see the
+    runners-up are untouched. Memories the change let through for the first
+    time are added at the bottom.
     """
-    kept = {str(s) for s in after_items}
-    print(f'query: "{query}"')
-    print(f"{legend}\n")
-    print(f"{before_title}:")
-    for b in before_items:
-        mark = "✗" if str(b) not in kept else " "
-        print(f"  {mark} {b}")
-    print(f"\n{after_title}:")
-    for a in after_items:
-        print(f"  ✓ {a}")
+    survivors = {h.id for h in after_hits}
+    peak = max((h.score for h in before_hits), default=1.0)
+    price = _has_price([h.payload for h in before_hits + after_hits])
+    rows = [_result_row(h, peak, price=price,
+                        mark=f"✅ {kept}" if h.id in survivors
+                        else f"❌ {dropped}",
+                        muted=h.id not in survivors)
+            for h in before_hits]
+    seen = {h.id for h in before_hits}
+    rows += [_result_row(h, peak, price=price, mark=f"✅ {kept}")
+             for h in after_hits if h.id not in seen]
+    headers = ["", "Score", "Category"] + (["Price"] if price else []) + ["Memory"]
+    return _html(_table(headers, rows, title,
+                        caption=f'question: "{query}"'))
 
 
-def show_photo_results(hits, image_dir, query):
-    """Show the photos a text query retrieved: the top hit as a hero, the rest muted.
-
-    The winning photo is large, with its filename and score; runners-up sit in a
-    small dimmed strip so the cross-modal match reads in one glance.
-    """
-    from PIL import Image
-    hero, rest = hits[0], hits[1:]
-    fig = plt.figure(figsize=(9, 4.4))
-    gs = fig.add_gridspec(max(len(rest), 1), 3)
-
-    hax = fig.add_subplot(gs[:, :2])
-    him = Image.open(Path(image_dir) / hero.payload["file"])
-    him.thumbnail((520, 520))
-    hax.imshow(him)
-    hax.set_title(f'best match  ·  {hero.payload["file"]}  ·  score {hero.score:.3f}',
-                  fontsize=12, fontweight="bold", loc="left", color=QDRANT_RED)
-    hax.axis("off")
-
-    for i, hit in enumerate(rest):
-        ax = fig.add_subplot(gs[i, 2])
-        img = Image.open(Path(image_dir) / hit.payload["file"])
-        img.thumbnail((200, 200))
-        ax.imshow(img, alpha=0.55)
-        ax.set_title(f'{hit.payload["file"]} · {hit.score:.3f}', fontsize=8, color="#888")
-        ax.axis("off")
-
-    fig.suptitle(f'text query -> photos:  "{query}"', fontsize=12, x=0.02, ha="left")
-    fig.tight_layout(rect=[0, 0, 1, 0.94])
-    plt.show()
-
-
-MODALITY_COLOR = {"photo": QDRANT_RED, "voice": "#8547FF", "text": "#28324D"}
+def receipt_table(rows, title="Restart receipt"):
+    """Render a list of (label, value) pairs as a two-column table."""
+    cells = [_cell(label, color=MUTED)
+             + _cell(value, weight=700) for label, value in rows]
+    return _html(_table(["", ""], cells, title))
 
 
 def _thumb_data_uri(path, size=120):
@@ -494,179 +599,154 @@ def _thumb_data_uri(path, size=120):
     img = Image.open(path).convert("RGB")
     img.thumbnail((size, size))
     buf = io.BytesIO()
-    img.save(buf, format="JPEG", quality=80)
+    img.save(buf, format="JPEG", quality=85)
     return "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
-def day_timeline(memories, image_dir):
-    """Two-lane strip of a day's captured memories, in time order.
+def show_photo_results(hits, image_dir, query):
+    """Show the photo a description retrieved, large, with its score.
 
-    Photos sit in an upper lane (thumbnails + store label); voice and text
-    notes sit in a lower lane as numbered markers. A compact legend under the
-    axis maps each number to its time and full text, so no label collides.
-    Each memory is a dict with `timestamp`, `source_type`, and either `file`
-    (photo) or `note`/`transcript` (voice/text).
+    Only the closest match is shown: the search always returns something, and
+    a big single answer says that more clearly than a row of runners-up.
     """
+    hero = hits[0]
+    uri = _thumb_data_uri(Path(image_dir) / hero.payload["file"], size=420)
+    return _html(
+        f'<div style="{FONT};max-width:460px">'
+        f'<div style="font-size:12px;color:{MUTED};text-transform:uppercase;'
+        f'letter-spacing:.04em">closest photo to your description</div>'
+        f'<div style="font-size:17px;font-weight:700;color:{INK};'
+        f'margin:2px 0 8px">"{_esc(query)}"</div>'
+        f'<img src="{uri}" style="width:100%;border-radius:10px;display:block">'
+        f'<div style="margin-top:8px;font-size:13.5px;color:{INK}">'
+        f'{_esc(hero.payload["file"])} · similarity '
+        f'<span style="color:{QDRANT_RED};font-weight:700">'
+        f'{hero.score:.3f}</span></div></div>')
+
+
+def _hhmm(ts, fmt="%H:%M"):
     from datetime import datetime, timezone
-    from matplotlib.offsetbox import OffsetImage, AnnotationBbox
-    from PIL import Image
-
-    def hhmm(ts):
-        return datetime.fromtimestamp(ts, timezone.utc).strftime("%H:%M")
-    def hour(ts):
-        d = datetime.fromtimestamp(ts, timezone.utc)
-        return d.hour + d.minute / 60
-
-    mems = sorted(memories, key=lambda m: m["timestamp"])
-    fig, ax = plt.subplots(figsize=(11, 4.2))
-    ax.axhline(0, color="#cccccc", lw=2, zorder=0)
-
-    note_legend, n, photo_i = [], 0, 0
-    for m in mems:
-        st, h = m["source_type"], hour(m["timestamp"])
-        color = MODALITY_COLOR.get(st, "#28324D")
-        if st == "photo" and m.get("file"):
-            # Stagger neighboring thumbnails on two heights so close-in-time
-            # photos never overlap.
-            y_img = 0.6 if photo_i % 2 == 0 else 0.92
-            photo_i += 1
-            ax.scatter([h], [0.15], s=40, color=color, zorder=3)
-            im = Image.open(Path(image_dir) / m["file"]).convert("RGB")
-            im.thumbnail((52, 52))
-            ax.add_artist(AnnotationBbox(OffsetImage(im, zoom=1), (h, y_img),
-                                         frameon=True, pad=0.1, zorder=4))
-            ax.annotate(m.get("store", ""), (h, y_img + 0.22), ha="center", va="bottom",
-                        fontsize=8, color=color)
-        else:
-            n += 1
-            ax.scatter([h], [-0.15], s=90, color=color, zorder=3)
-            ax.annotate(str(n), (h, -0.32), ha="center", va="top",
-                        fontsize=9, fontweight="bold", color=color)
-            text = (m.get("note") or m.get("transcript") or "")
-            note_legend.append((n, hhmm(m["timestamp"]), st, text))
-
-    ax.set_ylim(-0.5, 1.4)
-    ax.set_yticks([])
-    ax.set_xlabel("Time of day (hour)")
-    ax.set_title("A day of captured memories: photos above, notes below", loc="left")
-    ax.spines[["top", "right", "left"]].set_visible(False)
-    handles = [Patch(color=c, label=k.capitalize()) for k, c in MODALITY_COLOR.items()]
-    ax.legend(handles=handles, loc="upper right", fontsize=8, ncol=3)
-
-    # Compact legend of the numbered notes, full text wrapped, anchored at the
-    # figure bottom so it never collides with the x-axis label. The legend is
-    # capped so a busy day stays readable and the layout never inverts.
-    import textwrap
-    LEGEND_MAX = 12
-    lines = []
-    for i, t, st, txt in note_legend[:LEGEND_MAX]:
-        lines += textwrap.wrap(f"{i}. {t} · {st:>5} · {txt}", 104,
-                               subsequent_indent="        ") or [""]
-    if len(note_legend) > LEGEND_MAX:
-        lines.append(f"        ... and {len(note_legend) - LEGEND_MAX} more notes")
-    bottom = min(0.82, 0.12 + 0.035 * len(lines))
-    fig.subplots_adjust(bottom=bottom, top=0.93)
-    fig.text(0.02, 0.02, "\n".join(lines), va="bottom", ha="left",
-             fontsize=8.5, family="monospace", color="#333333")
-    plt.show()
+    return datetime.fromtimestamp(ts, timezone.utc).strftime(fmt)
 
 
-INBOX_SECTIONS = ("Photos", "Voice Notes", "Text Notes")
+def day_photos(memories, image_dir):
+    """A wrapping strip of the day's photos, each stamped with its time."""
+    photos = sorted((m for m in memories if m.get("file")),
+                    key=lambda m: m["timestamp"])
+    cards = "".join(
+        f'<figure style="margin:0;width:104px">'
+        f'<img src="{_thumb_data_uri(Path(image_dir) / m["file"], 200)}" '
+        f'style="width:104px;height:104px;object-fit:cover;'
+        f'border-radius:8px;display:block">'
+        f'<figcaption style="font-size:11px;color:{MUTED};margin-top:3px">'
+        f'{_hhmm(m["timestamp"])} · {_esc(m.get("store") or m.get("location", ""))}'
+        f'</figcaption></figure>' for m in photos)
+    return _html(
+        f'<div style="{FONT};max-width:760px">'
+        f'<div style="font-weight:800;font-size:15px;color:{INK};'
+        f'margin-bottom:8px">📷 {len(photos)} photos, in time order</div>'
+        f'<div style="display:flex;flex-wrap:wrap;gap:10px">{cards}</div></div>')
 
 
-def _mem_when(payload):
-    """Format a memory's timestamp as HH:MM, or '' if it has none."""
-    from datetime import datetime, timezone
-    ts = payload.get("timestamp")
-    return datetime.fromtimestamp(ts, timezone.utc).strftime("%H:%M") if ts else ""
-
-
-def _mem_context(payload):
-    """The store / location / price line for a memory (only the fields present)."""
-    parts = [payload.get("store"), payload.get("location")]
-    if payload.get("price") is not None:
-        parts.append(f"${payload['price']:.0f}")
-    return " · ".join(p for p in parts if p)
+def day_notes(memories):
+    """The day's voice and text notes as a table: time, kind, and words."""
+    notes = sorted((m for m in memories if not m.get("file")),
+                   key=lambda m: m["timestamp"])
+    # A couple of notes are stamped the evening before, so the date is shown
+    # whenever the set spans more than one day.
+    spans_days = len({_hhmm(m["timestamp"], "%j") for m in notes}) > 1
+    fmt = "%b %d · %H:%M" if spans_days else "%H:%M"
+    rows = []
+    for m in notes:
+        kind = m["source_type"]
+        rows.append(_cell(_hhmm(m["timestamp"], fmt), color=MUTED,
+                          nowrap=True)
+                    + _cell(f'{MODALITY_EMOJI.get(kind, "")} {kind}',
+                            color=MODALITY_COLOR.get(kind, INK), weight=600,
+                            nowrap=True)
+                    + _cell(_memory_text(m)))
+    return _html(_table(["Time", "Kind", "Note"], rows,
+                        f"{len(notes)} voice and text notes"))
 
 
 def memory_inbox(sections, image_dir, min_score=None):
-    """Render query results grouped by modality (never one blended list). Returns HTML.
+    """Render query results grouped by modality, never one blended list.
 
-    `sections` maps a section title to a list of ScoredPoint. Every section in
-    INBOX_SECTIONS is rendered even when empty ("No matches"). Each card shows
-    the memory's timestamp, its store/location/price context, and its score.
-    Scores below `min_score` are dimmed and tagged as weaker matches. Scores are
-    measured live in the notebook, so the header carries that provenance badge.
+    `sections` maps a section title to a list of ScoredPoint. Every section is
+    rendered even when empty. Scores below `min_score` are dimmed and tagged
+    as weaker matches.
     """
-    import html as html_lib
-    from IPython.display import HTML
-
     def card(h):
         p = h.payload
-        # Only text/voice (Nomic) scores are thresholded; CLIP photo scores live
-        # on a different scale and are never marked weak against a Nomic cutoff.
+        # Only text/voice (Nomic) scores are thresholded; CLIP photo scores
+        # live on a different scale and never meet a Nomic cutoff.
         weak = min_score is not None and not p.get("file") and h.score < min_score
-        when = _mem_when(p)
-        ctx = _mem_context(p)
-        head = (f'<div style="font-size:11px;color:#888">{when}'
-                + (f' · {ctx}' if ctx else '') + '</div>')
+        ctx = " · ".join(x for x in [_hhmm(p["timestamp"]) if p.get("timestamp") else "",
+                                     p.get("store"), p.get("location"),
+                                     _price(p) if p.get("price") is not None else ""]
+                         if x)
         if p.get("file"):
-            uri = _thumb_data_uri(Path(image_dir) / p["file"])
-            body = f'<img src="{uri}" style="height:96px;border-radius:6px;display:block;margin-top:4px">'
+            uri = _thumb_data_uri(Path(image_dir) / p["file"], 260)
+            body = (f'<img src="{uri}" style="width:100%;height:150px;'
+                    f'object-fit:cover;border-radius:8px;display:block;'
+                    f'margin-top:6px">')
         else:
-            text = html_lib.escape(p.get("transcript") or p.get("note") or "")
-            body = f'<div style="max-width:240px;font-size:13px;margin-top:4px">{text}</div>'
-        tag = ('<span style="font-size:10px;color:#b08">weaker match</span>' if weak else '')
-        score = f'<span style="color:#DC244C;font-weight:700">{h.score:.3f}</span>'
-        return (f'<div style="border:1px solid #e0e0e0;border-radius:8px;padding:8px;'
-                f'margin:4px;background:#fff;{"opacity:.55" if weak else ""}">{head}{body}'
-                f'<div style="font-size:12px;margin-top:4px">score {score} {tag}</div></div>')
+            body = (f'<div style="font-size:13.5px;margin-top:6px;'
+                    f'color:{INK}">{_esc(_memory_text(p))}</div>')
+        tag = ('<span style="font-size:11px;color:#B0088A"> · weaker match</span>'
+               if weak else '')
+        return (f'<div style="border:1px solid {LINE};border-radius:10px;'
+                f'padding:10px;width:230px;background:#fff;'
+                f'{"opacity:.5" if weak else ""}">'
+                f'<div style="font-size:11px;color:{MUTED}">{_esc(ctx)}</div>'
+                f'{body}<div style="font-size:12.5px;margin-top:6px">score '
+                f'<span style="color:{QDRANT_RED};font-weight:700">'
+                f'{h.score:.3f}</span>{tag}</div></div>')
 
     blocks = []
-    for title in INBOX_SECTIONS:
-        hits = sections.get(title, [])
-        if hits:
-            inner = f'<div style="display:flex;flex-wrap:wrap">{"".join(card(h) for h in hits)}</div>'
-        else:
-            inner = '<div style="font-size:13px;color:#aaa;font-style:italic;margin:4px">No matches</div>'
+    for title, hits in sections.items():
+        inner = (f'<div style="display:flex;flex-wrap:wrap;gap:10px">'
+                 f'{"".join(card(h) for h in hits)}</div>' if hits else
+                 f'<div style="font-size:13px;color:{MUTED};font-style:italic">'
+                 f'No matches</div>')
         blocks.append(
-            f'<div style="margin:10px 0">'
-            f'<div style="font-weight:700;color:#28324D;border-bottom:2px solid #DC244C;'
-            f'display:inline-block;margin-bottom:6px">{title}</div>{inner}</div>')
-    _badge_label, _badge_color = BADGES["measured"]
-    header = (
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
-        '<span style="font-weight:800;font-size:15px">Memory Inbox</span>'
-        f'<span style="font-size:11px;color:#fff;background:{_badge_color};'
-        f'border-radius:10px;padding:2px 8px">{_badge_label}</span></div>')
-    return HTML(
-        '<div style="font-family:system-ui,sans-serif;background:#f7f7f8;'
-        'border-radius:12px;padding:12px 16px">' + header + "".join(blocks) + "</div>")
+            f'<div style="margin:12px 0">'
+            f'<div style="font-weight:700;color:{INK};'
+            f'border-bottom:2px solid {QDRANT_RED};display:inline-block;'
+            f'margin-bottom:8px">{_esc(title)}</div>{inner}</div>')
+    return _html(
+        f'<div style="{FONT};background:#F7F7F8;border-radius:12px;'
+        f'padding:14px 16px;max-width:760px">'
+        f'<div style="font-weight:800;font-size:15px;color:{INK}">'
+        f'Memory Inbox</div>{"".join(blocks)}</div>')
 
 
 def show_raw(hits):
-    """Print the plain evidence for a grouped recall: space, score, id, text."""
-    for space, rows in hits.items():
-        for h in rows:
-            p = h.payload
-            label = (p.get("store") or p.get("note")
-                     or p.get("transcript") or p.get("file", ""))[:34]
-            print(f"{space:11} {h.score:.3f} id={h.id}  {label}")
+    """The plain evidence behind a grouped recall: lane, score, id, memory."""
+    rows = []
+    for lane, group in hits.items():
+        for h in group:
+            # No bar: the photo lane is CLIP, the note lanes are Nomic, and
+            # the two scales do not compare.
+            rows.append(_cell(lane, color=MUTED, nowrap=True)
+                        + _score_cell(h.score, None)
+                        + _cell(h.id, align="right", color=MUTED)
+                        + _cell(_memory_text(h.payload)[:60]))
+    return _html(_table(["Lane", "Score", "id", "Memory"], rows,
+                        "What came back, before the inbox groups it"))
 
 
 def score_gap_chart(taught, foreign, threshold):
-    """Horizontal score bars for recognition evidence: taught held-out photos
-    vs never-taught images, with the threshold line drawn inside the gap.
+    """Horizontal score bars for recognition evidence: the taught held-out
+    photo against never-taught images, with the threshold drawn in the gap.
 
-    `taught` and `foreign` are lists of (label, score); scores are measured
-    live in the notebook.
+    `taught` and `foreign` are lists of (label, score).
     """
     rows = [(lbl, s, True) for lbl, s in taught] + \
            [(lbl, s, False) for lbl, s in foreign]
-    fig, ax = plt.subplots(figsize=(8.5, 0.55 * len(rows) + 1.2))
+    fig, ax = plt.subplots(figsize=(FIG_W, 0.5 * len(rows) + 1.2))
     ys = range(len(rows))
-    ax.barh(list(ys),
-            [s for _, s, _ in rows],
+    ax.barh(list(ys), [s for _, s, _ in rows],
             color=["#009688" if t else "#8F98B2" for _, _, t in rows],
             height=0.6)
     for y, (_, s, _) in zip(ys, rows):
@@ -680,13 +760,9 @@ def score_gap_chart(taught, foreign, threshold):
     ax.set_xlim(0, 1.0)
     ax.set_xlabel("similarity to nearest stored view")
     ax.spines[["top", "right"]].set_visible(False)
-    handles = [Patch(color="#009688", label="taught (held-out photo)"),
-               Patch(color="#8F98B2", label="never taught")]
-    ax.legend(handles=handles, loc="lower right", fontsize=9)
-    label, color = BADGES["measured"]
-    ax.text(1.0, 1.02, label, transform=ax.transAxes, ha="right", va="bottom",
-            fontsize=8, color="white",
-            bbox=dict(boxstyle="round,pad=0.3", fc=color, ec="none"))
+    ax.legend(handles=[Patch(color="#009688", label="taught (held-out photo)"),
+                       Patch(color="#8F98B2", label="never taught")],
+              loc="lower right", fontsize=9)
     fig.tight_layout()
     plt.show()
 
@@ -694,17 +770,14 @@ def score_gap_chart(taught, foreign, threshold):
 def latency_hist(timings_ms, points_count, embed_ms=None):
     """Histogram of live recall timings with the median marked.
 
-    `timings_ms` are per-query latencies measured in the notebook. The median
-    is the number a reader should take away, so it is drawn on the chart
-    rather than printed beside it. Pass `embed_ms`, also measured live,
-    to add the budget line: embedding the question costs far more than the
-    lookup, and a reader planning a real loop needs to see which term wins.
-    Both halves are local, so this stays a where-the-time-goes breakdown and
-    never a comparison against a server.
+    Pass `embed_ms`, also measured live, to add the budget line: embedding the
+    question costs far more than the lookup, and a reader planning a real loop
+    needs to see which term wins. Both halves are local, so this stays a
+    where-the-time-goes breakdown and never a comparison against a server.
     """
     timings = sorted(timings_ms)
     median = timings[len(timings) // 2]
-    fig, ax = plt.subplots(figsize=(8.5, 3.2 if embed_ms is None else 3.9))
+    fig, ax = plt.subplots(figsize=(FIG_W, 3.2 if embed_ms is None else 3.9))
     ax.hist(timings, bins=30, color="#8F98B2", edgecolor="white")
     ax.axvline(median, color=QDRANT_RED, lw=2, ls="--")
     ax.text(median, ax.get_ylim()[1] * 0.92, f"  median {median:.2f} ms",
@@ -714,20 +787,15 @@ def latency_hist(timings_ms, points_count, embed_ms=None):
     ax.set_xlabel("milliseconds per lookup (query embedding not included)")
     ax.set_ylabel("queries")
     ax.spines[["top", "right"]].set_visible(False)
-    label, color = BADGES["measured"]
-    ax.text(1.0, 1.04, label, transform=ax.transAxes, ha="right", va="bottom",
-            fontsize=8, color="white",
-            bbox=dict(boxstyle="round,pad=0.3", fc=color, ec="none"))
     fig.tight_layout()
     if embed_ms is not None:
-        # The budget goes under the axes, where it has the full width and does
-        # not run into the badge.
+        # The budget goes under the axes, where it has the full width.
         total = embed_ms + median
         fig.subplots_adjust(bottom=0.36)
         fig.text(0.012, 0.10,
                  f"embed {embed_ms:.2f} ms + lookup {median:.2f} ms"
                  f" = {total:.2f} ms per answer",
-                 fontsize=11, fontweight="bold", color="#28324D")
+                 fontsize=11, fontweight="bold", color=INK)
         fig.text(0.012, 0.02,
                  f"embedding is {embed_ms / median:.0f}x the lookup"
                  f" · about {1000 / total:.0f} answers per second",
@@ -735,29 +803,53 @@ def latency_hist(timings_ms, points_count, embed_ms=None):
     plt.show()
 
 
-def show_images(paths, captions=None, height=2.2, per_row=6):
-    """One row of images with optional captions under each, wrapping to a new
-    row past `per_row`. White background, axes off. For showing inputs a student
-    hasn't seen yet, so there is no provenance badge (these aren't results).
-    """
-    from PIL import Image
+def show_images(paths, captions=None, per_row=3):
+    """A row of photos with a caption under each, sized to the video frame."""
     paths = list(paths)
-    n = len(paths)
-    cols = min(per_row, n) or 1
-    rows = (n + cols - 1) // cols
-    fig, axes = plt.subplots(rows, cols, squeeze=False,
-                             figsize=(height * cols, height * rows))
-    fig.patch.set_facecolor("white")
-    for i, ax in enumerate(ax for row in axes for ax in row):
-        ax.axis("off")
-        if i < n:
-            img = Image.open(paths[i]).convert("RGB")
-            img.thumbnail((int(height * 110), int(height * 110)))
-            ax.imshow(img)
-            if captions and i < len(captions):
-                ax.set_title(str(captions[i]), fontsize=8, fontweight="bold")
-    fig.tight_layout()
-    plt.show()
+    cards = []
+    for i, path in enumerate(paths):
+        caption = captions[i] if captions and i < len(captions) else ""
+        width = int(720 / min(per_row, max(len(paths), 1)))
+        cards.append(
+            f'<figure style="margin:0;width:{width}px">'
+            f'<img src="{_thumb_data_uri(path, 460)}" style="width:100%;'
+            f'border-radius:10px;display:block">'
+            f'<figcaption style="font-size:13px;font-weight:600;color:{INK};'
+            f'margin-top:6px">{_esc(caption)}</figcaption></figure>')
+    return _html(f'<div style="{FONT};display:flex;flex-wrap:wrap;gap:14px;'
+                 f'max-width:760px">{"".join(cards)}</div>')
+
+
+def recognition_result(query_photo, top, known, image_dir=None):
+    """The photo you showed beside the closest memory, with the verdict.
+
+    `known` is whether the score cleared the threshold. Unknown is shown as a
+    real answer, not an error: the device says so rather than guessing.
+    """
+    stored = top.payload["file"]
+    if image_dir:
+        stored = str(Path(image_dir) / stored)
+    verdict = top.payload.get("label", "UNKNOWN") if known else "UNKNOWN"
+    color = "#009688" if known else MUTED
+    mark = "✅" if known else "❓"
+    return _html(
+        f'<div style="{FONT};max-width:620px">'
+        f'<div style="font-size:19px;font-weight:800;color:{color};'
+        f'margin-bottom:10px">{mark} {_esc(verdict)}'
+        f'<span style="font-size:14px;font-weight:600;color:{MUTED}">'
+        f' · similarity {top.score:.3f}</span></div>'
+        f'<div style="display:flex;gap:16px">'
+        f'<figure style="margin:0;width:290px">'
+        f'<img src="{_thumb_data_uri(query_photo, 460)}" style="width:100%;'
+        f'border-radius:10px;display:block">'
+        f'<figcaption style="font-size:13px;color:{MUTED};margin-top:6px">'
+        f'the photo you showed it</figcaption></figure>'
+        f'<figure style="margin:0;width:290px">'
+        f'<img src="{_thumb_data_uri(stored, 460)}" style="width:100%;'
+        f'border-radius:10px;display:block">'
+        f'<figcaption style="font-size:13px;color:{MUTED};margin-top:6px">'
+        f'closest memory: {_esc(top.payload.get("label", ""))}'
+        f'</figcaption></figure></div></div>')
 
 
 # Speech to text for the voice notes -----------------------------------

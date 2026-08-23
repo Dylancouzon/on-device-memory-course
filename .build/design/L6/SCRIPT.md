@@ -1,257 +1,148 @@
-# L6: The Robot (script)
+# L6: Teaching It to See (script)
 
-**Target runtime:** ~8 min
-**Format:** video only, no notebook. Slides are **16:9**, styled per
-`SLIDE_STYLE.md`. Demo beats reference `SHOTLIST.md`; production
-direction lives there, never here.
+**Target runtime:** ~11 min
 
-**STATUS: PROVISIONAL.** The robot app, hardware, and shoot are pending
-(`.build/PLAN.md` separate track). Every demo claim below, the scores, the
-threshold behavior, persistence, fleet sync, "same stack", the location
-label shown on recall, must be reconciled against the recorded robot output
-before this script is finalized or anything is recorded. Numbers on screen
-are the evidence; the script never claims what the footage doesn't show. The
-location is a label set when the robot starts (`--location`), the same
-`where` field your L4 captures carried, not a GPS reading, and never faked.
+Talking points, not narration. Each beat lists what to hit; wording is yours on the day.
 
-A synthesis lecture that happens to have a robot. The robot runs the
-course's exact stack: CLIP for image (512-d), Nomic for text (768-d),
-Whisper for audio, Qdrant Edge as the store, the same 0.80 threshold. So
-every stage of its loop maps back to a lesson the students built with
-their own hands. Two pieces are genuinely new, and both are named, not
-taught. The fleet-sync beat is a stretch shot, teed up by L5's Appendix A
-upload: wire it for real or cut it, never fake it.
+NOTEBOOK beats reference the section numbers as they appear in the executed `Lesson6.ipynb`. Slide briefs live in `SLIDES.md` in this directory; beats name only the slug.
+
+The device learns something new by writing memory, not by retraining. A student starts with an unrecognized photo, stores a few examples under a label of their own, then tests a photo it never saw. The rest of the lesson combines that skill with the assistant they built earlier.
+
+The label is the point worth landing. Two photos of one object teach that object; two different black cats teach black cats. Same call, same store, and what the examples have in common is what the label means. That is also why the threshold is a knob: tight subjects leave a wide gap, varied ones a narrow one.
+
+The lab runs end-to-end on the bundled photos in `ro_shared_data/objects/`, so the core lesson works offline in the course container. Bringing your own photos (§1, the upload button in the first cell) and the cloud sync (Appendix A, its own notebook in the lesson folder, a `USE_CLOUD` switch plus `QDRANT_URL`/`QDRANT_API_KEY`) are the two opt-in beats that leave the container. The lesson arc closes at §9, on the offline reboot, so the hands-on course ends on memory staying put. The subject is set once, at the top, so a single top-to-bottom run teaches it with no mid-notebook edits. On the video, the instructor captures photos live on camera; the student path uploads their own photos or leaves the bundled example in place.
 
 ## Beat map
 
 | # | Type | Content | Est. sec |
 |---|---|---|---|
-| 1 | INTRO | Endpoint first: fail → teach by voice → recognize | 75 |
-| 2 | SLIDE 1 | The robot's loop: capture → detect → embed → match → teach | 50 |
-| 3 | SLIDE 2 | The lesson map: you already built this | 55 |
-| 4 | NARRATION | The two new pieces: detection, and when to remember | 55 |
-| 5 | DEMO | Teach by voice, in full ("this is my mug") | 55 |
-| 6 | DEMO | "What did you see today?" · "where are my keys?" · offline reboot | 70 |
-| 7 | DEMO | Forget it: teach wrong, delete, back to unknown | 35 |
-| 8 | DEMO | Fleet sync: one robot teaches, another remembers | 45 |
-| 9 | WRAP | The course arc + repo pointer | 50 |
+| 1 | INTRO + SLIDE `l6-00-endpoint` | Endpoint teaser + teach it something of your own | 40 |
+| 2 | SLIDE `teach-store-recognize` | Teach, store, recognize | 35 |
+| 3 | NOTEBOOK §1 | The subject you'll teach | 20 |
+| 4 | NOTEBOOK §2 | An object-memory shard | 35 |
+| 5 | NOTEBOOK §3 | Give it a few memories first | 50 |
+| 6 | NOTEBOOK §4 | Show it your subject: not recognized yet | 55 |
+| 7 | NOTEBOOK §5 | Teach it, recognize it | 60 |
+| 8 | NOTEBOOK §6 | Inspect the threshold gap | 70 |
+| 9 | NOTEBOOK §7 | Assemble the assistant | 50 |
+| 10 | NOTEBOOK §8 | Two ways into one memory | 70 |
+| 11 | NOTEBOOK §9 | It persists, with no server in the loop | 50 |
+| 12 | WRAP | Wrap the course's hands-on arc | 45 |
+| 13 | APPENDIX | Cloud sync: one memory, many devices, optional | 45 |
 
-Total: ~490 sec (~8.2 min narration; trim beat 6 or 8 in edit if it runs
-long).
-
----
-
-## Beat 1: INTRO, the finished robot first
-
-Demo footage (shotlist #1–3): an object the robot has never seen; the
-robot says it doesn't know it; one spoken sentence teaches it; a new
-angle is recognized seconds later.
-
-**NARRATION:**
-
-This is the last lesson, so let's start at the end. This robot has
-never seen this object. It looks, and it says so: it doesn't know. Now I
-teach it, the way you'd teach a person: I show it the object and I tell
-it what it is. One sentence. That's the whole training procedure. Now a
-different angle, and it knows it, and it remembers what I said about it.
-No model was retrained in those ten seconds. If you've done the labs, you
-already know exactly what just happened, because you built it. This
-lesson maps this robot, stage by stage, back to the notebooks.
+Total: ~615 sec (~10 min). The longest lesson, a deliberate call for the students' capstone.
 
 ---
 
-## Beat 2: SLIDE 1, the robot's loop
+## Beat 1: INTRO, SLIDE `l6-00-endpoint`
 
-```slide-brief
-slug: l6-01-robot-loop
-purpose: the robot's continuous loop in one picture. The course loop
-  with two new stages drawn in.
-on-slide text: node labels only: "camera + mic", "detect (crop)",
-  "embed", "match ≥ 0.80", "memory", "teach". No headline.
-diagram spec (16:9, left-to-right):
-  - Light-blue (#03A9F4) node "camera + mic" (photo + waveform icons) →
-    gray (#4E5366) node "detect (crop)" drawn with a dashed "new" tag →
-    orange (#FF9800) node "embed" → teal (#009688) diamond-ish node
-    "match ≥ 0.80" → violet (#6047FF) cylinder "memory" (spiral-notebook
-    motif).
-  - A red (#DC244C) return arrow from the cylinder back toward the
-    camera node, labeled "recognized · recalled".
-  - A second, orange arrow labeled "teach" from the camera+mic node
-    through the "embed" node into the cylinder, bypassing only the match
-    check, so teaching visibly shares the embed stage.
-  - The "detect (crop)" node is the only gray one, visually marked as
-    the black box the course doesn't open.
-```
+- The loop one last time, lit end to end: this lesson uses every stage.
+- Every lesson so far stored a memory you already had words or a picture for. This one teaches the device to recognize something it has never seen.
+- No retraining, no fine-tuning: it writes a few example vectors to memory.
+- You pick the subject. Find a couple of photos of anything, give it a name, teach it yourself.
+- The ending: one assistant that answers questions about your day and recognizes what you taught it, with the network off.
 
-**NARRATION:**
+## Beat 2: SLIDE `teach-store-recognize`
 
-Here's the robot's loop. The camera and microphone capture continuously.
-A detector finds objects in the frame and crops them. That stage is new,
-and I'll come back to it. Each crop embeds with CLIP; each utterance goes
-through Whisper and embeds with Nomic. The embedding is matched against
-memory: nearest stored view, compared to a threshold of 0.80, the same
-number, literally the same check, as your notebooks. Above it, the robot
-recognizes and recalls; below it, it says it doesn't know, and that's
-your cue to teach. Teaching runs through the same embed stage and writes
-straight to memory: an upsert, not a training run.
+- To teach: embed a few photos with CLIP, store them under a label you choose.
+- To recognize: embed a new photo the same way, find the nearest stored photo, and check the score against a threshold.
+- Recognition from stored examples, not a newly trained classifier.
+- Your examples decide whether the label means one object or a broader kind of object.
 
----
+## Beat 3: NOTEBOOK §1, the subject you'll teach
 
-## Beat 3: SLIDE 2, the lesson map
+Run the first cell, upload your photos into the two boxes, then run the next one.
 
-```slide-brief
-slug: l6-02-lesson-map
-purpose: every stage of the robot's loop tagged with the lesson where
-  students built it themselves. The "you already built this" slide.
-on-slide text: stage labels + lesson tags only: "mic → transcript · L4",
-  "store / recall / forget · L2", "frame → embed → match · L5",
-  "cross-modal recall · L3–L4", "one shard, two skills, offline · L5".
-  No headline.
-diagram spec (16:9):
-  - The same loop layout as slide l6-01-robot-loop, at reduced opacity,
-    with five hand-lettered tags pinned to the stages, each tag a small
-    card: the stage phrase and the lesson number in Qdrant Red.
-  - No new nodes; this slide is the previous slide annotated.
-```
+- Two boxes, because the photos have two different jobs. On the left, two or more to teach with. On the right, one held back to test with.
+- That held-back photo is the whole lab: the device sees it once before it knows anything, and once after you teach it.
+- The upload buttons take photos straight off your machine. They land in a folder beside the notebook and stay there.
+- Take them from different angles or in different places. Three shots from the same spot teach the device very little.
+- Skip the upload and the bundled rubber duck runs, so the lesson works as shipped.
+- The label, the note the device should remember, and the question you'll ask later all live in this cell.
+- Everything below reads from here, so you set the subject once and never touch it again.
 
-**NARRATION:**
+## Beat 4: NOTEBOOK §2, an object-memory shard
 
-Now the same loop, with the receipts. The microphone-to-transcript path,
-Whisper, then Nomic, is your L4, cell for cell. Store, recall, forget:
-the memory lifecycle you walked in L2 with one repeated question, and
-you'll watch all three of those on this robot before the lesson is out.
-Frame to embedding to nearest-match against a threshold: that's L5's
-teach and recognize, unchanged. Asking about the day across photos,
-voice, and text: the cross-modal recall you built in L3 and L4. And
-the memory itself is one shard with a text vector and an image vector,
-the exact assistant shard you assembled at the end of L5, with a camera and a
-microphone bolted on. The robot's memory code mirrors what you wrote.
+Run the shard cell.
 
----
+- One shard, one named vector this time: `image`, the CLIP space from L4.
+- Each point is one view of an object, with a payload saying which object and which file.
+- One number turns similarity into a decision: `RECOGNIZE_THRESHOLD = 0.80`. Above it, recognized. Below it, the device says it doesn't know.
 
-## Beat 4: The two new pieces
+## Beat 5: NOTEBOOK §3, give it a few memories first
 
-No slide.
+Run the `teach` cell.
 
-**NARRATION:**
+- `teach` is short: embed each photo with CLIP, store one point per photo with an id, label, and file name.
+- That is the learning step, writing examples rather than training a model. `flush` puts the new memory on disk right away, so it survives a power cut.
+- Three everyday things go in first, a bicycle, a handful of chess pieces, and a camera, so the store isn't empty when we test.
+- Notice what a label is here: whatever you say it is, and what your examples share is what it comes to mean.
 
-Two things on that loop are genuinely new, and I'll name both rather than
-teach them. First, detection. Your notebooks got clean, single-object
-photos. A robot gets a cluttered frame, so an off-the-shelf detector,
-YOLOE, finds and crops the objects before embedding. We throw its labels
-away. Detection finds *a thing*; memory tells it *which* thing: your
-mug, not "a mug." Second, when to form a memory. A camera at several
-frames a second would write thousands of near-duplicate memories, so the
-robot tracks what's stable in view and writes at a sensible cadence.
-Both are engineering around the loop, not changes to it, and both are
-in the repo if you want to open the box.
+## Beat 6: NOTEBOOK §4, show it your subject: not recognized yet
 
----
+Run the cell.
 
-## Beat 5: DEMO, teach by voice
+- `recognize` embeds a query image, finds the nearest stored photo, and checks the score against the threshold.
+- Your test photo hasn't been taught, so the verdict is UNKNOWN, and the chart names the closest thing the device does know.
+- That is the honest starting point: it doesn't pretend to recognize something it has no memory of.
+- If your own photo is recognized here, inspect the match. You just found out it resembles one of the three starters.
 
-Demo footage (shotlist #4): the full teach-by-voice interaction, close
-up. The spoken sentence, the stored memory appearing.
+## Beat 7: NOTEBOOK §5, teach it, recognize it
 
-**NARRATION:**
+Run the teach cell, then the recognize cell.
 
-Watch the teach beat once more, slowly, because it's the course in one
-interaction. I hold up the object and say "this is my mug." The camera
-crops it and CLIP embeds it: that's the image vector. Whisper turns my
-sentence into text and Nomic embeds it: that's a text vector, exactly
-like a voice memo from L4. Both land in one memory: one point carrying
-both named vectors, `image` and `text`, searchable by sight and by what
-was said, with my sentence in the payload. You built exactly this point
-at the end of L5, when you taught your own subject with a note. Next time the
-robot sees the mug from another angle, the one you'll watch it recognize,
-the nearest-match check clears the threshold, and what comes back isn't
-just a label. It's what I told it, in my words.
+- Store your example photos under your label, two photos for the bundled duck: one on a car hood, one on a desk.
+- Run the same held-out photo that came back UNKNOWN a moment ago. It was never stored, and now it clears the threshold at 0.880 and the device answers with your label.
+- The model is unchanged. It only has examples to compare against now.
+- How far this generalizes: two photos of one thing you own and it knows that thing; two different black cats and it knows black cats, because that is what those examples share.
 
----
+## Beat 8: NOTEBOOK §6, inspect the threshold gap
 
-## Beat 6: DEMO, the day, recalled, then a reboot
+Run the evidence cell.
 
-Demo footage (shotlist #5–6): "what did you see today?" recall, then the
-"where are my keys?" question that surfaces the location; then power cycle,
-network off, both skills repeated.
+- Your held-out photo sits above the line; five never-taught photos sit below it. That gap is the evidence for the threshold.
+- Photo-to-photo scores run high, roughly 0.86 to 0.96 for a good match, so a number from another task means nothing here.
+- If your subject landed below the line, add clearer examples, and test more known and unknown photos before settling on a number.
+- The threshold itself is the `RECOGNIZE_THRESHOLD` line in the shard cell.
 
-**NARRATION:**
+## Beat 9: NOTEBOOK §7, assemble the assistant
 
-The robot's day is now a memory store, so you can ask it questions. "What
-did you see today?" is the two ideas you built in L3 and L4 running
-together: cross-modal recall over the day, narrowed by a filter. The
-filter here is a time window, a new field for the same numeric-range
-condition you wrote for "under fifteen dollars", and the results come
-back grouped by what was seen and what was heard. And every memory also
-carries where it was formed. Earlier I left this robot running in my hotel
-room, and it saw my keys on the desk. So I can ask it something a photo
-alone can't answer: where did I leave my keys? The keys come back, and the
-memory says where it learned them, the hotel room. That's the same location
-field you stored on every capture in L4, set once when the robot starts and
-written onto every memory it forms. And here's the surprising part: no
-language model answered any of that. The robot matched
-vectors and grouped what it found. Retrieval, not generation. Put a
-language model on top and it would phrase the reply in a sentence; the
-remembering underneath is all memory. And the last check is the one you
-ran at the end of L5: reboot. Power off, no network, power on, reopen the
-shard from disk. The mug is still recognized; the day is still there.
-Memory that survives a restart isn't a feature of the demo. It's what
-makes any of this count as memory.
+Run the assemble cell, then the cell that stores your subject and prints the receipt.
 
----
+- One shard with `text` for notes and voice, `image` for photos: today's day, 102 earlier notes, and the subject you taught.
+- Look at how that last point is built: one id, one payload, two vectors, the photo embedded with CLIP and your note with Nomic.
+- The first point in this course with both, and it is what lets you reach one memory two ways, by sight or by what was said about it.
 
-## Beat 7: DEMO, forget it
+## Beat 10: NOTEBOOK §8, two ways into one memory
 
-Demo footage (shotlist #7): the robot is taught the wrong label on
-purpose, the memory is deleted on camera, and the same object comes back
-unknown.
+Run the one cell.
 
-**NARRATION:**
+- Two skills, one store of 145 memories.
+- Show it the held-out photo from the object lab. It clears the threshold, and because a note is stored with it, it tells you what you said about it.
+- Then ask for that note in words: the same memory comes back, same id 5000, reached by sight a moment ago and by words now.
+- That is the difference between a classifier and a memory: "I know what this is" becomes "I remember this".
 
-One more verb, and it's the one that makes this a memory instead of a log.
-Watch me teach it wrong on purpose: I hold up the object and give it the
-wrong name, and now it's confidently wrong, because it believes what it
-was told. So I delete that memory. One press, and what runs underneath is
-`delete_points` on the ids for that label, the same call you made in L2
-when you forgot the coffee place. Now the same object, same angle, and
-it's unknown again. Nothing lingers, no retraining, no relearning around
-the mistake. A device that can be taught has to be correctable, and on
-this design correcting it is a delete.
+## Beat 11: NOTEBOOK §9, it persists, with no server in the loop
 
----
+Run the persistence cell.
 
-## Beat 8: DEMO, fleet sync
+- Close the shard, block Python's sockets, reopen from disk, run both skills again.
+- Ask about the day and the ramen place still comes back. Your subject is still recognized.
+- Everything this assistant knows lives in files on the device and survives being closed, with no server in the loop and nothing to reload.
 
-Demo footage (shotlist #8, pending build): robot A is taught the mug;
-an explicit sync runs; robot B (or a second device) recognizes the mug
-and recalls the spoken note. Every claim here must match the recorded
-output; if the fleet build isn't ready, this beat is cut, never staged.
+## Beat 12: WRAP
 
-**NARRATION:**
+- Text notes, then photos and filters, then an assistant that remembers a day and recognizes something you taught it, holding both through a restart with the network off.
+- Nothing you stored has left this machine.
+- The same design appears on a robot in the final lesson.
 
-One robot learning is memory. Two robots sharing it is a fleet. The last lab
-ended with an appendix that uploads a shard to the cloud, with the switch
-left in your hands. This is the same write, running between
-machines: the mug this robot was just taught goes up as points, and the
-second device pulls them down. Now it recognizes an object it has never
-seen, because a teammate remembered for it. Same points, same format,
-same choice: nothing syncs until someone decides it should.
+## Beat 13: APPENDIX A, cloud sync: one memory, many devices
 
----
+Open `Lesson6_Appendix.ipynb` in the lesson folder and run its three sections. It sits outside the lesson arc, so it can be skipped on camera and left for students who want it.
 
-## Beat 9: WRAP
-
-**NARRATION:**
-
-That's the course. In L1 we said memory is not the model's weights. It's
-the notebook the model keeps beside it. You then built that notebook with
-your own hands: stored and recalled and forgot in L2, found the right
-memory by description and by filter in L3, assembled a whole day in L4,
-and taught a device to recognize your own object in L5, finishing with an
-assistant that keeps both skills through a restart, offline. This robot
-is that same notebook, walking around, and it got this far without a
-language model writing a word. Memory and retrieval carried it, and
-that's the store your own model would read from. The build is public.
-The repo link is below, and it runs on a board that costs about $250.
-Take the loop, put it on your own device, and teach it something. Thanks
-for building with me.
+- One appendix, for when you do want memory to travel. The switch ships off, so running it as-is reports that nothing left the device.
+- Turn it on, point it at your own cluster, and three things happen.
+- Push: the shard's points upsert to Qdrant Cloud, same points, same format, because Edge and the server share it.
+- Restore: a second device, here a second folder, downloads one snapshot and knows everything this one learned, your day and the subject you taught.
+- Stay in sync: the device sends a manifest of what it has, and the server answers with only what is new.
+- That push-pull loop is fleet memory. It runs on real robots today in memory-fleet, and it is the doorway to the next lesson.

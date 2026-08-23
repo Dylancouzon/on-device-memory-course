@@ -112,6 +112,21 @@ def recall(shard, question):
     }
 
 
+def recognize(shard, photo, threshold):
+    """The closest stored photo to this one, and whether it clears the bar.
+
+    The nearest-vector query is Lesson 2's; searching the image vector is
+    Lesson 3's. What Lesson 5 adds is the threshold: below it, the device
+    says it does not know this object rather than guessing.
+    """
+    top = shard.query(QueryRequest(
+        query=Query.Nearest(embed_image([photo])[0], using="image"),
+        limit=1,
+        with_payload=True,
+    ))[0]
+    return top, top.score >= threshold
+
+
 def remember(shard, note, memories, point_id=900):
     """Store one new text note, stamped at the end of the day."""
     memory = {

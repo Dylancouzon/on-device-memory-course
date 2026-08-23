@@ -1,4 +1,4 @@
-"""On-device speech-to-text for L4's voice notes.
+"""On-device speech-to-text for L5's voice notes.
 
 A voice note is audio until a speech model turns it into text. This runs a small
 Whisper model exported to ONNX through onnxruntime (already present for

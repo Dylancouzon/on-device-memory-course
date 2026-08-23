@@ -17,10 +17,10 @@ connection.
 | Lesson | Topic | Format |
 | --- | --- | --- |
 | 1 | Why Devices Need Memory | Video |
-| 2 | Store and Recall | Notebook |
-| 3 | Finding the Right Memory | Notebook |
-| 4 | Your On-Device Assistant | Notebook |
-| 5 | Teaching It to See | Notebook and appendix |
+| 3 | Store and Recall | Notebook |
+| 4 | Finding the Right Memory | Notebook |
+| 5 | Your On-Device Assistant | Notebook |
+| 6 | Teaching It to See | Notebook and appendix |
 | 6 | The Robot | Video |
 
 In the notebooks, you will:
@@ -44,7 +44,7 @@ pip install -r requirements.txt jupyterlab
 jupyter lab
 ```
 
-Open a lesson notebook from `L2/` through `L5/`. One install at the repository
+Open a lesson notebook from `L3/` through `L6/`. One install at the repository
 root covers every lesson.
 
 The first run downloads the embedding and transcription models used by the
@@ -57,16 +57,16 @@ change in future releases.
 ## Repository layout
 
 ```text
-L2/ ... L5/              lesson notebooks
+L3/ ... L6/              lesson notebooks
 requirements.txt         every package the course needs, pinned
-helper.py                shared embedding, transcription, chart, and offline helpers
+helper.py                shared embedding, transcription, result-table, and offline helpers
 ro_shared_data/          data used by the notebooks
-  memories.json          text, voice, and photo memories for Lessons 2–5
-  recent_days.json       earlier notes used in Lesson 5
-  bank/                  image-search examples for Lesson 3
-  audio/                 voice notes for Lesson 4
-  images/                scene photos for Lessons 4 and 5
-  objects/               multi-view object photos for Lesson 5
+  memories.json          text, voice, and photo memories for Lessons 3–6
+  recent_days.json       earlier notes used in Lesson 6
+  bank/                  image-search examples for Lesson 4
+  audio/                 voice notes for Lesson 5
+  images/                scene photos for Lessons 5 and 6
+  objects/               multi-view object photos for Lesson 6
 ```
 
 Each lesson links to the shared helper and data. This mirrors

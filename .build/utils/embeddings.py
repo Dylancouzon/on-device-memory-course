@@ -1,12 +1,13 @@
 """On-device embedding models.
 
-L2 uses Nomic-Embed-Text v1.5 through FastEmbed: a small ONNX text model that
+L3 uses Nomic-Embed-Text v1.5 through FastEmbed: a small ONNX text model that
 runs locally with no account and no network after the first download. The model
 loads lazily and once (4 GB sandbox budget, one model in memory at a time).
 
-L3 extends this module with CLIP (image / cross-modal).
+L4 extends this module with CLIP (image / cross-modal).
 """
 from functools import lru_cache
+from pathlib import Path
 
 NOMIC_MODEL = "nomic-ai/nomic-embed-text-v1.5"
 NOMIC_DIM = 768
@@ -32,7 +33,7 @@ def embed_query(text):
     return next(_text_model().query_embed([text])).tolist()
 
 
-# CLIP: one shared text/image space, for cross-modal recall in L3 and later.
+# CLIP: one shared text/image space, for cross-modal recall in L4 and later.
 # Nomic and CLIP scores sit on different scales, so photos live in their own
 # named vector and a text query is embedded twice, once per space.
 CLIP_VISION_MODEL = "Qdrant/clip-ViT-B-32-vision"
@@ -60,10 +61,8 @@ def embed_image(paths):
 def load_image(url_or_path):
     """Return a local image path, fetching http(s) URLs to a temp JPEG first.
 
-    The container has no camera, so pasting an image URL stands in for a
-    capture: the bytes are fetched once, normalized to RGB JPEG, and the
-    local path is returned so it embeds and displays like a bundled photo.
-    A path to a file already on disk passes straight through.
+    A path to a file already on disk passes straight through, so the upload
+    button and a filename typed by hand both land here.
     """
     if not str(url_or_path).startswith(("http://", "https://")):
         return url_or_path
@@ -88,8 +87,7 @@ def load_image(url_or_path):
         raise ValueError(
             f"No image came back from this link:\n  {url[:90]}\n"
             "Right-click the image itself and copy the image address (it "
-            "ends in .jpg or .png), or save your photos into this lesson's "
-            "folder and list their filenames instead of links."
+            "ends in .jpg or .png), or use the upload button instead."
         ) from None
     fd, path = tempfile.mkstemp(suffix=".jpg")
     os.close(fd)
@@ -115,26 +113,85 @@ def embed_query_ms(text, runs=50):
 
 
 EXAMPLE_OBJECT = "./ro_shared_data/objects/rubberduck_"
+TEACH_DIR = "./my_photos/teach"
+TEST_DIR = "./my_photos/test"
+IMAGE_TYPES = (".jpg", ".jpeg", ".png", ".webp")
 
 
-def object_photos(teach_photos, test_photo):
-    """Resolve a subject's photos to local files, ready to embed and show.
+def _uploaded(folder):
+    """Photos sitting in an upload folder, oldest first."""
+    path = Path(folder)
+    if not path.is_dir():
+        return []
+    files = [f for f in path.iterdir() if f.suffix.lower() in IMAGE_TYPES]
+    return sorted(files, key=lambda f: f.stat().st_mtime)
 
-    Pass two or more photos of one subject in `teach_photos` and one more in
-    `test_photo`, either as image links or as filenames saved beside the
-    notebook. Leave them empty to fall back to the bundled example. Links
-    are fetched once; local paths pass through.
+
+def _upload_box(folder, heading, hint):
+    """One labelled upload button that saves into `folder`."""
+    import ipywidgets as widgets
+
+    Path(folder).mkdir(parents=True, exist_ok=True)
+    title = widgets.HTML(f"<b>{heading}</b><br><small>{hint}</small>")
+    button = widgets.FileUpload(accept="image/*", multiple=True)
+    status = widgets.HTML(_upload_status(folder))
+
+    def save(change):
+        for item in change["new"]:
+            (Path(folder) / item["name"]).write_bytes(item["content"])
+        button.value = ()
+        status.value = _upload_status(folder)
+
+    button.observe(save, names="value")
+    return widgets.VBox([title, button, status],
+                        layout=widgets.Layout(width="330px"))
+
+
+def _upload_status(folder):
+    files = _uploaded(folder)
+    if not files:
+        return "<small>Nothing uploaded yet.</small>"
+    return f"<small>{len(files)} ready: {', '.join(f.name for f in files)}</small>"
+
+
+def photo_uploader():
+    """Two upload buttons: the photos to teach with, and the one to test with.
+
+    Photos land in ./my_photos and stay on the device. Holding one photo back
+    is the point of the lab: the device meets it once before it has been
+    taught anything, and once after. Leave both empty for the bundled example.
     """
-    example = not (teach_photos or test_photo)
-    if example:
-        teach_photos = [EXAMPLE_OBJECT + "1.jpg", EXAMPLE_OBJECT + "2.jpg"]
-        test_photo = EXAMPLE_OBJECT + "3.jpg"
-    elif not (teach_photos and test_photo):
+    import ipywidgets as widgets
+    from IPython.display import display
+
+    display(widgets.HBox([
+        _upload_box(TEACH_DIR, "Teach with these",
+                    "Two or more photos of one object, from different "
+                    "angles or in different places."),
+        _upload_box(TEST_DIR, "Test with this one",
+                    "One more photo of the same object. Leave this one out "
+                    "of the teaching photos."),
+    ]))
+
+
+def object_photos():
+    """The photos to teach with, and the one held back to test with.
+
+    Reads the two folders the upload buttons write to, and falls back to the
+    bundled example when both are empty.
+    """
+    teach = [str(f) for f in _uploaded(TEACH_DIR)]
+    test = [str(f) for f in _uploaded(TEST_DIR)]
+    if not teach and not test:
+        example = [EXAMPLE_OBJECT + f"{i}.jpg" for i in (1, 2, 3)]
+        print("Using the bundled example: a rubber duck, 2 photos to teach",
+              "with and 1 to test with")
+        return example[:2], example[2]
+    if len(teach) < 2 or len(test) != 1:
         raise ValueError(
-            "Fill in both TEACH_PHOTOS (two or more photos) and TEST_PHOTO "
-            "(one more), or leave both empty to use the bundled example."
+            f"Found {len(teach)} photo(s) to teach with and {len(test)} to "
+            "test with. Upload two or more on the left and exactly one on "
+            "the right, or leave both empty for the bundled example."
         )
-    resolved = [load_image(p) for p in teach_photos]
-    print(f"{len(resolved)} teach photos + 1 test photo ready"
-          + (" (bundled example: rubber duck)" if example else ""))
-    return resolved, load_image(test_photo)
+    print(f"{len(teach)} photos to teach with, 1 held back to test")
+    return teach, test[0]

@@ -1,4 +1,4 @@
-"""Build ro_shared_data/memories.json: one person's day, shared across L2-L5.
+"""Build ro_shared_data/memories.json: one person's day, shared across L3-L6.
 
 Text and voice notes plus photo captures, each with metadata the labs filter on
 (category, location, timestamp, price). Photo entries point at files in
@@ -63,8 +63,8 @@ DAY = [
     (7.4, "photo", "gym.jpg", "health", "Gym", None, None),
 ]
 
-# Voice notes carry the audio file L4 transcribes on-device. The stored
-# transcript is the fallback text L2/L3/L5 read; L4 replaces it with what its
+# Voice notes carry the audio file L5 transcribes on-device. The stored
+# transcript is the fallback text L3/L4/L6 read; L5 replaces it with what its
 # Whisper model produces from these clips (see .build/utils/audio.py).
 VOICE_AUDIO = {
     "Note to self, the ramen downtown was incredible, fourteen dollars and worth it, sat right by the window": "ramen.wav",
