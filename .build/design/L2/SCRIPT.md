@@ -30,7 +30,6 @@
 |---|---|
 | `l2-01-the-parts` | Four parts, what each one is for, and the total |
 | `l2-02-where-the-compute-goes` | Detector on the GPU against the same work on CPU, and what stays loaded on 8 GB |
-| `l2-03-the-body` | The six printed parts, exploded, with the three measurements that decide the fit |
 | `l2-04-lesson-map` | The loop's four stages, each tagged with the lesson that builds it, as a promise |
 
 ## Beat map
@@ -40,15 +39,13 @@
 | 1 | INTRO | The finished machine, and what this lesson is | 23 |
 | 2 | SLIDE 1 + 2 | The four parts, and what 8 GB costs you | 96 |
 | 3 | NARRATION | The interface: no screen, no speaker, your phone | 58 |
-| 4 | SLIDE 3 | Designing the body as a program | 86 |
+| 4 | SLIDE 3 | Designing the body with Claude | 86 |
 | 5 | DEMO | Making it work in a room | 100 |
-| 6 | DEMO | A real question is not a nearest-neighbour query | 104 |
-| 7 | DEMO | Making it a machine instead of a script | 46 |
-| 8 | SLIDE 4 | What you can run tonight, and where this goes | 51 |
+| 6 | SLIDE 4 | What you can run tonight, and where this goes | 51 |
 
-Total: ~564 sec (9 min 24 sec) at 156 words per minute, 1,466 words of narration measured from the narration blocks below. Recount after any edit.
+Total: ~414 sec (6 min 54 sec) at 156 words per minute. Recount after any edit.
 
-**To reach 7:30**, in this order: cut beat 6's small-language-model paragraph (18 sec), beat 3's cost paragraph (22 sec), beat 2's Raspberry Pi sentence (8 sec), beat 5's recogniser-that-only-worked-in-one-room line (14 sec), beat 8's laptop paragraph (16 sec), beat 4's parts-and-glue list (12 sec). Beats 4, 5, and 6 are never cut below their core: the audit that passed on an unbuildable part, the three things that bridge notebook and room, and similarity-then-sorting.
+The lesson now lands at just under seven minutes before any additional expansion.
 
 ---
 
@@ -60,9 +57,9 @@ Demo footage: the machine working, cut tight. An object it has never seen goes f
 
 One sentence just turned a stranger object into a memory. A moment later, I deleted that memory—and it forgot.
 
-That is the leap from an AI that starts from zero every time to one that learns, recognises, and changes with you. Over the years, it can become personal—remembering the objects, places, and routines of your life.
+That is the leap from an AI that starts from zero every time to something you can build: a system that learns, recognises, and changes over time. Over months and years, it can build a memory of your life: the objects, places, and routines that make it personal to you.
 
-Today, it’s a home assistant. Add audio and text, and that same memory could follow you through smart glasses.
+This robot starts as a home assistant. The lessons extend its memory through audio and text, toward something that could live with you, for example in smart glasses. We’ll take the build apart: four parts, one printed body, and the compute, camera, and engineering decisions that make it work in a real room.
 
 ---
 
@@ -72,13 +69,13 @@ Slide: `l2-02-where-the-compute-goes`.
 
 **NARRATION:**
 
-Start with the computer. It sets the limits for everything else.
+When building a robot, start with the computer. It sets the limits for everything else.
 
 This build uses an NVIDIA Jetson Orin Nano Super with 8 GB of memory. Its GPU runs the object detector at about 165 milliseconds a frame. On a CPU, the same work takes seconds. At that speed, a robot becomes a slideshow.
 
-A Raspberry Pi 5 should run the software too, though I have not tested it. You would need to reduce the workload: smaller frames, lower resolution and FPS, and smaller models. Accuracy and response time may suffer. The idea stays the same, but the robot moves at a different pace.
+A Raspberry Pi 5 should run the same software, though You would have to accept some trade-offs: lower resolution, FPS, smaller models, decreased accuracy and response time. The idea stays the same, but the robot moves at a different pace.
 
-I chose the Jetson because it has enough headroom for a useful live image while keeping the models on-device. It costs 249 dollars. The 16 GB version gives you room for a bigger image encoder or a small language model.
+I chose the Jetson because it has enough headroom for a useful live image while keeping the models on-device. It costs 249 dollars which stays fairly affordable. There is still some headroom for a bigger image encoder or a small language model to give it reasoning capabilities. 
 
 The other parts are a USB camera, an NVMe drive, and about 300 grams of filament for the enclosure. Four parts in total, about 347 dollars.
 
@@ -90,29 +87,21 @@ No slide. Demo footage: the phone view in Dylan's hand, the robot in the backgro
 
 **NARRATION:**
 
-This robot has no screen, speaker, or microphone of its own. Its interface is a web page served to the phone in my hand over its own wifi.
+This robot has no screen, speaker, or microphone of its own. Its interface is a web page served to the phone in my hand over direct wifi. The phone is just the interface: all of the vision, speech, and memory compute happens on the robot.
 
-The reasons apply to whatever you build. Fewer parts mean fewer things that can fail during a demo. A phone also gives you a better screen and microphone than anything you would bolt onto the robot.
+That keeps the hardware simple, but it does not make the phone a performance dependency. Add a microphone or a screen to the robot and the AI would still run the same way; you would only be changing how you interact with it.
 
-The tradeoff is that the phone becomes the weak link for video, and answers appear on the screen instead of coming from a speaker. If you want the robot to hear the room without the phone, add a USB microphone. The same speech model can process what it hears.
+The tradeoff is that answers appear on the phone instead of coming from a speaker. If you want the robot to hear the room without the phone, add a USB microphone. The same speech model can process what it hears.
 
 ---
 
-## Beat 4: SLIDE 3, designing the body
+## Beat 4: SLIDE 3, designing the body with Claude
 
-Slide: `l2-03-the-body`.
+No slide. Claude Design UI. 
 
 **NARRATION:**
 
-The body is the part I would not have attempted two years ago.
-
-The shell is not a model I sculpted. It is a program that builds the geometry from parameters. I wrote the spec in plain language with Claude, and the page and prompt are in the repo. The fit measurements live in one place, so if your board is a different size, you change a number and export again.
-
-There are six printed parts and no screws: a twist lock, two snap clips, one zip tie, and a drop of glue. The three plates take about eight hours to print.
-
-The page checks its own work every time it loads, and it passed. The first build still could not be assembled. The tray was 37.4 millimetres across for a 37 millimetre board, which is a fit on paper and a jam on a printer. My assembly instructions also said to drop the board in from above, even though its rear connectors make that impossible.
-
-A nominal dimension is not a fit. A generated model can pass its own checks and still be unbuildable. The check now moves the parts along their actual assembly paths and requires zero interference.
+[Showcase Claude Design, show how the design came to life]
 
 ---
 
@@ -124,55 +113,17 @@ Demo footage: the live feed with boxes and scores, a hand entering the frame and
 
 The hardware is only the start. A real room is harder than a notebook.
 
-In the notebook lessons, you get one clean photograph of one object. In a room, the frame is cluttered and changes several times a second. Three parts of the build handle that gap.
+In the notebook lessons, each example starts as a single, clean image file. The robot has to process a live camera stream: objects overlap, backgrounds change, and the same object looks different from one frame to the next. The build has to turn that stream into stable memories.
 
-A detector finds the objects and crops them out, but I throw away its labels. The memory identifies each crop by comparing it with everything it has been taught. That lets the robot learn an object the detector has no name for, including a person.
+Start with YOLO. It is a family of fast object-detection models that predicts what is in an image and where it is. That gives us the boxes and generic labels on screen. I use the boxes to crop objects, but I do not rely on those labels. The memory compares each crop with what I have taught it, so I can teach it names that matter to me, even an object or person YOLO was never trained to recognise.
 
-Before the crop is stored, the background is erased. Everything outside the object's outline becomes flat gray. Otherwise, half the memory is my desk, and recognition breaks as soon as the object moves. If you have built a recogniser that only worked in one room, this is the same problem.
+Before the crop enters memory, I remove the background. Everything outside the object's outline becomes gray. That keeps the memory focused on the object instead of my desk, so recognition still works when the object moves.
 
-The box also has to hold still. What stands out changes every frame, so similar objects can trade the highlight several times a second. A new object has to be about one and a half times more prominent before it takes over. It is unglamorous code, but without it nobody can press the button in time.
-
-One number, then I will leave thresholds alone. Recognition here fires at 0.90. Your notebook uses 0.80 because the right number depends on the camera and the room. Lesson six is where you find yours.
+We use Qdrant's similarity score with a recognition threshold to decide when a match is good enough. Lesson six is where you find the right threshold for your camera and room.
 
 ---
 
-## Beat 6: A real question is not a nearest-neighbour query
-
-Demo footage: the recall answer on the phone, then the "what did you see today" inventory.
-
-**NARRATION:**
-
-This is the design idea from the build I would reuse first.
-
-When I ask when and where it last saw Potato, the words first pick the object from the names I taught it. That part is a vector search. The answer then comes from that object's sightings, sorted by time. "What did you see today?" uses no vectors. It is a list of what the robot has seen since this morning.
-
-Use similarity to identify the thing. Use ordinary sorting and filtering to answer questions about it. If you use similarity to answer a question about time, you can get an answer that sounds reasonable but is wrong.
-
-That makes the clock part of the memory. A machine with no internet has no idea what time it is. Fit a coin cell battery, or it will stamp today's memories with the day you last packed it away.
-
-There is one limit to call out. Image models can search photos with a sentence, which is what you do in lesson four. I tested that approach here and did not keep it because a spoken question against pictures of the room did not find the right object often enough to trust. The words are matched against the words instead.
-
-If you want the system to reason about what it found, a small language model can sit on top of the memory and read the results.
-
----
-
-## Beat 7: Making it a machine instead of a script
-
-Demo footage: the robot with only a power cable, then the plug pulled and the same object recognised again after it comes back.
-
-**NARRATION:**
-
-The last step makes the script reliable enough to hand to somebody else.
-
-It boots on its own. It needs no keyboard, screen, or outside network. It brings up its own wifi and serves the page, so it works in a hall with no internet. Plugging it in is the on switch.
-
-There is no shutdown procedure either. Each new memory is written to disk and committed before the operation finishes, so what the robot learned survives a loss of power.
-
-It knows this object. Power off, then power on. It takes about a minute to come back, and it still knows the object from the files on disk.
-
----
-
-## Beat 8: SLIDE 4, what you can run tonight
+## Beat 6: SLIDE 4, what you can run tonight
 
 Slide: `l2-04-lesson-map`.
 
