@@ -3,9 +3,9 @@
 **Target runtime:** ~9:20
 **Format:** video only, no notebook. Slides are 16:9, briefs in `SLIDES.md` in this directory. Production direction lives in the shotlist, never here.
 
-**Objective.** Answer the question a hobbyist is already asking at the end of lesson one: could I build this? The lesson walks the build in the order it was made, and every beat is a decision, what else was on the table, and what the choice cost. It is a build lesson, not a tour of a prop, and every beat has to leave the viewer able to decide something about their own project.
+**Objective.** Answer the question a hobbyist is already asking at the end of lesson one: could I build this? The lesson follows the build in the order it happened. Each beat covers a decision, the alternatives, and the cost. It is a build lesson, not a tour of a prop. By the end, viewers should have a better sense of what they would choose for their own project.
 
-**What this lesson does not do.** It does not teach thresholds, filters, coverage, or recall, all of which the student builds by hand in lessons three to six. Where the robot touches one of those, the beat names it in one sentence and points at the lesson that owns it. Its own spine is the part no notebook can show: what breaks between one clean photo in a notebook and six frames a second of a real room.
+**What this lesson does not do.** It does not teach thresholds, filters, coverage, or recall. The student builds those by hand in lessons three to six. When the robot touches one of them, the beat names it briefly and points to the lesson that covers it. This lesson stays with the gap a notebook cannot show: what changes between one clean photo and six frames a second in a real room.
 
 **STATUS: PROVISIONAL.** The robot app and hardware exist; the shoot does not. Every number below is sourced from the robot repo and must be reconciled against the recorded footage before anything is cut. Numbers on screen are the evidence, and the narration never claims what the footage does not show.
 
@@ -58,9 +58,11 @@ Demo footage: the machine working, cut tight. An object it has never seen goes f
 
 **NARRATION:**
 
-That is the machine from last lesson, and that is all three verbs: it learns an object from one sentence, it knows it afterwards, and the memory can be deleted.
+One sentence just turned a stranger object into a memory. A moment later, I deleted that memory—and it forgot.
 
-This lesson is how it got built, in the order I built it. Four parts, one printed body, and about a week of decisions I can save you.
+That is the leap from an AI that starts from zero every time to one that learns, recognises, and changes with you. Over the years, it can become personal—remembering the objects, places, and routines of your life.
+
+Today, it’s a home assistant. Add audio and text, and that same memory could follow you through smart glasses.
 
 ---
 
@@ -70,15 +72,15 @@ Slide: `l2-02-where-the-compute-goes`.
 
 **NARRATION:**
 
-Start with the compute, because it decides everything downstream.
+Start with the computer. It sets the limits for everything else.
 
-One measurement made this choice. The detector runs at about 165 milliseconds a frame on the Jetson's GPU. The same work on a CPU takes seconds a frame, and seconds a frame is not a robot, it is a slideshow.
+This build uses an NVIDIA Jetson Orin Nano Super with 8 GB of memory. Its GPU runs the object detector at about 165 milliseconds a frame. On a CPU, the same work takes seconds. At that speed, a robot becomes a slideshow.
 
-A Raspberry Pi 5 should run all of this software, and I have not tested it. What I used is a Jetson Orin Nano Super with 8 GB, at 249 dollars. If you want a bigger image encoder or a small language model on the box, buy the 16 GB version instead.
+A Raspberry Pi 5 should run the software too, though I have not tested it. You would need to reduce the workload: smaller frames, lower resolution and FPS, and smaller models. Accuracy and response time may suffer. The idea stays the same, but the robot moves at a different pace.
 
-Here is what 8 GB costs you: you do not get to keep every model loaded. Of the three encoders on this robot, only the image one is up when it boots, and speech and text load the first time you teach it or ask it something. Load all three at startup and the board runs out of memory, and then it misses the moment you are pointing at.
+I chose the Jetson because it has enough headroom for a useful live image while keeping the models on-device. It costs 249 dollars. The 16 GB version gives you room for a bigger image encoder or a small language model.
 
-Three more parts. A USB camera, the kind your operating system already understands, that opens with two lines of OpenCV and no drivers. The ribbon cable modules are cheaper and they will cost you a Saturday of driver work on a board like this. An NVMe drive rather than a memory card, because every model loads off it at startup. And about 300 grams of filament. Four parts, about 347 dollars, and the board is 249 of it.
+The other parts are a USB camera, an NVMe drive, and about 300 grams of filament for the enclosure. Four parts in total, about 347 dollars.
 
 ---
 
@@ -88,11 +90,11 @@ No slide. Demo footage: the phone view in Dylan's hand, the robot in the backgro
 
 **NARRATION:**
 
-Now the interface, and this is the decision I would most defend. This robot has no screen, no speaker, and no microphone of its own. The whole interface is a web page it serves to the phone in my hand, over its own wifi.
+This robot has no screen, speaker, or microphone of its own. Its interface is a web page served to the phone in my hand over its own wifi.
 
-Two reasons, and both apply to whatever you build. Every part you do not add is a part that cannot fail while someone is watching. And a phone is a better interface than anything you would bolt on: a real screen, a real microphone, already in your pocket.
+The reasons apply to whatever you build. Fewer parts mean fewer things that can fail during a demo. A phone also gives you a better screen and microphone than anything you would bolt onto the robot.
 
-What it costs: the video feed to the phone becomes the weakest link, and with no speaker the robot never talks back, so answers appear on the panel. If you want it to hear the room without a phone in the loop, add a USB microphone and the same speech model runs on whatever it picks up.
+The tradeoff is that the phone becomes the weak link for video, and answers appear on the screen instead of coming from a speaker. If you want the robot to hear the room without the phone, add a USB microphone. The same speech model can process what it hears.
 
 ---
 
@@ -102,15 +104,15 @@ Slide: `l2-03-the-body`.
 
 **NARRATION:**
 
-Then the body, and this is the part I would not have attempted two years ago.
+The body is the part I would not have attempted two years ago.
 
-The shell is not a model I sculpted. It is a program: a page that builds the geometry from parameters, written with Claude from a spec I wrote in plain language, and both the page and the prompt are in the repo. Which means the measurements that decide the fit are numbers in one place. If your board is a different size, you change the number and export again.
+The shell is not a model I sculpted. It is a program that builds the geometry from parameters. I wrote the spec in plain language with Claude, and the page and prompt are in the repo. The fit measurements live in one place, so if your board is a different size, you change a number and export again.
 
-Six printed parts and no screws. A twist lock, two snap clips, one zip tie and one drop of glue. Three plates, about eight hours of printing.
+There are six printed parts and no screws: a twist lock, two snap clips, one zip tie, and a drop of glue. The three plates take about eight hours to print.
 
-Now the part worth taking away. That page checks its own work every time it loads, and it passed. And the first build still could not be assembled. The tray was 37.4 millimetres across for a 37 millimetre board, which is a fit on paper and a jam on a printer. And my own assembly instruction had the board dropping in from above, which the connectors on its back make physically impossible.
+The page checks its own work every time it loads, and it passed. The first build still could not be assembled. The tray was 37.4 millimetres across for a 37 millimetre board, which is a fit on paper and a jam on a printer. My assembly instructions also said to drop the board in from above, even though its rear connectors make that impossible.
 
-A nominal dimension is not a fit, and a generated model that passes its own checks can still be unbuildable. So the check changed: it now drives the parts along the paths they travel during assembly and demands they hit nothing.
+A nominal dimension is not a fit. A generated model can pass its own checks and still be unbuildable. The check now moves the parts along their actual assembly paths and requires zero interference.
 
 ---
 
@@ -120,17 +122,17 @@ Demo footage: the live feed with boxes and scores, a hand entering the frame and
 
 **NARRATION:**
 
-The hardware is only the start. The harder problem is a real room.
+The hardware is only the start. A real room is harder than a notebook.
 
-In the notebook lessons you get one clean photograph of one object. A room gives you a cluttered frame, several times a second. Three things bridge that.
+In the notebook lessons, you get one clean photograph of one object. In a room, the frame is cluttered and changes several times a second. Three parts of the build handle that gap.
 
-First, a detector finds the objects and crops them out, and I throw its labels away. The memory decides which thing it is, by comparing that cut-out picture against everything it has been taught. That is why this robot can learn an object no detector has a word for, including a person.
+A detector finds the objects and crops them out, but I throw away its labels. The memory identifies each crop by comparing it with everything it has been taught. That lets the robot learn an object the detector has no name for, including a person.
 
-Second, the cut-out gets its background erased before it is stored. Everything outside the object's outline is flattened to flat gray. Without that, half of what it remembers is my desk, and it stops recognising the object the moment you move it. If you have ever built a recogniser that only worked in the room you built it in, that is why.
+Before the crop is stored, the background is erased. Everything outside the object's outline becomes flat gray. Otherwise, half the memory is my desk, and recognition breaks as soon as the object moves. If you have built a recogniser that only worked in one room, this is the same problem.
 
-Third, the box has to hold still. What stands out changes every frame, so two similar objects trade the highlight several times a second, and you cannot press a button on a target that keeps moving. So a new object has to be about one and a half times more prominent before it takes the highlight. Unglamorous code, and without it nobody can press the button in time.
+The box also has to hold still. What stands out changes every frame, so similar objects can trade the highlight several times a second. A new object has to be about one and a half times more prominent before it takes over. It is unglamorous code, but without it nobody can press the button in time.
 
-One number, and then I leave thresholds alone. Recognition here fires at 0.90 where your notebook will use 0.80, because that number belongs to a camera and a room. Lesson six is where you find yours.
+One number, then I will leave thresholds alone. Recognition here fires at 0.90. Your notebook uses 0.80 because the right number depends on the camera and the room. Lesson six is where you find yours.
 
 ---
 
@@ -140,17 +142,17 @@ Demo footage: the recall answer on the phone, then the "what did you see today" 
 
 **NARRATION:**
 
-This is the design idea from the build that is most worth reusing.
+This is the design idea from the build I would reuse first.
 
-When I ask when and where it last saw Potato, it is tempting to make that one big vector search. It is not, and it should not be. The words pick which object I mean out of the names I taught it, and that part is a vector search. Then the answer comes from that object's sightings, sorted by time: the newest ones, not the nearest ones. And what did you see today touches no vectors at all. It is a list of what was seen since this morning.
+When I ask when and where it last saw Potato, the words first pick the object from the names I taught it. That part is a vector search. The answer then comes from that object's sightings, sorted by time. "What did you see today?" uses no vectors. It is a list of what the robot has seen since this morning.
 
-Similarity is for identifying the thing. Ordinary sorting and filtering answer the question about it. Push a question about time through a similarity search and you get an answer that looks reasonable and is not.
+Use similarity to identify the thing. Use ordinary sorting and filtering to answer questions about it. If you use similarity to answer a question about time, you can get an answer that sounds reasonable but is wrong.
 
-Which makes the clock part of the memory. A machine with no internet has no idea what time it is, so fit a coin cell battery, or it will stamp today's memories with the day you last packed it away.
+That makes the clock part of the memory. A machine with no internet has no idea what time it is. Fit a coin cell battery, or it will stamp today's memories with the day you last packed it away.
 
-One limit worth being straight about. Image models can search photos with a sentence, which is what you do in lesson four, and I measured it here and did not keep it: a spoken question against pictures of the room did not find the right object often enough to trust. So the words are matched against the words instead.
+There is one limit to call out. Image models can search photos with a sentence, which is what you do in lesson four. I tested that approach here and did not keep it because a spoken question against pictures of the room did not find the right object often enough to trust. The words are matched against the words instead.
 
-And if you want it to reason about what it found rather than just find it, that is where a small language model goes: on top of the memory, reading what came back.
+If you want the system to reason about what it found, a small language model can sit on top of the memory and read the results.
 
 ---
 
@@ -160,13 +162,13 @@ Demo footage: the robot with only a power cable, then the plug pulled and the sa
 
 **NARRATION:**
 
-The last step is what turns a script into something reliable enough to hand to somebody else.
+The last step makes the script reliable enough to hand to somebody else.
 
-It boots on its own. No keyboard, no screen, no network it depends on: it brings up its own wifi and serves the page, so it works in a hall with no internet at all. Plugging it in is the on switch.
+It boots on its own. It needs no keyboard, screen, or outside network. It brings up its own wifi and serves the page, so it works in a hall with no internet. Plugging it in is the on switch.
 
-There is also no shutdown procedure. Every time it learns something, that memory is written to disk and committed before the operation finishes, so what it has learned survives losing power.
+There is no shutdown procedure either. Each new memory is written to disk and committed before the operation finishes, so what the robot learned survives a loss of power.
 
-Watch. It knows this object. Power off. Power on. It takes about a minute to come back, and it still knows it, from the files on the disk.
+It knows this object. Power off, then power on. It takes about a minute to come back, and it still knows the object from the files on disk.
 
 ---
 
@@ -176,8 +178,8 @@ Slide: `l2-04-lesson-map`.
 
 **NARRATION:**
 
-One last thing, and it matters more than the parts list: you do not need any of this hardware to follow along. Point the same code at a folder of photos instead of a camera and the whole recognition path runs on your laptop.
+You do not need this hardware to follow along. Point the same code at a folder of photos instead of a camera, and the recognition path runs on your laptop.
 
-The reusable part of this build was never the board or the shell. It is that you teach the thing by showing it something and saying what it is, and it keeps it. That works anywhere you can take a picture and write a record.
+The reusable part is the teaching loop: show the system something, say what it is, and let it keep that memory. It works anywhere you can take a picture and write a record.
 
-Which brings us to the memory itself, the part I have been pointing at for two lessons. Capture, store, recall, forget. Starting next lesson you write those four yourself, beginning with an empty folder and a question it cannot answer yet.
+Next comes the memory itself. Capture, store, recall, forget. In the next lesson, you will write those four operations yourself, starting with an empty folder and a question the system cannot answer yet.

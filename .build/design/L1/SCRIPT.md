@@ -3,19 +3,19 @@
 **Target runtime:** ~8:45
 **Format:** video only, no notebook. Slides are 16:9, briefs in `SLIDES.md` in this directory.
 
-**Objective.** Two jobs at once. Hand the student the vector search toolbox the rest of the course uses (vector, embedding model, similarity score, details, index, and the store/recall/forget lifecycle), and convince a builder that on-device memory is worth their week.
+**Objective.** Two jobs at once. Give the student the vector search toolbox used through the rest of the course (vector, embedding model, similarity score, details, index, and the store/recall/forget lifecycle), and show a builder why on-device memory is worth a week of their time.
 
-**Thesis.** Getting a model to run on a small board is now an installable problem: there are wheels, runtimes, and a $249 board that does it. Giving that board a memory of what it has seen is still something you assemble yourself.
+**Thesis.** Getting a model to run on a small board is now mostly an installation problem. There are wheels, runtimes, and a $249 board that can do it. Giving that board a memory of what it has seen is still something you assemble yourself.
 
 **Closing line.** You can download the model I am running on this thing. You cannot download what it saw in my room.
 
 **Audience.** A hobbyist AI and robotics builder. Technical, impatient, building at home in the evening. They will skip a lecture that feels like a product tour.
 
-**Robot claims, corrected against the robot repo.** The robot answers on its own panel and has no speaker, so nothing is ever spoken by the machine. Nothing on it generates text: the app formats a stored time, a place label, and a photo, and the place is a label set when the robot starts rather than anything it infers. So the question asked on camera is "when and where did you last see my water bottle", never "where did I leave it". Its stack is YOLOE for detection, CLIP's vision tower for image vectors, Nomic for text, Whisper for speech. There is no LLM, and no CLIP text tower. L1 never names a threshold number; L2 owns both numbers and why they differ.
+**Robot claims, checked against the robot repo.** The robot answers on its own panel and has no speaker, so the machine never speaks. Nothing on it generates text. The app formats a stored time, a place label, and a photo. The place is set when the robot starts, not inferred by the model. The question asked on camera is "when and where did you last see my water bottle", never "where did I leave it". Its stack is YOLOE for detection, CLIP's vision tower for image vectors, Nomic for text, and Whisper for speech. There is no LLM and no CLIP text tower. L1 does not name a threshold number. L2 covers both numbers and why they differ.
 
-**Vocabulary.** L1 owns vector, embedding model, similarity score, details, and index, each defined in the beat that first uses it. Filters are named once in beat 5 and taught in lesson four. No code appears on screen. Internals stay out: how an embedding model or an index works inside is prior-course material.
+**Vocabulary.** L1 owns vector, embedding model, similarity score, details, and index. Each is defined when it first appears. Filters are named once in Beat 5 and taught in Lesson 4. No code appears on screen. The internals of the embedding model and index belong to the prior course.
 
-**The robot is on set for the whole shoot.** Beats 1, 10, and 11 are live. Four slide beats cut to the robot's own panel, and anything on its display is real output from the machine.
+**The robot is on set for the whole shoot.** Beats 1, 10, and 11 are live. Four slide beats cut to the robot's own panel. Anything on its display is real output from the machine.
 
 ## Slides
 
@@ -66,9 +66,9 @@ This one was. It watches the room all day.
 
 When and where did you last see my water bottle?
 
-A time, the room, and the photo it took. It was never trained on my bottle, and there is no language model on that board. I taught it what my bottle looks like, it wrote down each sighting, and just found the note again. The app read it back.
+A time, the room, and the photo it took. Nobody trained it on my bottle, and there is no language model on that board. I taught it what my bottle looks like. It saved each sighting, then found the memory again. The app read it back.
 
-The model is the easy part now. The memory is yours to build. That is this course, and today is the toolbox.
+Running the model is the easy part now. The memory is the part you build. That is this course, and today is the toolbox.
 
 ---
 
@@ -78,13 +78,13 @@ Slide: `l1-01-note-and-nearest`, both states. Robot cutaway on the last line: th
 
 **NARRATION:**
 
-That answer starts with the smallest useful memory: a note. Let's say I drank a coffee: Flat white on the terrace.
+That answer starts with a small memory: a note. Say I had a coffee: Flat white on the terrace.
 
-A keyword search only looks for the same words. It would miss that “Flat white on the terrace” answers a question about sitting outside for a latte. So the note goes through an embedding model, a small network that turns text into a list of numbers. Ours returns 768 of them, and that list is called a vector. Notes that mean similar things land close together.
+A keyword search only looks for the same words. It would miss that "Flat white on the terrace" answers a question about sitting outside for a latte. The note goes through an embedding model, a small network that turns text into a list of numbers. Ours returns 768 numbers. That list is a vector. Notes with similar meanings land close together.
 
-Now ask a real question: where can I sit outside for a latte? The question goes through the same model, so search becomes one question: which stored note is closest? The closest note wins because the two pieces of text mean similar things, even though they share no exact words. A keyword search would miss that connection.
+Now ask: where can I sit outside for a latte? The question goes through the same model. Search then asks which stored note is closest. The closest note wins because the two pieces of text mean similar things, even though they share no exact words. A keyword search misses that connection.
 
-That is retrieval, and it sits at the core of every lesson here. One rule about that score: it only means something inside its own model's space. Each lesson names its own range.
+That is retrieval, and it sits at the core of every lesson here. The score only means something inside its own model's space. Each lesson names its own range.
 
 ---
 
@@ -94,11 +94,11 @@ Slide: `l1-02-photos-and-words`, first state.
 
 **NARRATION:**
 
-Text is half a day. What about everything you see?
+Text only gets us so far. What about everything you see?
 
-A model like CLIP has two halves trained together. One embeds images, one embeds text, and both land in the same space of 512 numbers. So a photo of a bicycle and the phrase "a red bicycle" come out as neighbours.
+A model like CLIP has two halves trained together. One embeds images and the other embeds text. Both produce 512-number vectors, so a photo of a bicycle and the phrase "a red bicycle" land near each other.
 
-That means you can search photos with a sentence. Embed the words, return the nearest image. No tags and no captions, which is lesson four.
+You can search photos with a sentence. Embed the words, then return the nearest image. No tags or captions. Lesson 4 adds those later.
 
 ---
 
@@ -108,9 +108,9 @@ Slide: `l1-02-photos-and-words`, second state. Robot cutaway on the last two sen
 
 **NARRATION:**
 
-That same idea lets the robot recognize objects. A new photo goes through the same image model as the remembered photo, producing another vector. Compare the two; if their similarity clears a threshold you pick, it is a match. No LLM interpreting the image, no model training, no custom vision pipeline—the device. It is simply retrieving the closest visual memory.
+That same idea lets the robot recognize objects. A new photo goes through the same image model as the remembered photo and produces another vector. Compare the two. If their similarity clears a threshold you pick, it is a match. No LLM interprets the image. You do not retrain the model or build a custom vision pipeline. The device retrieves the closest visual memory.
 
-And one memory can carry two vectors: one for what the photo looks like, one for what the sentence means. One point, two ways back to the same moment. On the robot, that point holds the photo, the words I taught it, and its sighting count.
+One memory can carry two vectors: one for what the photo looks like and one for what the sentence means. One card, two ways back to the same moment. On the robot, that card holds the photo, the words I taught it, and its sighting count.
 
 ---
 
@@ -122,9 +122,9 @@ Slide: `l1-03-the-loop`. Robot cutaway on the second line: the live feed, boxes 
 
 Put those pieces together and you get a memory loop. The robot is running it right now.
 
-First, capture a moment: a photo of the thing in front of the camera. The encoder turns it into a vector on the device. When you teach it a label, the photo, vector, label, time, and place become one memory. Teaching happens once. Later, a new photo becomes another vector; retrieval finds the closest match, and the app recalls its label, time, and place.
+First, capture a moment: a photo of the thing in front of the camera. The encoder turns it into a vector on the device. When you teach it a label, the photo, vector, label, time, and place become one memory. Teaching happens once. Later, a new photo becomes another vector. Retrieval finds the closest match, and the app recalls its label, time, and place.
 
-Then forget. A memory you cannot delete from is not yours. The index underneath keeps retrieval quick as memories run into the thousands.
+Then forget. If you cannot delete a memory, it is not yours. The index underneath keeps retrieval quick as the collection reaches the thousands. Lesson 4 turns those details into filters.
 
 ---
 
@@ -134,15 +134,15 @@ Slide: `l1-04-four-questions`.
 
 **NARRATION:**
 
-So why keep the memory on the device? Four questions, and you can answer them about your own project tonight.
+Why keep the memory on the device? Ask four questions about your own project.
 
-Is there a network where the thing lives? In a workshop, a field, a basement, or anything moving, often not.
+Is there a network where the thing lives? In a workshop, a field, a basement, or anything moving, often there is not.
 
-How long may an answer take? A machine reacting to what it sees cannot wait for a round trip.
+How long can an answer take? A machine reacting to what it sees cannot wait for a round trip.
 
-Do you want your house on someone's server, or an API key sitting inside your robot?
+Do you want your house on someone else's server, or an API key inside your robot?
 
-And what happens the morning a provider retires an endpoint? A device that has to phone home can be switched off by someone who is not you.
+What happens the morning a provider retires an endpoint? A device that has to phone home can be switched off by someone who is not you.
 
 If there is a network and seconds are fine, the cloud is the right answer. This course is for the other case.
 
@@ -154,15 +154,15 @@ Slide: `l1-05-what-you-give-up`.
 
 **NARRATION:**
 
-Now the honest half, because this is a trade and not a free upgrade.
+There is a tradeoff here. This is not a free upgrade.
 
-You do not get the biggest model. A device this size recognises and retrieves. It does not reason about your day, unless you put a small language model on top of the memory.
+You do not get the biggest model. A device this size recognizes and retrieves. It does not reason about your day unless you put a small language model on top of the memory.
 
-Storage decides how much stays instantly searchable, so what to keep and what to drop becomes your decision.
+Storage limits how much stays instantly searchable. What to keep and what to drop becomes your decision.
 
-Two devices know nothing about each other until you sync them, and that sync is yours to design. So is the update path.
+Two devices know nothing about each other until you sync them. You decide how that sync works and how updates reach the devices.
 
-The common answer is to keep the memory local and send the heavy thinking out when there is signal and permission.
+One practical answer is to keep the memory local and send the heavy thinking out when there is a signal and permission.
 
 ---
 
@@ -172,11 +172,11 @@ Slide: `l1-06-horizon`.
 
 **NARRATION:**
 
-Here is the part I find genuinely exciting, and it is not a prediction. It is what changes for you.
+This is what changes for you.
 
-When a device has a memory, you teach it by showing it something and telling it what it is. No dataset. No labels. No retraining and no GPU hours. One sentence, and it knows your thing from then on. That is already true on the board behind me.
+When a device has a memory, you teach it by showing it something and telling it what it is. You do not need a dataset, a labeling project, retraining, or GPU hours. One sentence, and it knows your thing from then on. That is already true on the board behind me.
 
-Follow that out. A machine that gets better in your house without an update, because the improvement is the memory and not the weights. A machine you teach in the field, about objects nobody put in a dataset. Then more than one machine: one learns something and the others can have it, and what crosses between them is your decision rather than a default.
+Take that outside the house. The machine gets better without an update because the improvement lives in its memory, not its weights. You can teach it in the field about objects nobody put in a dataset. With more than one machine, one can learn something and the others can receive it. You decide what crosses between them.
 
 ---
 
@@ -186,11 +186,11 @@ Slide: `l1-07-on-device`. Robot cutaway on the last line: the robot's own memory
 
 **NARRATION:**
 
-Every machine like this runs the same shape, and it is the architecture of this course. The embedding models and the memory live inside your application's own process. A question comes in, gets embedded, gets matched, and comes back answered without touching a network. Recall is a function call in your program.
+The architecture is simple. The embedding models and the memory live inside your application's own process. A question comes in, gets embedded, gets matched, and comes back answered without touching a network. Recall is a function call in your program.
 
-Qdrant Edge is the embedded build of Qdrant's vector search engine, so the search runs inside your program. No server to deploy and no account to create.
+Qdrant Edge is the embedded build of Qdrant's vector search engine, so the search runs inside your program. You do not deploy a server or create an account.
 
-On disk it is a directory. Kill the process, start it again, and everything is still there, because the files are.
+On disk, it is a directory. Stop the process and start it again. The memory is still there because the files are.
 
 ---
 
@@ -200,16 +200,16 @@ Camera, no slide. Teach, recognise, recall, on one object, on the robot's own pa
 
 **NARRATION:**
 
-Let me show you the whole thing, live, because it takes about twenty seconds.
+I can show you the whole thing live in about twenty seconds.
 
-This is Potato, my cat plushie. Right now the robot has never seen her. It finds a thing in the frame, draws a box around it, and puts no name on it, because it has nothing to match her against.
+This is Potato, my cat plushie. The robot has never seen her. It finds a thing in the frame, draws a box around it, and gives it no name because it has nothing to match her against.
 
 So I hold the button and I tell it what she is. This is Potato.
 
-That is the entire training procedure. One sentence. No detector on earth has a word for Potato, and it does not need one. Nothing was retrained. The models on that machine are exactly what they were a second ago. What changed is that there is now one more memory in the folder, with her picture and my words on it.
+That is the entire training procedure: one sentence. No detector on earth has a word for Potato, and it does not need one. Nothing was retrained. The models on that machine are exactly what they were a second ago. The change is one more memory in the folder, with her picture and my words on it.
 
-Potato goes away. Potato comes back. Watch the score clear the bar. She is recognised, out of a memory that is twenty seconds old.
+Potato goes away and comes back. Watch the score clear the bar. The robot recognizes her from a memory that is twenty seconds old.
 
-And now I can ask about her. When and where did you last see Potato? A time, the room, and the frame it came from.
+Now I can ask about her. When and where did you last see Potato? The answer is a time, the room, and the frame it came from.
 
-That is the machine we build next lesson, and the four after it are you building its memory.
+That is the machine we build next lesson. The four lessons after that are about building its memory.

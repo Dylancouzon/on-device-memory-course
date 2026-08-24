@@ -21,7 +21,8 @@ connection.
 | 3 | Store and Recall | Notebook |
 | 4 | Finding the Right Memory | Notebook |
 | 5 | Your On-Device Assistant | Notebook |
-| 6 | Teaching It to See | Notebook and appendix |
+| 6 | Teaching It to See | Notebook |
+| 7 | Cloud Sync: One Memory, Many Devices (bonus) | Notebook |
 
 In the notebooks, you will:
 
@@ -31,6 +32,7 @@ In the notebooks, you will:
 - Transcribe voice notes locally.
 - Add and query memories of your own.
 - Teach the assistant to recognize a chosen subject and test it offline.
+- Sync one device's memory to a cluster and to a second device (bonus).
 
 ## Run the notebooks locally
 
@@ -44,7 +46,7 @@ pip install -r requirements.txt jupyterlab
 jupyter lab
 ```
 
-Open a lesson notebook from `L3/` through `L6/`. One install at the repository
+Open a lesson notebook from `L3/` through `L7/`. One install at the repository
 root covers every lesson.
 
 The first run downloads the embedding and transcription models used by the
@@ -57,7 +59,7 @@ change in future releases.
 ## Repository layout
 
 ```text
-L3/ ... L6/              lesson notebooks
+L3/ ... L7/              lesson notebooks
 requirements.txt         every package the course needs, pinned
 helper.py                shared embedding, transcription, result-table, and offline helpers
 ro_shared_data/          data used by the notebooks

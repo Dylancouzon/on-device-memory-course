@@ -26,7 +26,7 @@ SECTIONS = [
     ("viz", "The views the lessons print"),
     ("audio", "Speech to text for the voice notes"),
 ]
-LESSONS = ["L3", "L4", "L5", "L6"]
+LESSONS = ["L3", "L4", "L5", "L6", "L7"]
 
 HEADER = '''"""Helper functions for the course notebooks.
 
