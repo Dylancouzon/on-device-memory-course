@@ -220,7 +220,7 @@ def load_memories(path, source_type=None):
 def store_notes(shard, notes):
     """Embed text and voice notes with Nomic and store one point per note.
 
-    The write this wraps is taught in Lesson 2: embed the note, build a
+    The write this wraps is taught in Lesson 3: embed the note, build a
     Point with the note as payload, upsert. A voice note embeds its
     transcript.
     """
@@ -261,8 +261,8 @@ def store_photo_memories(shard, photos, folder):
 def text_search(shard, query, query_filter=None, limit=4):
     """Embed a query with Nomic and return the nearest text memories.
 
-    The raw call is taught in Lesson 2; `query_filter` narrows recall the
-    way Lesson 3 teaches.
+    The raw call is taught in Lesson 3; `query_filter` narrows recall the
+    way Lesson 4 teaches.
     """
     return shard.query(QueryRequest(
         query=Query.Nearest(embed_query(query), using="text"),
@@ -275,7 +275,7 @@ def text_search(shard, query, query_filter=None, limit=4):
 def photo_search(shard, description, limit=1):
     """Embed a description with CLIP and return the nearest photos.
 
-    The raw cross-modal call is taught in Lesson 3.
+    The raw cross-modal call is taught in Lesson 4.
     """
     return shard.query(QueryRequest(
         query=Query.Nearest(embed_query_clip(description), using="image"),
@@ -287,7 +287,7 @@ def photo_search(shard, description, limit=1):
 def recall(shard, question):
     """One question, two lanes: text memories by Nomic, photos by CLIP.
 
-    Lesson 4 builds this in the open; later lessons import it. Extra text
+    Lesson 5 builds this in the open; later lessons import it. Extra text
     hits are fetched so one lane cannot crowd out the other.
     """
     text_hits = text_search(shard, question, limit=10)
@@ -305,8 +305,8 @@ def recall(shard, question):
 def recognize(shard, photo, threshold):
     """The closest stored photo to this one, and whether it clears the bar.
 
-    The nearest-vector query is Lesson 2's; searching the image vector is
-    Lesson 3's. What Lesson 5 adds is the threshold: below it, the device
+    The nearest-vector query is Lesson 3's; searching the image vector is
+    Lesson 4's. What Lesson 6 adds is the threshold: below it, the device
     says it does not know this object rather than guessing.
     """
     top = shard.query(QueryRequest(
