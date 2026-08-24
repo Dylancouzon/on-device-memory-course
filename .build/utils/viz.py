@@ -4,10 +4,11 @@ Results come back as HTML tables so a student can select and copy any number
 off the screen. Photos and charts stay images, sized for the recording frame
 (8 wide by 9 high), so nothing is cut off.
 """
+import math
+from collections import Counter
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-from matplotlib.patches import Patch
 
 QDRANT_RED = "#DC244C"
 INK = "#28324D"
@@ -249,6 +250,13 @@ def _hhmm(ts, fmt="%H:%M"):
     return datetime.fromtimestamp(ts, timezone.utc).strftime(fmt)
 
 
+def day_summary(memories):
+    """One line: how many captures the day holds, by source type."""
+    counts = Counter(m["source_type"] for m in memories)
+    print(len(memories), "captures:",
+          ", ".join(f"{v} {k}" for k, v in sorted(counts.items())))
+
+
 def day_photos(memories, image_dir, title=None):
     """A wrapping strip of the day's photos, each stamped with its time."""
     photos = sorted((m for m in memories if m.get("file")),
@@ -393,33 +401,85 @@ def show_raw(hits):
                         "What came back, before the inbox groups it"))
 
 
-def score_gap_chart(taught, foreign, threshold):
-    """Horizontal score bars for recognition evidence: the taught held-out
-    photo against never-taught images, with the threshold drawn in the gap.
+def threshold_calibration(object_dir, scene_dir, selected, current=None):
+    """Calibrate image recognition on held-out and unrelated photos.
 
-    `taught` and `foreign` are lists of (label, score).
+    Each bundled object keeps its last view out of the teaching set. Positive
+    scores compare that held-out view with its own taught views. Negative
+    scores compare held-out and scene photos with taught views of a different
+    object. `current` may be `(label, score)` for the student's held-out photo.
     """
-    rows = [(lbl, s, True) for lbl, s in taught] + \
-           [(lbl, s, False) for lbl, s in foreign]
-    fig, ax = plt.subplots(figsize=(FIG_W, 0.5 * len(rows) + 1.2))
-    ys = range(len(rows))
-    ax.barh(list(ys), [s for _, s, _ in rows],
-            color=["#009688" if t else "#8F98B2" for _, _, t in rows],
-            height=0.6)
-    for y, (_, s, _) in zip(ys, rows):
-        ax.text(s + 0.008, y, f"{s:.3f}", va="center", fontsize=9)
-    ax.set_yticks(list(ys))
-    ax.set_yticklabels([lbl for lbl, _, _ in rows])
-    ax.invert_yaxis()
-    ax.axvline(threshold, color=QDRANT_RED, lw=2, ls="--")
-    ax.text(threshold - 0.012, -0.7, f"threshold {threshold}",
-            color=QDRANT_RED, ha="right", fontsize=10, fontweight="bold")
-    ax.set_xlim(0, 1.0)
-    ax.set_xlabel("similarity to nearest stored view")
-    ax.spines[["top", "right"]].set_visible(False)
-    ax.legend(handles=[Patch(color="#009688", label="taught (held-out photo)"),
-                       Patch(color="#8F98B2", label="never taught")],
-              loc="lower right", fontsize=9)
+    groups = {}
+    for path in sorted(Path(object_dir).glob("*.jpg")):
+        groups.setdefault(path.stem.rsplit("_", 1)[0], []).append(path)
+
+    taught = {label: views[:-1] for label, views in groups.items()}
+    held_out = {label: views[-1] for label, views in groups.items()}
+    scenes = sorted(Path(scene_dir).glob("*.jpg"))
+    paths = [p for views in groups.values() for p in views] + scenes
+    vectors = dict(zip(paths, embed_image([str(p) for p in paths])))
+
+    def cosine(a, b):
+        dot = sum(x * y for x, y in zip(a, b))
+        na = math.sqrt(sum(x * x for x in a))
+        nb = math.sqrt(sum(y * y for y in b))
+        return dot / (na * nb)
+
+    same = []
+    different = []
+    for label, query in held_out.items():
+        same.append(max(cosine(vectors[query], vectors[p])
+                        for p in taught[label]))
+        different.extend(
+            cosine(vectors[query], vectors[p])
+            for other, views in taught.items() if other != label
+            for p in views)
+    different.extend(
+        cosine(vectors[scene], vectors[p])
+        for scene in scenes for views in taught.values() for p in views)
+
+    same_min = min(same)
+    different_max = max(different)
+    fig, ax = plt.subplots(figsize=(FIG_W, 3.2))
+
+    # Hundreds of negative dots hide the boundary that matters. Show their
+    # tested range and hardest example instead, then keep each positive test.
+    different_min = max(0.4, min(different))
+    ax.hlines(0, different_min, different_max, color="#C8CEDD",
+              linewidth=12, alpha=0.65)
+    ax.scatter([different_max], [0], s=70, color="#8F98B2",
+               edgecolors="white", linewidths=0.8, zorder=3)
+    same_y = [0.96 + 0.04 * (i % 3) for i in range(len(same))]
+    ax.scatter(same, same_y, s=58, color="#009688",
+               edgecolors="white", linewidths=0.8, zorder=3)
+    if different_max < same_min:
+        ax.axvspan(different_max, same_min, color="#009688", alpha=0.09)
+    ax.axvline(selected, color=QDRANT_RED, lw=2, ls="--")
+    ax.annotate(f"highest {different_max:.3f}",
+                xy=(different_max, 0), xytext=(-5, 14),
+                textcoords="offset points", ha="right", color=MUTED,
+                fontsize=9)
+    ax.annotate(f"lowest {same_min:.3f}",
+                xy=(same_min, 1), xytext=(5, -18),
+                textcoords="offset points", ha="left", color="#00796B",
+                fontsize=9)
+    if current:
+        ax.scatter([current[1]], [1.25], marker="*", s=170,
+                   color=QDRANT_RED, edgecolors="white", linewidths=0.8,
+                   zorder=4)
+        ax.annotate(f"your view {current[1]:.3f}",
+                    xy=(current[1], 1.25), xytext=(7, 0),
+                    textcoords="offset points", va="center",
+                    color=QDRANT_RED, fontsize=9, fontweight="bold")
+    ax.set_xlim(0.4, 1.0)
+    ax.set_ylim(-0.35, 1.50)
+    ax.set_yticks([0, 1])
+    ax.set_yticklabels([f"{len(different)} non-matches",
+                        f"{len(same)} held-out matches"])
+    ax.set_xlabel("similarity to nearest taught view")
+    ax.set_title("Where should the threshold go?", loc="left")
+    ax.spines[["top", "right", "left"]].set_visible(False)
+    ax.tick_params(axis="y", length=0)
     fig.tight_layout()
     plt.show()
 
@@ -491,19 +551,24 @@ def show_images(paths, captions=None, per_row=None, title=None, height=170):
                  f'{"".join(cards)}</div></div>')
 
 
-def recognition_result(query_photo, top, known, image_dir=None):
+def recognition_result(query_photo, top, known, image_dir=None,
+                       threshold=None, expected=None):
     """The photo you showed beside the closest memory, with the verdict.
 
-    `known` is whether the score cleared the threshold. Unknown is shown as a
-    real answer, not an error: the device says so rather than guessing. Both
-    photos get the same box so the pair reads as a comparison.
+    `known=None` shows the nearest memory without making a decision. Otherwise
+    `known` is whether the score cleared the threshold. Both photos get the
+    same box so the pair reads as a comparison.
     """
     stored = top.payload["file"]
     if image_dir:
         stored = str(Path(image_dir) / stored)
-    verdict = top.payload.get("label", "UNKNOWN") if known else "UNKNOWN"
-    color = "#009688" if known else MUTED
-    mark = "✅" if known else "❓"
+    label = top.payload.get("label", "UNKNOWN")
+    if known is None:
+        verdict, color, mark = f"Closest memory: {label}", INK, ""
+    elif known:
+        verdict, color, mark = label, "#009688", "✅"
+    else:
+        verdict, color, mark = "UNKNOWN", MUTED, "❓"
 
     def pane(path, caption):
         return (f'<figure style="margin:0;width:290px">'
@@ -513,15 +578,40 @@ def recognition_result(query_photo, top, known, image_dir=None):
                 f'<figcaption style="font-size:13px;color:{MUTED};'
                 f'margin-top:6px">{_esc(caption)}</figcaption></figure>')
 
+    detail = ""
+    if known is None:
+        if expected and label == expected:
+            detail = ("Retrieval found the right memory. Next, choose when "
+                      "a match is close enough to accept.")
+        else:
+            detail = ("Nearest search always returns something. Your subject "
+                      "has not been taught yet.")
+        detail = (f'<div style="font-size:13px;color:{MUTED};font-weight:650;'
+                  f'margin:0 0 10px">{_esc(detail)}</div>')
+    elif threshold is not None:
+        delta = abs(top.score - threshold)
+        if known:
+            detail = (f'Similarity {top.score:.3f} clears the '
+                      f'{threshold:.3f} threshold by {delta:.3f}.')
+        else:
+            detail = (f'The closest memory scores {top.score:.3f}, below the '
+                      f'{threshold:.3f} threshold.')
+        detail = (f'<div style="font-size:13px;color:{color};font-weight:650;'
+                  f'margin:0 0 10px">{_esc(detail)}</div>')
+
+    heading = f"{mark} " if mark else ""
+    score_detail = (f" · similarity {top.score:.3f}" if known is None else
+                    f" · closest memory: {_esc(label)}"
+                    f" · similarity {top.score:.3f}")
     return _html(
         f'<div style="{FONT};max-width:620px">'
         f'<div style="font-size:19px;font-weight:800;color:{color};'
-        f'margin-bottom:10px">{mark} {_esc(verdict)}'
+        f'margin-bottom:10px">{heading}{_esc(verdict)}'
         f'<span style="font-size:14px;font-weight:600;color:{MUTED}">'
-        f' · similarity {top.score:.3f}</span></div>'
+        f'{score_detail}</span></div>{detail}'
         f'<div style="display:flex;gap:16px">'
         + pane(query_photo, "the photo you showed it")
-        + pane(stored, f'closest memory: {top.payload.get("label", "")}')
+        + pane(stored, f"closest memory: {label}")
         + '</div></div>')
 
 

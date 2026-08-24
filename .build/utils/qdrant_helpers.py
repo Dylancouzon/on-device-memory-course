@@ -135,8 +135,8 @@ def recall(shard, question):
     }
 
 
-def recognize(shard, photo, threshold):
-    """The closest stored photo to this one, and whether it clears the bar.
+def recognize(shard, photo, threshold=None):
+    """The closest stored photo, and optionally whether it clears the bar.
 
     The nearest-vector query is Lesson 3's; searching the image vector is
     Lesson 4's. What Lesson 6 adds is the threshold: below it, the device
@@ -147,7 +147,67 @@ def recognize(shard, photo, threshold):
         limit=1,
         with_payload=True,
     ))[0]
-    return top, top.score >= threshold
+    known = None if threshold is None else top.score >= threshold
+    return top, known
+
+
+def seed_objects(shard, folder="./ro_shared_data/bank"):
+    """Store three known objects and show them, one photo each at ids 0-2.
+
+    Writes exactly what Lesson 6's `teach` writes: the photo's CLIP vector
+    with the label as payload, flushed to disk so a taught memory survives
+    a power cut.
+    """
+    seeds = {"a bicycle": "bicycle.jpg",
+             "chess pieces": "chess_set.jpg",
+             "a camera": "camera.jpg"}
+    paths = [f"{folder}/{f}" for f in seeds.values()]
+    vectors = embed_image(paths)
+    shard.update(UpdateOperation.upsert_points([
+        Point(id=i, vector={"image": v},
+              payload={"label": label, "file": p})
+        for i, (label, p, v) in enumerate(zip(seeds, paths, vectors))
+    ]))
+    shard.optimize()
+    shard.flush()
+    show(show_images(paths, captions=list(seeds),
+                     title=f"It already knows {len(seeds)} objects"))
+
+
+def load_day_and_history(folder="./ro_shared_data"):
+    """The assistant's full memory: today's captures plus the earlier days.
+
+    Returns (day, history, notes, photos): the two files, then the text
+    and voice notes from both, then today's photos.
+    """
+    day = load_memories(f"{folder}/memories.json")
+    history = load_memories(f"{folder}/recent_days.json")
+    notes = [m for m in day + history
+             if m["source_type"] in ("text", "voice")]
+    photos = [m for m in day if m["source_type"] == "photo"]
+    return day, history, notes, photos
+
+
+def cloud_client(enabled, collection):
+    """Connect to the Qdrant cluster named in QDRANT_URL / QDRANT_API_KEY.
+
+    Returns a ready qdrant_client.QdrantClient, or None when syncing is
+    off, the env vars are missing, or the collection already exists on
+    the cluster (the course never deletes one). None means every memory
+    stays on the device, and the calling cell says so.
+    """
+    import os
+    if not (enabled and os.getenv("QDRANT_URL")
+            and os.getenv("QDRANT_API_KEY")):
+        return None
+    from qdrant_client import QdrantClient
+    client = QdrantClient(url=os.environ["QDRANT_URL"],
+                          api_key=os.environ["QDRANT_API_KEY"])
+    if client.collection_exists(collection):
+        print(f"{collection} already exists on the cluster.",
+              "Delete it there first, or rename the collection here.")
+        return None
+    return client
 
 
 def remember(shard, note, memories, point_id=900):
@@ -165,14 +225,16 @@ def remember(shard, note, memories, point_id=900):
     shard.optimize()
 
 
-def fetch_snapshot(base_url, api_key, collection, dest, manifest=None):
-    """Download a shard snapshot from a Qdrant server to a local file.
+def fetch_snapshot(collection, dest, manifest=None):
+    """Download a shard snapshot from the cluster in QDRANT_URL to a file.
 
     With a manifest (from `EdgeShard.snapshot_manifest`), asks the server
     for a partial snapshot holding only what this shard is missing.
     """
+    import os
     import urllib.request
-    headers = {"api-key": api_key or ""}
+    base_url = os.environ["QDRANT_URL"]
+    headers = {"api-key": os.getenv("QDRANT_API_KEY") or ""}
     if manifest is None:
         url = f"{base_url}/collections/{collection}/shards/0/snapshot"
         req = urllib.request.Request(url, headers=headers)
@@ -279,6 +341,11 @@ def demo():
     ]))
     shard.optimize()
     assert shard.count(CountRequest(exact=True)) == 2
+    hits = shard.query(QueryRequest(
+        query=Query.Nearest([1.0, 0, 0], using="v"),
+        limit=1,
+        with_payload=True,
+    ))
     assert hits[0].payload["note"] == "a"
     shard.close()
     reloaded = EdgeShard.load(d)

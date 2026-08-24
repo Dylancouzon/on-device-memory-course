@@ -116,6 +116,7 @@ EXAMPLE_OBJECT = "./ro_shared_data/objects/rubberduck_"
 TEACH_DIR = "./my_photos/teach"
 TEST_DIR = "./my_photos/test"
 IMAGE_TYPES = (".jpg", ".jpeg", ".png", ".webp")
+_UPLOADS_RESET = False
 
 
 def _uploaded(folder):
@@ -154,16 +155,38 @@ def _upload_status(folder):
     return f"<small>{len(files)} ready: {', '.join(f.name for f in files)}</small>"
 
 
+def _reset_uploads_once():
+    """Start each fresh kernel with empty upload folders.
+
+    The flag keeps a same-kernel re-run of the first cell from deleting photos
+    the student just uploaded. Restarting the kernel reloads this module,
+    resets the flag, and clears the previous session's files.
+    """
+    global _UPLOADS_RESET
+    if _UPLOADS_RESET:
+        return
+    for folder in (TEACH_DIR, TEST_DIR):
+        path = Path(folder)
+        if path.is_dir():
+            for uploaded in path.iterdir():
+                if uploaded.is_file() or uploaded.is_symlink():
+                    uploaded.unlink()
+    _UPLOADS_RESET = True
+
+
 def photo_uploader():
     """Two upload buttons: the photos to teach with, and the one to test with.
 
-    Photos land in ./my_photos and stay on the device. Holding one photo back
-    is the point of the lab: the device meets it once before it has been
-    taught anything, and once after. Leave both empty for the bundled example.
+    Photos land in ./my_photos for this kernel session. A fresh kernel clears
+    the previous session's uploads; re-running this cell in the same kernel
+    keeps them. Holding one photo back is the point of the lab: the device
+    meets it once before it has been taught anything, and once after. Leave
+    both empty for the bundled example.
     """
     import ipywidgets as widgets
     from IPython.display import display
 
+    _reset_uploads_once()
     display(widgets.HBox([
         _upload_box(TEACH_DIR, "Teach with these",
                     "Two or more photos of one object, from different "

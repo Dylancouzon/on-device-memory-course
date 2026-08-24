@@ -1,136 +1,148 @@
 # L2: Building the Device (script)
 
-**Target runtime:** ~9:20
-**Format:** video only, no notebook. Slides are 16:9, briefs in `SLIDES.md` in this directory. Production direction lives in the shotlist, never here.
+**Target runtime:** ~6:45
+**Format:** video only, no notebook. Slides are 16:9. Briefs will be written in `SLIDES.md` in this directory after the script is locked. Production direction belongs in the shotlist.
 
-**Objective.** Answer the question a hobbyist is already asking at the end of lesson one: could I build this? The lesson follows the build in the order it happened. Each beat covers a decision, the alternatives, and the cost. It is a build lesson, not a tour of a prop. By the end, viewers should have a better sense of what they would choose for their own project.
+**Objective.** Show how the robot is put together and make the build feel achievable. By the end, viewers should understand what the computer, camera, printed body, web interface, detector, embedding models, and memory each do. They should also know which parts they could change in a build of their own.
 
-**What this lesson does not do.** It does not teach thresholds, filters, coverage, or recall. The student builds those by hand in lessons three to six. When the robot touches one of them, the beat names it briefly and points to the lesson that covers it. This lesson stays with the gap a notebook cannot show: what changes between one clean photo and six frames a second in a real room.
+**Scope.** This is the course's embodiment lesson. It explains the complete robot at system level, but leaves the memory operations, filters, recall code, and threshold calibration to lessons three through six. The student does not need the robot or its hardware to follow the course.
 
-**STATUS: PROVISIONAL.** The robot app and hardware exist; the shoot does not. Every number below is sourced from the robot repo and must be reconciled against the recorded footage before anything is cut. Numbers on screen are the evidence, and the narration never claims what the footage does not show.
+**STATUS: PROVISIONAL.** The robot app and hardware exist; the shoot does not. Every number below comes from the robot repo and must be checked against the recorded footage before the script is locked. Numbers shown on screen are evidence. The narration must not claim more than the footage shows.
 
-**Sourced claims, with the constraint each one carries:**
+**Sourced claims, with their limits:**
 
-- The detector runs at roughly 165 ms per frame on the Jetson GPU, against seconds per frame on CPU. This justifies using the GPU. It is not a board-selection experiment, so the narration says what it is.
-- A Raspberry Pi 5 should run the software and has not been tested. Say "should" and "untested", never "does".
-- Of the three encoders, only CLIP's vision tower loads at startup. Speech and text load the first time you teach or ask. The service sits at roughly 2.3 to 2.5 GB after startup, before those two load. YOLOE loads as well, so the claim is about encoders.
-- The parts: Jetson Orin Nano Super 8 GB at $249, a 256 GB NVMe at about $30, a 37 x 37 mm USB camera at about $60, about 300 g of filament at about $8. Roughly $347. So the build is a $347 build around a $249 board.
-- Print time is about 8 hours for the three plates. `docs/hardware.md` still says "about a day and a half" and must be corrected to match before this ships.
-- The enclosure page audits itself on every load. The audit passed and the first build still could not be assembled: a 37.4 mm tray for a 37 mm board, a clamp with 2.5 mm per side of interference and nothing to flex, and a written instruction describing a motion that cannot physically happen. The audit now sweeps the assembly motions themselves and requires zero interference.
-- The recognition threshold on the robot is 0.90, camera calibrated. The lab notebook uses 0.80. Both numbers are named here, once, and lesson six is where the student calibrates their own.
-- CLIP's text tower is deliberately absent, because searching the image space with the words of a question measured useless.
-- Recall runs in three steps: the text model picks which object out of the names the operator taught, then sightings are answered by time, and "what did you see today" uses no vectors at all.
-- After every memory change the app calls `flush()`, so once the call returns the memory survives reopening from disk. That is the whole claim. Nothing here says pulling power is safe for the filesystem.
-- Focus is sticky: a challenger has to be 1.6 times more salient to take the box, and a stable track re-asks memory every two seconds.
-- The crop that gets embedded has a 12 percent margin and everything outside the segmentation mask flattened to gray.
+- The Jetson Orin Nano Super 8 GB costs $249. YOLOE runs at roughly 165 ms per frame on its GPU and takes seconds per frame on CPU.
+- A Raspberry Pi 5 has the parts needed to run the software, but this build has not been tested on one. It is presented as a learning or proof-of-concept option with lower resolution, frame rate, smaller models, or slower responses.
+- A larger image encoder or small language model is an extension to explore, not a tested configuration. Either would compete with the detector for memory and compute.
+- The parts are a Jetson at $249, a 256 GB NVMe at about $30, a 37 x 37 mm USB camera at about $60, and about 300 g of filament at about $8. The total is roughly $347.
+- The enclosure has six printed parts and uses no screws. Its three print plates take about eight hours. The robot documentation still says "about a day and a half" and must be corrected before this ships.
+- The enclosure is a parametric model in one HTML file. It opens in Chrome, generates the geometry in the browser, audits the printable parts, and exports STL and 3MF files.
+- The robot has no built-in microphone, speaker, or screen. A phone browser records and uploads audio. The Jetson performs the transcription, embedding, recognition, and memory work.
+- YOLOE finds object regions and segmentation masks. The app discards its class labels. Detection finds a thing; memory decides which thing it is.
+- The image sent to CLIP has a 12 percent margin around the detection. Pixels outside the segmentation mask are replaced with gray.
+- A stable object is tracked across frames, and focus stays on it until another object is clearly more prominent.
+- The robot's calibrated recognition threshold is 0.90. The lesson six notebook uses 0.80 with its own images. The number belongs to the camera and crop pipeline, and it is not a confidence percentage.
+- The recognition path can run from a folder of images on a laptop, with no camera or robot body.
 
 ## Slides
 
 | Slug | Idea |
 |---|---|
-| `l2-01-the-parts` | Four parts, what each one is for, and the total |
-| `l2-02-where-the-compute-goes` | Detector on the GPU against the same work on CPU, and what stays loaded on 8 GB |
-| `l2-04-lesson-map` | The loop's four stages, each tagged with the lesson that builds it, as a promise |
+| `l2-01-the-parts` | The four purchased or printed parts, their jobs, and the $347 total |
+| `l2-02-the-robot-loop` | Camera through detection and image memory, plus phone audio through speech and text memory |
+| `l2-03-lesson-map` | The same loop tagged with the hands-on lesson that builds each part |
 
 ## Beat map
 
 | # | Type | Content | Est. sec |
 |---|---|---|---:|
-| 1 | INTRO | The finished machine, and what this lesson is | 23 |
-| 2 | SLIDE 1 + 2 | The four parts, and what 8 GB costs you | 96 |
-| 3 | NARRATION | The interface: no screen, no speaker, your phone | 58 |
-| 4 | SLIDE 3 | Designing the body with Claude | 86 |
-| 5 | DEMO | Making it work in a room | 100 |
-| 6 | SLIDE 4 | What you can run tonight, and where this goes | 51 |
+| 1 | DEMO | An unknown object is taught, recognized, then forgotten | 30 |
+| 2 | SLIDE 1 | Choosing the computer, camera, storage, and body | 82 |
+| 3 | DEMO | Designing and exporting the printed body with Claude | 68 |
+| 4 | DEMO | The phone web interface and where the work runs | 55 |
+| 5 | SLIDE 2 + DEMO | How a camera frame becomes a personal memory | 120 |
+| 6 | SLIDE 3 | What viewers can build without this robot | 50 |
 
-Total: ~414 sec (6 min 54 sec) at 156 words per minute. Recount after any edit.
-
-The lesson now lands at just under seven minutes before any additional expansion.
+Total: ~405 sec (6 min 45 sec) at 156 words per minute. Recount after any edit.
 
 ---
 
-## Beat 1: INTRO
+## Beat 1: The finished robot
 
-Demo footage: the machine working, cut tight. An object it has never seen goes from an unnamed box to a named one after one spoken sentence, then the memory is deleted on camera and the same object goes unknown again.
+Demo: Hold up an object the robot has not learned. Teach it by voice, show it recognized from another view, delete the memory, then show it as unknown again.
 
 **NARRATION:**
 
-One sentence just turned a stranger object into a memory. A moment later, I deleted that memory—and it forgot.
+This robot has never seen this object. I hold the teach button and tell it what it is. Now the name appears beside it. I can show it again from another view and it still knows what I taught it.
 
-That is the leap from an AI that starts from zero every time to something you can build: a system that learns, recognises, and changes over time. Over months and years, it can build a memory of your life: the objects, places, and routines that make it personal to you.
+Delete that memory, and the same object becomes unknown again.
 
-This robot starts as a home assistant. The lessons extend its memory through audio and text, toward something that could live with you, for example in smart glasses. We’ll take the build apart: four parts, one printed body, and the compute, camera, and engineering decisions that make it work in a real room.
+There was no training run in between. The robot took a picture, listened to one sentence, and wrote a memory. This lesson is about everything around that moment: the parts, the printed body, the phone interface, and the software that connects a live camera to memory.
 
 ---
 
-## Beat 2: SLIDE 2, what compute
+## Beat 2: The parts and the computer
 
-Slide: `l2-02-where-the-compute-goes`.
+Slide: `l2-01-the-parts`.
 
 **NARRATION:**
 
-When building a robot, start with the computer. It sets the limits for everything else.
+The computer sets the pace of the robot, so that is where I started.
 
-This build uses an NVIDIA Jetson Orin Nano Super with 8 GB of memory. Its GPU runs the object detector at about 165 milliseconds a frame. On a CPU, the same work takes seconds. At that speed, a robot becomes a slideshow.
+This build uses an NVIDIA Jetson Orin Nano Super with 8 gigabytes of memory. Its GPU runs the object detector in about 165 milliseconds per frame. The same detector takes seconds per frame on a CPU. That difference matters when the input is a camera rather than one photograph.
 
-A Raspberry Pi 5 should run the same software, though You would have to accept some trade-offs: lower resolution, FPS, smaller models, decreased accuracy and response time. The idea stays the same, but the robot moves at a different pace.
+The Jetson costs 249 dollars. I chose it for a responsive live view with all of the models running on the device. Eight gigabytes also leaves some room to experiment. A larger image encoder or a small language model could sit on top of the memory, but either one would take memory and compute away from the live vision loop.
 
-I chose the Jetson because it has enough headroom for a useful live image while keeping the models on-device. It costs 249 dollars which stays fairly affordable. There is still some headroom for a bigger image encoder or a small language model to give it reasoning capabilities. 
+A Raspberry Pi 5 has what you need to build the same idea, though I have not tested this software on one. I would treat it as a learning build or proof of concept. You may need a smaller model, smaller images, or a lower frame rate, and interactions will take longer.
 
-The other parts are a USB camera, an NVMe drive, and about 300 grams of filament for the enclosure. Four parts in total, about 347 dollars.
+The other parts are a 256 gigabyte NVMe drive, a small USB camera, and the printed enclosure. The Jetson is 249 dollars, the drive about 30, the camera about 60, and the filament about 8. The complete build comes to roughly 347 dollars.
 
 ---
 
-## Beat 3: The interface
+## Beat 3: Designing the body with Claude
 
-No slide. Demo footage: the phone view in Dylan's hand, the robot in the background with nothing on it but a camera.
+Demo: Work in Claude Design, then open the generated model in the browser. Show the assembled view, the print plates, the audit, and the exported files beside the finished robot.
 
 **NARRATION:**
 
-This robot has no screen, speaker, or microphone of its own. Its interface is a web page served to the phone in my hand over direct wifi. The phone is just the interface: all of the vision, speech, and memory compute happens on the robot.
+The body was designed with Claude. I started with the hardware that had to fit: the Jetson standing on edge, the camera behind the eye, access to the ports, and enough open space for cooling.
 
-That keeps the hardware simple, but it does not make the phone a performance dependency. Add a microphone or a screen to the robot and the AI would still run the same way; you would only be changing how you interact with it.
+The model is built by code in a single HTML file. It generates the geometry in the browser, with the important measurements kept as parameters. Change the camera or board dimensions, and you can generate the parts again.
 
-The tradeoff is that answers appear on the phone instead of coming from a speaker. If you want the robot to hear the room without the phone, add a USB microphone. The same speech model can process what it hears.
+The page shows the assembled robot and three print plates. It checks the meshes, build volume, and clearances, then exports individual STL files or ready-to-slice 3MF plates.
+
+There are six printed parts and no screws. A twist lock and two clips hold the body together. One zip tie secures the camera cable, and the visor takes a drop of glue. The plates use about 300 grams of filament and take about eight hours to print.
+
+You still have to measure your hardware and inspect the result. The difference is that you do not have to begin with a blank CAD screen. I could describe the robot, work through the geometry with Claude, then print and revise it myself.
 
 ---
 
-## Beat 4: SLIDE 3, designing the body with Claude
+## Beat 4: The web interface
 
-No slide. Claude Design UI. 
+Demo: The robot stays in the background while the phone shows the live view, TEACH, ASK, and MEMORY. Open the memory view and show rename and forget.
 
 **NARRATION:**
 
-[Showcase Claude Design, show how the design came to life]
+The robot has no microphone, speaker, or screen. A phone supplies the microphone, screen, and controls through a web page served by the Jetson over its own Wi-Fi connection. Answers appear on the phone rather than coming from a speaker.
+
+The page shows the live camera, the object in focus, its match score, and the memory it matched. Hold TEACH to name an unknown object. Hold ASK to ask about something it remembers. The MEMORY view shows everything it has learned, with controls to rename a label or forget it.
+
+When I hold one of the voice buttons, the phone records the audio and uploads it. The Jetson transcribes it and runs the embedding and memory search. The phone is the interface, not the computer running the AI.
+
+This keeps the physical build small and gives it a screen, microphone, and touch controls that are easy to change. You could attach those parts to the robot later without changing the memory underneath.
 
 ---
 
-## Beat 5: Making it work in a room
+## Beat 5: From a camera frame to a memory
 
-Demo footage: the live feed with boxes and scores, a hand entering the frame and holding the object, the box staying put.
+Slide: `l2-02-the-robot-loop`, followed by the live feed and memory panel.
 
 **NARRATION:**
 
-The hardware is only the start. A real room is harder than a notebook.
+A notebook starts with a clean photo. The robot sees a changing room, with several objects in the frame at once. It needs to separate those objects before it can remember any of them.
 
-In the notebook lessons, each example starts as a single, clean image file. The robot has to process a live camera stream: objects overlap, backgrounds change, and the same object looks different from one frame to the next. The build has to turn that stream into stable memories.
+YOLOE handles that first step. YOLO is a family of models for finding objects in images. This version returns a box and an outline for each object it detects.
 
-Start with YOLO. It is a family of fast object-detection models that predicts what is in an image and where it is. That gives us the boxes and generic labels on screen. I use the boxes to crop objects, but I do not rely on those labels. The memory compares each crop with what I have taught it, so I can teach it names that matter to me, even an object or person YOLO was never trained to recognise.
+YOLOE can also produce generic class names, but this app throws them away. The detector only needs to answer, "Where is a thing?" The memory answers, "Which thing is it?" That is how the robot can learn my bottle or my keyboard instead of stopping at a generic category such as bottle or keyboard.
 
-Before the crop enters memory, I remove the background. Everything outside the object's outline becomes gray. That keeps the memory focused on the object instead of my desk, so recognition still works when the object moves.
+Each outline becomes its own image crop, with a small margin around it. Everything outside the outline is replaced with gray so less of the desk and the room enters the memory. CLIP then turns that crop into a 512-number image vector.
 
-We use Qdrant's similarity score with a recognition threshold to decide when a match is good enough. Lesson six is where you find the right threshold for your camera and room.
+The robot searches those numbers against the views it has already learned in Qdrant Edge. If the nearest score clears 0.90, the object is recognized. That score is a similarity measurement, not 90 percent confidence. The robot uses 0.90 because it was calibrated for this camera and this crop pipeline. In lesson six, the notebook uses 0.80 with a different set of images, and you will measure the right threshold for your own.
+
+The detector produces a new answer on every pass, so the robot also tracks objects across frames. An object has to remain stable before it can be selected or embedded. Once selected, it keeps the focus until something else is clearly more prominent. That gives you time to reach for the teach button without the target changing underneath your finger.
+
+When I teach an unknown object, Whisper turns my sentence into text and Nomic turns that text into a second vector. The image vector, the text vector, the picture, and the words I used are written into one memory. From then on, the camera can find that memory by sight, and a spoken question can find it through the words I taught.
 
 ---
 
-## Beat 6: SLIDE 4, what you can run tonight
+## Beat 6: Build the loop you need
 
-Slide: `l2-04-lesson-map`.
+Slide: `l2-03-lesson-map`.
 
 **NARRATION:**
 
-You do not need this hardware to follow along. Point the same code at a folder of photos instead of a camera, and the recognition path runs on your laptop.
+You do not need this hardware to build the memory loop. The same recognition path can read a folder of images on a laptop instead of a live camera. You can replace the board, camera, body, or interface and keep the same basic design.
 
-The reusable part is the teaching loop: show the system something, say what it is, and let it keep that memory. It works anywhere you can take a picture and write a record.
+In the next lesson, you will create an empty memory and build the capture, store, recall, and forget loop. Later lessons add image search, voice, a full day of memories, and recognition with a threshold you calibrate yourself.
 
-Next comes the memory itself. Capture, store, recall, forget. In the next lesson, you will write those four operations yourself, starting with an empty folder and a question the system cannot answer yet.
+The robot is one way to package those pieces. The next lesson starts with the memory itself.

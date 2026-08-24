@@ -37,8 +37,9 @@ notebook of the lesson that teaches it; after that, the repeat lives here.
 """
 '''
 
-STDLIB = {"gc", "inspect", "shutil", "socket", "contextlib", "functools",
-          "pathlib", "textwrap", "json", "os", "re", "time", "statistics"}
+STDLIB = {"gc", "inspect", "math", "shutil", "socket", "contextlib", "functools",
+          "pathlib", "textwrap", "json", "os", "re", "time", "statistics",
+          "collections"}
 
 
 def split_module(name):
@@ -91,7 +92,29 @@ for name, heading in SECTIONS:
     rule = "-" * max(3, 69 - len(heading))   # "# " + heading + " " + rule <= 72
     sections.append(f"# {heading} {rule}\n{body}")
 
-body = "\n\n\n".join(["\n".join(sort_imports(all_imports)), *sections])
+def public_names(sections):
+    """Every top-level function a lesson gets from `from helper import *`."""
+    names = []
+    for section in sections:
+        tree = ast.parse("\n".join(ln for ln in section.splitlines()
+                                   if not ln.startswith("#")))
+        names += [node.name for node in tree.body
+                  if isinstance(node, ast.FunctionDef)
+                  and not node.name.startswith("_")]
+    return sorted(names)
+
+
+import textwrap
+exports = ", ".join(f'"{n}"' for n in public_names(sections))
+all_block = ("# The lessons open with `from helper import *`; this is "
+             "what that hands them.\n__all__ = [\n"
+             + "\n".join(textwrap.wrap(exports, width=68,
+                                       initial_indent="    ",
+                                       subsequent_indent="    "))
+             + "\n]")
+
+body = "\n\n\n".join(["\n".join(sort_imports(all_imports)), all_block,
+                      *sections])
 (ROOT / "helper.py").write_text(HEADER + body + "\n")
 print(f"wrote helper.py ({len(SECTIONS)} sections)")
 
