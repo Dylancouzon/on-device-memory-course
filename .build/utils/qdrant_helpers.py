@@ -11,12 +11,18 @@ import inspect
 import json
 import shutil
 import socket
-from contextlib import contextmanager
 from pathlib import Path
 
 from qdrant_edge import EdgeShard, Point, Query, QueryRequest, UpdateOperation
 
 from .embeddings import embed_image, embed_query, embed_query_clip, embed_text
+from .viz import day_photos, memories_table, show, show_images
+
+
+# How much of a write to show back. Small: the recording frame is tall,
+# not endless, and the point is what landed, not all of it.
+PREVIEW_ROWS = 4
+PREVIEW_PHOTOS = 6
 
 
 def load_memories(path, source_type=None):
@@ -27,10 +33,10 @@ def load_memories(path, source_type=None):
     return memories
 
 
-def store_notes(shard, notes):
+def store_notes(shard, notes, preview=True):
     """Embed text and voice notes with Nomic and store one point per note.
 
-    The write this wraps is taught in Lesson 2: embed the note, build a
+    The write this wraps is taught in Lesson 3: embed the note, build a
     Point with the note as payload, upsert. A voice note embeds its
     transcript.
     """
@@ -39,10 +45,14 @@ def store_notes(shard, notes):
         Point(id=m["id"], vector={"text": v}, payload=m)
         for m, v in zip(notes, vectors)
     ]))
-    print(f"Stored {len(notes)} notes")
+    if preview:
+        show(memories_table(notes[:PREVIEW_ROWS],
+                            f"Stored {len(notes)} notes"))
+    else:
+        print(f"Stored {len(notes)} notes")
 
 
-def store_photos(shard, folder, start_id=1000):
+def store_photos(shard, folder, start_id=1000, preview=True):
     """Embed a folder of photos with CLIP and store them in the image vector."""
     photos = sorted(Path(folder).glob("*.jpg"))
     vectors = embed_image([str(p) for p in photos])
@@ -52,11 +62,19 @@ def store_photos(shard, folder, start_id=1000):
         for i, (p, v) in enumerate(zip(photos, vectors))
     ]))
     shard.optimize()
-    print(f"Stored {len(photos)} photos as {len(vectors[0])}-d CLIP image",
-          f"vectors. Total: {shard.info().points_count} memories")
+    if preview:
+        show(show_images([str(p) for p in photos[:PREVIEW_PHOTOS]],
+                         captions=[p.name for p in photos[:PREVIEW_PHOTOS]],
+                         per_row=6,
+                         title=f"Stored {len(photos)} photos as "
+                               f"{len(vectors[0])}-d CLIP vectors · "
+                               f"{shard.info().points_count} memories"))
+    else:
+        print(f"Stored {len(photos)} photos."
+              f" Total: {shard.info().points_count} memories")
 
 
-def store_photo_memories(shard, photos, folder):
+def store_photo_memories(shard, photos, folder, preview=True):
     """Embed photo memories with CLIP and store one point per photo."""
     vectors = embed_image([f"{folder}/{m['file']}" for m in photos])
     shard.update(UpdateOperation.upsert_points([
@@ -64,15 +82,20 @@ def store_photo_memories(shard, photos, folder):
         for m, v in zip(photos, vectors)
     ]))
     shard.optimize()
-    print(f"Stored {len(photos)} photos.",
-          f"Total: {shard.info().points_count} memories")
+    if preview:
+        show(day_photos(photos[:PREVIEW_PHOTOS], folder,
+                        f"Stored {len(photos)} photos · "
+                        f"{shard.info().points_count} memories"))
+    else:
+        print(f"Stored {len(photos)} photos."
+              f" Total: {shard.info().points_count} memories")
 
 
 def text_search(shard, query, query_filter=None, limit=4):
     """Embed a query with Nomic and return the nearest text memories.
 
-    The raw call is taught in Lesson 2; `query_filter` narrows recall the
-    way Lesson 3 teaches.
+    The raw call is taught in Lesson 3; `query_filter` narrows recall the
+    way Lesson 4 teaches.
     """
     return shard.query(QueryRequest(
         query=Query.Nearest(embed_query(query), using="text"),
@@ -85,7 +108,7 @@ def text_search(shard, query, query_filter=None, limit=4):
 def photo_search(shard, description, limit=1):
     """Embed a description with CLIP and return the nearest photos.
 
-    The raw cross-modal call is taught in Lesson 3.
+    The raw cross-modal call is taught in Lesson 4.
     """
     return shard.query(QueryRequest(
         query=Query.Nearest(embed_query_clip(description), using="image"),
@@ -97,7 +120,7 @@ def photo_search(shard, description, limit=1):
 def recall(shard, question):
     """One question, two lanes: text memories by Nomic, photos by CLIP.
 
-    Lesson 4 builds this in the open; later lessons import it. Extra text
+    Lesson 5 builds this in the open; later lessons import it. Extra text
     hits are fetched so one lane cannot crowd out the other.
     """
     text_hits = text_search(shard, question, limit=10)
@@ -115,8 +138,8 @@ def recall(shard, question):
 def recognize(shard, photo, threshold):
     """The closest stored photo to this one, and whether it clears the bar.
 
-    The nearest-vector query is Lesson 2's; searching the image vector is
-    Lesson 3's. What Lesson 5 adds is the threshold: below it, the device
+    The nearest-vector query is Lesson 3's; searching the image vector is
+    Lesson 4's. What Lesson 6 adds is the threshold: below it, the device
     says it does not know this object rather than guessing.
     """
     top = shard.query(QueryRequest(
@@ -236,27 +259,6 @@ def fresh_start(directory):
     return directory
 
 
-@contextmanager
-def no_network():
-    """Block new Python socket creation inside the block.
-
-    Swaps `socket.socket` for one that raises, so any Python code that tries to
-    open a new socket fails loudly. It is a demonstration guard, not an OS-level
-    network cut: it does not touch sockets already open or native code paths.
-    If a query still returns with it active, that query opened no new socket.
-    """
-    original = socket.socket
-
-    def blocked(*args, **kwargs):
-        raise OSError("Python socket creation blocked for this cell")
-
-    socket.socket = blocked
-    try:
-        yield
-    finally:
-        socket.socket = original
-
-
 def demo():
     """Self-check: the raw Qdrant calls the notebooks use, run offline.
 
@@ -277,11 +279,6 @@ def demo():
     ]))
     shard.optimize()
     assert shard.count(CountRequest(exact=True)) == 2
-    with no_network():
-        hits = shard.query(QueryRequest(
-            query=Query.Nearest([1.0, 0, 0], using="v"),
-            limit=1, with_payload=True,
-        ))
     assert hits[0].payload["note"] == "a"
     shard.close()
     reloaded = EdgeShard.load(d)

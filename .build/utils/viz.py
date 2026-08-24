@@ -20,6 +20,12 @@ MODALITY_COLOR = {"photo": QDRANT_RED, "voice": "#8547FF", "text": INK}
 MODALITY_EMOJI = {"photo": "📷", "voice": "🎙️", "text": "📝"}
 
 
+def show(view):
+    """Put a view on screen from inside a helper, mid-cell."""
+    from IPython.display import display
+    display(view)
+
+
 def _html(markup):
     from IPython.display import HTML
     return HTML(markup)
@@ -102,7 +108,21 @@ def _result_row(hit, peak, mark=None, muted=False, price=True):
 
 
 def results_table(hits, title=None, caption=None):
-    """Show search hits as a table: score, category, price, and the memory."""
+    """Show search hits as a table: score, category, price, and the memory.
+
+    An empty result renders as the same view with nothing in it, so asking
+    before and after storing reads as one picture with a row count.
+    """
+    if not hits:
+        return _html(
+            f'<div style="{FONT};max-width:760px">'
+            f'<div style="font-weight:800;font-size:15px;color:{INK};'
+            f'margin-bottom:6px">{_esc(title or "No memories found")}</div>'
+            f'<div style="border:1px dashed {LINE};border-radius:8px;'
+            f'padding:18px;text-align:center;color:{MUTED};font-size:13.5px">'
+            f'Nothing stored yet, so there is nothing to find.</div>'
+            + (f'<div style="font-size:12px;color:{MUTED};margin-top:6px">'
+               f'{_esc(caption)}</div>' if caption else '') + '</div>')
     peak = max((h.score for h in hits), default=1.0)
     price = _has_price([h.payload for h in hits])
     rows = [_result_row(h, peak, price=price) for h in hits]
@@ -185,12 +205,51 @@ def show_photo_results(hits, image_dir, query):
         f'{hero.score:.3f}</span></div></div>')
 
 
+def vector_preview(text, vector, shown=8, name="text vector"):
+    """One memory beside the start of the vector it became.
+
+    The caption names the vector and counts its numbers, because those are two
+    different things and the lesson leans on the difference: one note becomes
+    one vector, and that vector is a list of numbers.
+    """
+    numbers = ", ".join(f"{x:+.3f}" for x in vector[:shown])
+    return _html(
+        f'<div style="{FONT};max-width:760px">'
+        f'<div style="font-size:13.5px;color:{INK};margin-bottom:6px">'
+        f'"{_esc(text)}"</div>'
+        f'<div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;'
+        f'font-size:12.5px;color:{QDRANT_RED};background:#FAFAFB;'
+        f'border:1px solid {LINE};border-radius:8px;padding:10px">'
+        f'[{numbers}, ...]</div>'
+        f'<div style="font-size:12px;color:{MUTED};margin-top:6px">'
+        f'one {_esc(name)} · showing {shown} of its {len(vector)} numbers'
+        f'</div></div>')
+
+
+def point_card(record, vector_name="text", shown=6):
+    """One stored point in full: its id, its vector, and its payload."""
+    vector = record.vector[vector_name]
+    numbers = ", ".join(f"{x:+.3f}" for x in vector[:shown])
+    rows = [_cell(k, color=MUTED, nowrap=True) + _cell(v)
+            for k, v in record.payload.items()]
+    return _html(
+        f'<div style="{FONT};max-width:760px">'
+        f'<div style="font-weight:800;font-size:15px;color:{INK}">'
+        f'Point {_esc(record.id)}</div>'
+        f'<div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;'
+        f'font-size:12.5px;color:{QDRANT_RED};background:#FAFAFB;'
+        f'border:1px solid {LINE};border-radius:8px;padding:10px;'
+        f'margin:8px 0">{_esc(vector_name)}: [{numbers}, ...] '
+        f'<span style="color:{MUTED}">{len(vector)} numbers</span></div>'
+        + _table(["Field", "Value"], rows) + '</div>')
+
+
 def _hhmm(ts, fmt="%H:%M"):
     from datetime import datetime, timezone
     return datetime.fromtimestamp(ts, timezone.utc).strftime(fmt)
 
 
-def day_photos(memories, image_dir):
+def day_photos(memories, image_dir, title=None):
     """A wrapping strip of the day's photos, each stamped with its time."""
     photos = sorted((m for m in memories if m.get("file")),
                     key=lambda m: m["timestamp"])
@@ -205,7 +264,7 @@ def day_photos(memories, image_dir):
     return _html(
         f'<div style="{FONT};max-width:760px">'
         f'<div style="font-weight:800;font-size:15px;color:{INK};'
-        f'margin-bottom:8px">📷 {len(photos)} photos, in time order</div>'
+        f'margin-bottom:8px">📷 {_esc(title) if title else f"{len(photos)} photos, in time order"}</div>'
         f'<div style="display:flex;flex-wrap:wrap;gap:10px">{cards}</div></div>')
 
 
@@ -228,6 +287,43 @@ def day_notes(memories):
                     + _cell(_memory_text(m)))
     return _html(_table(["Time", "Kind", "Note"], rows,
                         f"{len(notes)} voice and text notes"))
+
+
+def answers_table(answers, image_dir=None, title="Ask your assistant"):
+    """Questions answered from both lanes at once: the words and the picture.
+
+    `answers` is a list of (question, text_hit, photo_hit). The two scores sit
+    in their own columns and carry no bars, because words are scored by Nomic
+    and photos by CLIP and the two numbers do not compare. When both lanes
+    land on the same point, the row says so: one memory, reached two ways.
+    """
+    rows = []
+    for question, words, photo in answers:
+        p = words.payload
+        when = ("you taught this" if p.get("label")
+                else _hhmm(p["timestamp"], "%b %d") if p.get("timestamp")
+                else "-")
+        same = photo is not None and photo.id == words.id
+        file = photo.payload.get("file", "") if photo is not None else ""
+        if file and "/" not in file and image_dir:
+            file = str(Path(image_dir) / file)
+        thumb = (f'<img src="{_thumb_data_uri(file, 180)}" style="width:88px;'
+                 f'height:66px;object-fit:cover;border-radius:6px;display:block">'
+                 if file else "")
+        tag = ('<div style="font-size:11px;color:#009688;font-weight:700;'
+               'white-space:nowrap">✅ same memory</div>' if same else "")
+        photo_cell = (f'<td style="padding:6px 10px;border-bottom:1px solid '
+                      f'{LINE}">{thumb}<div style="font-size:11px;'
+                      f'color:{QDRANT_RED};font-weight:700;margin-top:3px">'
+                      f'{photo.score:.3f}</div>{tag}</td>'
+                      if photo is not None else _cell("-"))
+        rows.append(_cell(question, weight=600)
+                    + _cell(_memory_text(p))
+                    + _score_cell(words.score, None)
+                    + _cell(when, color=MUTED, nowrap=True)
+                    + photo_cell)
+    return _html(_table(["You asked", "It remembered", "Words", "When",
+                         "Photo"], rows, title))
 
 
 def memory_inbox(sections, image_dir, min_score=None):
@@ -364,28 +460,43 @@ def latency_hist(timings_ms, points_count, embed_ms=None):
     plt.show()
 
 
-def show_images(paths, captions=None, per_row=3):
-    """A row of photos with a caption under each, sized to the video frame."""
+def show_images(paths, captions=None, per_row=None, title=None, height=170):
+    """A row of photos with a caption under each, sized to the video frame.
+
+    Every photo gets the same box, whatever its shape, so a row reads as a row
+    rather than a ragged stack. `contain` keeps the whole subject visible,
+    which matters when the photo is the evidence.
+    """
     paths = list(paths)
+    # Fill the row with what there is, rather than leaving a hole for photos
+    # that were never uploaded.
+    per_row = per_row or min(len(paths), 4) or 1
+    gap = 14
     cards = []
     for i, path in enumerate(paths):
         caption = captions[i] if captions and i < len(captions) else ""
-        width = int(720 / min(per_row, max(len(paths), 1)))
         cards.append(
-            f'<figure style="margin:0;width:{width}px">'
+            f'<figure style="margin:0;flex:0 0 auto;'
+            f'width:calc((100% - {gap * (per_row - 1)}px) / {per_row})">'
             f'<img src="{_thumb_data_uri(path, 460)}" style="width:100%;'
+            f'height:{height}px;object-fit:contain;background:#FAFAFB;'
             f'border-radius:10px;display:block">'
-            f'<figcaption style="font-size:13px;font-weight:600;color:{INK};'
-            f'margin-top:6px">{_esc(caption)}</figcaption></figure>')
-    return _html(f'<div style="{FONT};display:flex;flex-wrap:wrap;gap:14px;'
-                 f'max-width:760px">{"".join(cards)}</div>')
+            f'<figcaption style="font-size:12.5px;font-weight:600;color:{INK};'
+            f'margin-top:6px;overflow:hidden;text-overflow:ellipsis;'
+            f'white-space:nowrap">{_esc(caption)}</figcaption></figure>')
+    head = (f'<div style="font-weight:800;font-size:15px;color:{INK};'
+            f'margin-bottom:8px">📷 {_esc(title)}</div>' if title else '')
+    return _html(f'<div style="{FONT};max-width:760px">{head}'
+                 f'<div style="display:flex;flex-wrap:wrap;gap:{gap}px">'
+                 f'{"".join(cards)}</div></div>')
 
 
 def recognition_result(query_photo, top, known, image_dir=None):
     """The photo you showed beside the closest memory, with the verdict.
 
     `known` is whether the score cleared the threshold. Unknown is shown as a
-    real answer, not an error: the device says so rather than guessing.
+    real answer, not an error: the device says so rather than guessing. Both
+    photos get the same box so the pair reads as a comparison.
     """
     stored = top.payload["file"]
     if image_dir:
@@ -393,6 +504,15 @@ def recognition_result(query_photo, top, known, image_dir=None):
     verdict = top.payload.get("label", "UNKNOWN") if known else "UNKNOWN"
     color = "#009688" if known else MUTED
     mark = "✅" if known else "❓"
+
+    def pane(path, caption):
+        return (f'<figure style="margin:0;width:290px">'
+                f'<img src="{_thumb_data_uri(path, 460)}" style="width:100%;'
+                f'height:210px;object-fit:contain;background:#FAFAFB;'
+                f'border-radius:10px;display:block">'
+                f'<figcaption style="font-size:13px;color:{MUTED};'
+                f'margin-top:6px">{_esc(caption)}</figcaption></figure>')
+
     return _html(
         f'<div style="{FONT};max-width:620px">'
         f'<div style="font-size:19px;font-weight:800;color:{color};'
@@ -400,17 +520,9 @@ def recognition_result(query_photo, top, known, image_dir=None):
         f'<span style="font-size:14px;font-weight:600;color:{MUTED}">'
         f' · similarity {top.score:.3f}</span></div>'
         f'<div style="display:flex;gap:16px">'
-        f'<figure style="margin:0;width:290px">'
-        f'<img src="{_thumb_data_uri(query_photo, 460)}" style="width:100%;'
-        f'border-radius:10px;display:block">'
-        f'<figcaption style="font-size:13px;color:{MUTED};margin-top:6px">'
-        f'the photo you showed it</figcaption></figure>'
-        f'<figure style="margin:0;width:290px">'
-        f'<img src="{_thumb_data_uri(stored, 460)}" style="width:100%;'
-        f'border-radius:10px;display:block">'
-        f'<figcaption style="font-size:13px;color:{MUTED};margin-top:6px">'
-        f'closest memory: {_esc(top.payload.get("label", ""))}'
-        f'</figcaption></figure></div></div>')
+        + pane(query_photo, "the photo you showed it")
+        + pane(stored, f'closest memory: {top.payload.get("label", "")}')
+        + '</div></div>')
 
 
 def demo():

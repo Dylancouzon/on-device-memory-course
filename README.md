@@ -17,11 +17,11 @@ connection.
 | Lesson | Topic | Format |
 | --- | --- | --- |
 | 1 | Why Devices Need Memory | Video |
+| 2 | Building the Device | Video |
 | 3 | Store and Recall | Notebook |
 | 4 | Finding the Right Memory | Notebook |
 | 5 | Your On-Device Assistant | Notebook |
 | 6 | Teaching It to See | Notebook and appendix |
-| 6 | The Robot | Video |
 
 In the notebooks, you will:
 
