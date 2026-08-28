@@ -1,10 +1,9 @@
 """On-device embedding models.
 
-L3 uses Nomic-Embed-Text v1.5 through FastEmbed: a small ONNX text model that
-runs locally with no account and no network after the first download. The model
-loads lazily and once (4 GB sandbox budget, one model in memory at a time).
-
-L4 extends this module with CLIP (image / cross-modal).
+L3 uses two models through FastEmbed, both small ONNX models that run locally
+with no account and no network after the first download: Nomic-Embed-Text v1.5
+for words, and CLIP for images and cross-modal recall. Each model loads lazily
+and once (4 GB sandbox budget, one model in memory at a time).
 """
 from functools import lru_cache
 from pathlib import Path
@@ -33,7 +32,7 @@ def embed_query(text):
     return next(_text_model().query_embed([text])).tolist()
 
 
-# CLIP: one shared text/image space, for cross-modal recall in L4 and later.
+# CLIP: one shared text/image space, for cross-modal recall in L3 and later.
 # Nomic and CLIP scores sit on different scales, so photos live in their own
 # named vector and a text query is embedded twice, once per space.
 CLIP_VISION_MODEL = "Qdrant/clip-ViT-B-32-vision"
@@ -98,18 +97,6 @@ def load_image(url_or_path):
 def embed_query_clip(text):
     """Embed a text query into CLIP's space, to search the image vector."""
     return next(_clip_text().query_embed([text])).tolist()
-
-
-def embed_query_ms(text, runs=50):
-    """Median time in milliseconds to embed one query, measured live."""
-    from statistics import median
-    from time import perf_counter
-    times = []
-    for _ in range(runs):
-        t0 = perf_counter()
-        embed_query(text)
-        times.append((perf_counter() - t0) * 1000)
-    return median(times)
 
 
 EXAMPLE_OBJECT = "./ro_shared_data/objects/rubberduck_"
@@ -207,8 +194,7 @@ def object_photos():
     test = [str(f) for f in _uploaded(TEST_DIR)]
     if not teach and not test:
         example = [EXAMPLE_OBJECT + f"{i}.jpg" for i in (1, 2, 3)]
-        print("Using the bundled example: a rubber duck, 2 photos to teach",
-              "with and 1 to test with")
+        print("Bundled example: rubber duck, 2 to teach with, 1 to test")
         return example[:2], example[2]
     if len(teach) < 2 or len(test) != 1:
         raise ValueError(

@@ -1,9 +1,9 @@
 """Build ro_shared_data/recent_days.json: a few weeks of text/voice notes before "today".
 
-Gives the L6 capstone a realistic history to search, so the finished assistant
+Gives the L5 capstone a realistic history to search, so the finished assistant
 feels lived-in. Photos stay in the curated ro_shared_data/images set: this file is text
 and voice only. The hero day (ro_shared_data/memories.json, 42 memories) is untouched, so
-L3/L5 payoffs and spoken counts hold. Read by L4 §8 and the L6 capstone.
+L3/L4 payoffs and spoken counts hold. Read by the L5 capstone and the appendix.
 
 Timestamps share memories.json's BASE ("today 00:00 UTC"); `day` is days before
 today, `h` is the hour of day. Ids start at 1000, clear of the hero day's 0-41.

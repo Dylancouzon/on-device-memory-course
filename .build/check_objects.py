@@ -1,4 +1,4 @@
-"""Gate check for ro_shared_data/objects/: the L6 recognition threshold must sit in a real
+"""Gate check for ro_shared_data/objects/: the L5 recognition threshold must sit in a real
 gap. For every object with three views, the held-out third view scores >= 0.82
 against its taught pair, while no other object or scene image scores > 0.75
 against its views. Two-view objects (backpack, lithops) only get the no-collision

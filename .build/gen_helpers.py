@@ -26,7 +26,9 @@ SECTIONS = [
     ("viz", "The views the lessons print"),
     ("audio", "Speech to text for the voice notes"),
 ]
-LESSONS = ["L3", "L4", "L5", "L6", "L7"]
+# Plain "Appendix" here; the transfer to SC-Qdrant-C3 renames it to
+# DLAI's convention, "Appendix - Cloud Sync" with an en dash.
+LESSONS = ["L3", "L4", "L5", "Appendix"]
 
 HEADER = '''"""Helper functions for the course notebooks.
 

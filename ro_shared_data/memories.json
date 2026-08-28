@@ -5,7 +5,8 @@
     "category": "food",
     "location": "5th St",
     "timestamp": 1699949880,
-    "note": "Great little coffee place on 5th with outdoor seating and fast wifi"
+    "note": "Great little coffee place on 5th with outdoor seating and fast wifi",
+    "price": 6.0
   },
   {
     "id": 1,
@@ -70,7 +71,8 @@
     "category": "food",
     "location": "Downtown",
     "timestamp": 1699965000,
-    "note": "Try the new ramen place downtown, everyone raves about the tonkotsu"
+    "note": "Try the new ramen place downtown, everyone raves about the tonkotsu",
+    "price": 18.0
   },
   {
     "id": 9,

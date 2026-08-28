@@ -7,13 +7,14 @@ that first time, the repeat lives here so the cells stay short. Validated
 against qdrant-edge-py 0.7.2.
 """
 import gc
-import inspect
 import json
 import shutil
 import socket
 from pathlib import Path
 
-from qdrant_edge import EdgeShard, Point, Query, QueryRequest, UpdateOperation
+from qdrant_edge import Distance, EdgeConfig, EdgeShard, EdgeVectorParams
+from qdrant_edge import Point, Query, QueryRequest, ScrollRequest
+from qdrant_edge import UpdateOperation
 
 from .embeddings import embed_image, embed_query, embed_query_clip, embed_text
 from .viz import day_photos, memories_table, show, show_images
@@ -31,6 +32,31 @@ def load_memories(path, source_type=None):
     if source_type:
         memories = [m for m in memories if m["source_type"] == source_type]
     return memories
+
+
+MODEL_NAME = {"text": "Nomic", "image": "CLIP"}
+
+
+def new_shard(directory, text=None, image=None):
+    """Create an empty shard on a clean directory, one named vector space
+    per width given: `new_shard("./day_shard", text=768, image=512)`.
+
+    Lesson 3 writes this out in full, an `EdgeConfig` holding one
+    `EdgeVectorParams` per named vector and then `EdgeShard.create`. After
+    that first time the repeat lives here. The widths stay arguments, so a
+    lesson still says on screen which spaces it has and how wide they are.
+    """
+    sizes = {name: size for name, size in
+             (("text", text), ("image", image)) if size}
+    config = EdgeConfig(vectors={
+        name: EdgeVectorParams(size=size, distance=Distance.Cosine)
+        for name, size in sizes.items()
+    })
+    shard = EdgeShard.create(fresh_start(directory), config)
+    print("Shard ready:", ", ".join(
+        f"{name} {size}-d ({MODEL_NAME[name]})"
+        for name, size in sizes.items()))
+    return shard
 
 
 def store_notes(shard, notes, preview=True):
@@ -66,12 +92,11 @@ def store_photos(shard, folder, start_id=1000, preview=True):
         show(show_images([str(p) for p in photos[:PREVIEW_PHOTOS]],
                          captions=[p.name for p in photos[:PREVIEW_PHOTOS]],
                          per_row=6,
-                         title=f"Stored {len(photos)} photos as "
-                               f"{len(vectors[0])}-d CLIP vectors · "
+                         title=f"Stored {len(photos)} photos · "
                                f"{shard.info().points_count} memories"))
     else:
-        print(f"Stored {len(photos)} photos."
-              f" Total: {shard.info().points_count} memories")
+        print(f"Stored {len(photos)} photos · "
+              f"{shard.info().points_count} memories")
 
 
 def store_photo_memories(shard, photos, folder, preview=True):
@@ -87,15 +112,15 @@ def store_photo_memories(shard, photos, folder, preview=True):
                         f"Stored {len(photos)} photos · "
                         f"{shard.info().points_count} memories"))
     else:
-        print(f"Stored {len(photos)} photos."
-              f" Total: {shard.info().points_count} memories")
+        print(f"Stored {len(photos)} photos · "
+              f"{shard.info().points_count} memories")
 
 
 def text_search(shard, query, query_filter=None, limit=4):
     """Embed a query with Nomic and return the nearest text memories.
 
-    The raw call is taught in Lesson 3; `query_filter` narrows recall the
-    way Lesson 4 teaches.
+    Lesson 3 teaches both halves in the open: the raw nearest query, then
+    `query_filter` narrowing it.
     """
     return shard.query(QueryRequest(
         query=Query.Nearest(embed_query(query), using="text"),
@@ -108,7 +133,7 @@ def text_search(shard, query, query_filter=None, limit=4):
 def photo_search(shard, description, limit=1):
     """Embed a description with CLIP and return the nearest photos.
 
-    The raw cross-modal call is taught in Lesson 4.
+    The raw cross-modal call is taught in Lesson 3.
     """
     return shard.query(QueryRequest(
         query=Query.Nearest(embed_query_clip(description), using="image"),
@@ -120,7 +145,7 @@ def photo_search(shard, description, limit=1):
 def recall(shard, question):
     """One question, two lanes: text memories by Nomic, photos by CLIP.
 
-    Lesson 5 builds this in the open; later lessons import it. Extra text
+    Lesson 4 builds this in the open; later lessons import it. Extra text
     hits are fetched so one lane cannot crowd out the other.
     """
     text_hits = text_search(shard, question, limit=10)
@@ -138,8 +163,8 @@ def recall(shard, question):
 def recognize(shard, photo, threshold=None):
     """The closest stored photo, and optionally whether it clears the bar.
 
-    The nearest-vector query is Lesson 3's; searching the image vector is
-    Lesson 4's. What Lesson 6 adds is the threshold: below it, the device
+    The nearest-vector query and the image-vector search are both
+    Lesson 3's. What Lesson 5 adds is the threshold: below it, the device
     says it does not know this object rather than guessing.
     """
     top = shard.query(QueryRequest(
@@ -154,7 +179,7 @@ def recognize(shard, photo, threshold=None):
 def seed_objects(shard, folder="./ro_shared_data/bank"):
     """Store three known objects and show them, one photo each at ids 0-2.
 
-    Writes exactly what Lesson 6's `teach` writes: the photo's CLIP vector
+    Writes exactly what Lesson 5's `teach` writes: the photo's CLIP vector
     with the label as payload, flushed to disk so a taught memory survives
     a power cut.
     """
@@ -170,8 +195,7 @@ def seed_objects(shard, folder="./ro_shared_data/bank"):
     ]))
     shard.optimize()
     shard.flush()
-    show(show_images(paths, captions=list(seeds),
-                     title=f"It already knows {len(seeds)} objects"))
+    show(show_images(paths, captions=list(seeds)))
 
 
 def load_day_and_history(folder="./ro_shared_data"):
@@ -188,41 +212,64 @@ def load_day_and_history(folder="./ro_shared_data"):
     return day, history, notes, photos
 
 
-def cloud_client(enabled, collection):
-    """Connect to the Qdrant cluster named in QDRANT_URL / QDRANT_API_KEY.
+def cloud_client(collection, text=768, image=512):
+    """Connect to the cluster in QDRANT_URL / QDRANT_API_KEY, collection ready.
 
-    Returns a ready qdrant_client.QdrantClient, or None when syncing is
-    off, the env vars are missing, or the collection already exists on
-    the cluster (the course never deletes one). None means every memory
-    stays on the device, and the calling cell says so.
+    Pasting credentials is how a student opts in, so there is no second
+    switch to forget: returns a ready qdrant_client.QdrantClient with the
+    collection created, or None when either variable is empty. A collection
+    that already exists is left alone and None comes back, because the
+    course never deletes one. None means every memory stays on the device,
+    and the calling cell says so.
+
+    The server's vectors_config is the twin of the `EdgeConfig` Lesson 3
+    writes out, so it lives here rather than repeating on screen.
     """
     import os
-    if not (enabled and os.getenv("QDRANT_URL")
-            and os.getenv("QDRANT_API_KEY")):
+    if not (os.getenv("QDRANT_URL") and os.getenv("QDRANT_API_KEY")):
         return None
-    from qdrant_client import QdrantClient
+    from qdrant_client import QdrantClient, models
     client = QdrantClient(url=os.environ["QDRANT_URL"],
                           api_key=os.environ["QDRANT_API_KEY"])
     if client.collection_exists(collection):
         print(f"{collection} already exists on the cluster.",
               "Delete it there first, or rename the collection here.")
         return None
+    client.create_collection(collection, vectors_config={
+        "text": models.VectorParams(size=text,
+                                    distance=models.Distance.COSINE),
+        "image": models.VectorParams(size=image,
+                                     distance=models.Distance.COSINE),
+    })
     return client
 
 
-def remember(shard, note, memories, point_id=900):
-    """Store one new text note, stamped at the end of the day."""
-    memory = {
-        "id": point_id, "source_type": "text", "category": "home",
-        "location": "Home",
-        "timestamp": max(m["timestamp"] for m in memories),
-        "note": note,
-    }
-    shard.update(UpdateOperation.upsert_points([
-        Point(id=point_id, vector={"text": embed_text([note])[0]},
-              payload=memory)
-    ]))
-    shard.optimize()
+def cloud_points(shard, limit=1000):
+    """Every point in a shard, in the shape a Qdrant server takes.
+
+    Same ids, same vectors, same payloads: the format does not change on
+    the way up. Reading them back is the `ScrollRequest` the appendix
+    shows in the open one cell earlier.
+    """
+    from qdrant_client import models
+    records, _ = shard.scroll(ScrollRequest(limit=limit, with_payload=True,
+                                            with_vector=True))
+    return [models.PointStruct(id=r.id, vector=r.vector, payload=r.payload)
+            for r in records]
+
+
+def push_note(client, collection, point_id, note):
+    """Store one text note straight onto the cluster, as another device would.
+
+    Used where the write belongs to some other device in the fleet. A write
+    the student makes themselves stays in the notebook.
+    """
+    from qdrant_client import models
+    client.upsert(collection, points=[models.PointStruct(
+        id=point_id,
+        vector={"text": embed_text([note])[0]},
+        payload={"source_type": "text", "note": note},
+    )])
 
 
 def fetch_snapshot(collection, dest, manifest=None):
@@ -250,49 +297,11 @@ def fetch_snapshot(collection, dest, manifest=None):
     return dest
 
 
-def add_filler(shard, count=5000, dim=768, start_id=1000):
-    """Grow the shard with random filler so a latency number is credible.
-
-    Returns the new total point count.
-    """
-    shard.update(UpdateOperation.upsert_points([
-        Point(id=start_id + i, vector={"text": v},
-              payload={"kind": "filler"})
-        for i, v in enumerate(filler_vectors(count, dim))
-    ]))
-    shard.optimize()
-    return shard.info().points_count
-
-
-def lookup_times(shard, query_vector, runs=200):
-    """Milliseconds per vector lookup, one number per run.
-
-    The query vector is embedded before the clock starts, so this times
-    the search alone.
-    """
-    from time import perf_counter
-    timings = []
-    for _ in range(runs):
-        t0 = perf_counter()
-        shard.query(QueryRequest(
-            query=Query.Nearest(query_vector, using="text"),
-            limit=3,
-            with_payload=True,
-        ))
-        timings.append((perf_counter() - t0) * 1000)
-    return timings
-
-
-def filler_vectors(count, dim, seed=0):
-    """Random vectors that grow the shard so a latency number is credible.
-
-    Content is irrelevant to latency, it tracks how many vectors there are and
-    how wide they are. The notebook builds the points and upserts them itself,
-    so every write stays visible in the cell.
-    """
-    import numpy as np
-    rng = np.random.default_rng(seed)
-    return rng.normal(size=(count, dim)).astype("float32").tolist()
+def file_size(path):
+    """A downloaded snapshot's size, in whichever unit reads better."""
+    import os
+    kb = os.path.getsize(path) / 1024
+    return f"{kb / 1024:.1f} MB" if kb >= 1024 else f"{kb:.0f} KB"
 
 
 def fresh_start(directory):
@@ -301,20 +310,27 @@ def fresh_start(directory):
     A shard the notebook still has bound holds its files open, and Edge flushes
     when that object is dropped. Deleting the files first makes the flush fail
     inside a destructor, which surfaces as a Rust panic rather than a Python
-    error. So close any shard the caller still holds before removing anything:
-    that makes re-running a setup cell in a live kernel safe, instead of only
-    working on a clean top-to-bottom run.
+    error. So close any shard the notebook still holds before removing
+    anything: that makes re-running a setup cell in a live kernel safe,
+    instead of only working on a clean top-to-bottom run.
+
+    The notebook's own namespace is `__main__`, whatever the call depth, so
+    this works whether a lesson calls it directly or `new_shard` does.
+
+    Only a directory that already holds a shard can have one open on it, so
+    the sweep is skipped for a directory that does not exist yet. Without
+    that guard, opening a second shard closes the first, which is exactly
+    what a lesson holding two shards at once needs not to happen.
     """
-    frame = inspect.stack()[1].frame
-    try:
-        for value in list(frame.f_globals.values()):
+    import sys
+    if any(Path(directory).glob("*")):
+        notebook = vars(sys.modules.get("__main__", None)) or {}
+        for value in list(notebook.values()):
             if isinstance(value, EdgeShard):
                 try:
                     value.close()
                 except Exception:
                     pass
-    finally:
-        del frame
     gc.collect()
     shutil.rmtree(directory, ignore_errors=True)
     Path(directory).mkdir(parents=True, exist_ok=True)

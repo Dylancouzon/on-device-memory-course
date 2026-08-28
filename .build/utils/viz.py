@@ -50,8 +50,18 @@ def _score_cell(score, peak):
             f'transparent {pct:.0f}%)">{score:.3f}</td>')
 
 
-def _table(headers, rows, title=None, caption=None):
-    """Render a table as HTML. `rows` holds ready-made <td> strings."""
+def _table(headers, rows, title=None, caption=None, widths=None, above=""):
+    """Render a table as HTML. `rows` holds ready-made <td> strings.
+
+    `widths` is one CSS width per column. Without it the browser sizes every
+    column by its content, which lets a three-character Price column sit on
+    top of Category and squeezes the memory itself into what is left. The
+    memory is what the reader came to read, so it gets most of the width.
+    """
+    cols = ("<colgroup>"
+            + "".join(f'<col style="width:{w}">' for w in widths)
+            + "</colgroup>") if widths else ""
+    layout = "table-layout:fixed;" if widths else ""
     head = "".join(
         f'<th style="text-align:left;padding:6px 10px;font-size:12px;'
         f'letter-spacing:.04em;text-transform:uppercase;color:{MUTED};'
@@ -64,8 +74,10 @@ def _table(headers, rows, title=None, caption=None):
     if title:
         parts.append(f'<div style="font-weight:800;font-size:15px;color:{INK};'
                      f'margin-bottom:6px">{_esc(title)}</div>')
-    parts.append('<table style="border-collapse:collapse;width:100%;'
-                 f'font-size:13.5px;color:{INK}"><thead><tr>{head}</tr></thead>'
+    parts.append(above)
+    parts.append(f'<table style="border-collapse:collapse;width:100%;'
+                 f'{layout}font-size:13.5px;color:{INK}">{cols}'
+                 f'<thead><tr>{head}</tr></thead>'
                  f'<tbody>{body}</tbody></table>')
     if caption:
         parts.append(f'<div style="font-size:12px;color:{MUTED};'
@@ -96,39 +108,50 @@ def _has_price(payloads):
     return any(p.get("price") is not None for p in payloads)
 
 
-def _result_row(hit, peak, mark=None, muted=False, price=True):
-    """One table row for a search hit, with an optional status mark."""
+def _result_row(hit, peak, price=True, when=False):
+    """One table row for a search hit: score, category, price, the memory."""
     p = hit.payload
-    color = MUTED if muted else INK
-    return ((_cell(mark, color=color, nowrap=True)
-             if mark is not None else "")
-            + _score_cell(hit.score, peak)
+    return (_score_cell(hit.score, peak)
             + _cell(p.get("category", "-"), color=MUTED)
             + (_cell(_price(p), align="right", color=MUTED) if price else "")
-            + _cell(_memory_text(p), color=color))
+            + (_cell(_hhmm(p["timestamp"], "%b %d") if p.get("timestamp")
+                     else "-", color=MUTED, nowrap=True) if when else "")
+            + _cell(_memory_text(p)))
 
 
-def results_table(hits, title=None, caption=None):
+def results_table(hits, title=None, caption=None, query=None,
+                  when=False, price=None):
     """Show search hits as a table: score, category, price, and the memory.
 
+    `query` puts the question above the answers, where a reader looks for it.
     An empty result renders as the same view with nothing in it, so asking
     before and after storing reads as one picture with a row count.
+    `when` adds the memory's date, for the lessons that rank by it.
+    `price` defaults to showing the column when a memory carries one.
     """
+    asked = _query_block(query) if query else ""
     if not hits:
         return _html(
             f'<div style="{FONT};max-width:760px">'
             f'<div style="font-weight:800;font-size:15px;color:{INK};'
             f'margin-bottom:6px">{_esc(title or "No memories found")}</div>'
-            f'<div style="border:1px dashed {LINE};border-radius:8px;'
+            + asked
+            + f'<div style="border:1px dashed {LINE};border-radius:8px;'
             f'padding:18px;text-align:center;color:{MUTED};font-size:13.5px">'
-            f'Nothing stored yet, so there is nothing to find.</div>'
+            f'Nothing stored yet.</div>'
             + (f'<div style="font-size:12px;color:{MUTED};margin-top:6px">'
                f'{_esc(caption)}</div>' if caption else '') + '</div>')
     peak = max((h.score for h in hits), default=1.0)
-    price = _has_price([h.payload for h in hits])
-    rows = [_result_row(h, peak, price=price) for h in hits]
-    headers = ["Score", "Category"] + (["Price"] if price else []) + ["Memory"]
-    return _html(_table(headers, rows, title, caption))
+    if price is None:
+        price = _has_price([h.payload for h in hits])
+    rows = [_result_row(h, peak, price=price, when=when) for h in hits]
+    headers = (["Score", "Category"] + (["Price"] if price else [])
+               + (["When"] if when else []) + ["Memory"])
+    widths = {(True, True): ("10%", "12%", "9%", "10%", "59%"),
+              (True, False): ("10%", "13%", "9%", "68%"),
+              (False, True): ("10%", "13%", "11%", "66%"),
+              (False, False): ("10%", "14%", "76%")}[(price, when)]
+    return _html(_table(headers, rows, title, caption, widths, above=asked))
 
 
 def memories_table(memories, title=None):
@@ -138,32 +161,8 @@ def memories_table(memories, title=None):
             + (_cell(_price(m), align="right", color=MUTED) if price else "")
             + _cell(_memory_text(m)) for m in memories]
     headers = ["Category"] + (["Price"] if price else []) + ["Memory"]
-    return _html(_table(headers, rows, title))
-
-
-def before_after(query, before_hits, after_hits, title, kept="kept",
-                 dropped="removed"):
-    """One table showing what a change did: every memory from `before_hits`,
-    marked kept or removed by whether it survived into `after_hits`.
-
-    Scores stay the ones each memory scored, so a reader can see the
-    runners-up are untouched. Memories the change let through for the first
-    time are added at the bottom.
-    """
-    survivors = {h.id for h in after_hits}
-    peak = max((h.score for h in before_hits), default=1.0)
-    price = _has_price([h.payload for h in before_hits + after_hits])
-    rows = [_result_row(h, peak, price=price,
-                        mark=f"✅ {kept}" if h.id in survivors
-                        else f"❌ {dropped}",
-                        muted=h.id not in survivors)
-            for h in before_hits]
-    seen = {h.id for h in before_hits}
-    rows += [_result_row(h, peak, price=price, mark=f"✅ {kept}")
-             for h in after_hits if h.id not in seen]
-    headers = ["", "Score", "Category"] + (["Price"] if price else []) + ["Memory"]
-    return _html(_table(headers, rows, title,
-                        caption=f'question: "{query}"'))
+    widths = ("14%", "9%", "77%") if price else ("15%", "85%")
+    return _html(_table(headers, rows, title, widths=widths))
 
 
 def receipt_table(rows, title="Restart receipt"):
@@ -196,7 +195,7 @@ def show_photo_results(hits, image_dir, query):
     return _html(
         f'<div style="{FONT};max-width:460px">'
         f'<div style="font-size:12px;color:{MUTED};text-transform:uppercase;'
-        f'letter-spacing:.04em">closest photo to your description</div>'
+        f'letter-spacing:.04em">closest photo</div>'
         f'<div style="font-size:17px;font-weight:700;color:{INK};'
         f'margin:2px 0 8px">"{_esc(query)}"</div>'
         f'<img src="{uri}" style="width:100%;border-radius:10px;display:block">'
@@ -206,12 +205,37 @@ def show_photo_results(hits, image_dir, query):
         f'{hero.score:.3f}</span></div></div>')
 
 
-def vector_preview(text, vector, shown=8, name="text vector"):
+def _query_block(text):
+    """The question, shown above its answers rather than captioned under them."""
+    return (f'<div style="font-size:13.5px;color:{INK};background:#FAFAFB;'
+            f'border-left:3px solid {QDRANT_RED};padding:8px 10px;'
+            f'margin-bottom:10px">{_esc(text)}</div>')
+
+
+def _cosine(a, b):
+    """Cosine similarity between two embeddings, the score a search returns."""
+    dot = sum(x * y for x, y in zip(a, b))
+    return dot / (math.sqrt(sum(x * x for x in a))
+                  * math.sqrt(sum(y * y for y in b)))
+
+
+def _payload_value(key, value):
+    """A payload value as stored, glossed where the raw number is unreadable.
+
+    A timestamp is an epoch integer on disk and stays one here, with the time
+    it stands for beside it: the point of the card is what was really stored.
+    """
+    if key == "timestamp" and isinstance(value, (int, float)):
+        return f"{value}  ({_hhmm(value, '%b %d, %H:%M')})"
+    return value
+
+
+def vector_preview(text, vector, shown=8):
     """One memory beside the start of the vector it became.
 
-    The caption names the vector and counts its numbers, because those are two
+    The caption names the vector and counts its dimensions, because those are two
     different things and the lesson leans on the difference: one note becomes
-    one vector, and that vector is a list of numbers.
+    one vector, and that vector is a list of coordinates.
     """
     numbers = ", ".join(f"{x:+.3f}" for x in vector[:shown])
     return _html(
@@ -223,15 +247,21 @@ def vector_preview(text, vector, shown=8, name="text vector"):
         f'border:1px solid {LINE};border-radius:8px;padding:10px">'
         f'[{numbers}, ...]</div>'
         f'<div style="font-size:12px;color:{MUTED};margin-top:6px">'
-        f'one {_esc(name)} · showing {shown} of its {len(vector)} numbers'
+        f'{len(vector)} dimensions'
         f'</div></div>')
 
 
 def point_card(record, vector_name="text", shown=6):
-    """One stored point in full: its id, its vector, and its payload."""
+    """One point in full: its id, its vector, and its payload.
+
+    Takes anything carrying `.id`, `.vector`, and `.payload`, so it renders a
+    `Point` the lesson just built as readily as a record read back off disk.
+    """
     vector = record.vector[vector_name]
-    numbers = ", ".join(f"{x:+.3f}" for x in vector[:shown])
-    rows = [_cell(k, color=MUTED, nowrap=True) + _cell(v)
+    # shown=0 where the cell above already printed the vector in full:
+    # the card is then about the point's shape, not its values twice.
+    values = ", ".join(f"{x:+.3f}" for x in vector[:shown])
+    rows = [_cell(k, color=MUTED, nowrap=True) + _cell(_payload_value(k, v))
             for k, v in record.payload.items()]
     return _html(
         f'<div style="{FONT};max-width:760px">'
@@ -240,9 +270,11 @@ def point_card(record, vector_name="text", shown=6):
         f'<div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;'
         f'font-size:12.5px;color:{QDRANT_RED};background:#FAFAFB;'
         f'border:1px solid {LINE};border-radius:8px;padding:10px;'
-        f'margin:8px 0">{_esc(vector_name)}: [{numbers}, ...] '
-        f'<span style="color:{MUTED}">{len(vector)} numbers</span></div>'
-        + _table(["Field", "Value"], rows) + '</div>')
+        f'margin:8px 0">{_esc(vector_name)}: '
+        f'{f"[{values}, ...] " if shown else ""}'
+        f'<span style="color:{MUTED}">{len(vector)} dimensions</span></div>'
+        + _table(["Field", "Value"], rows,
+                  widths=("20%", "80%")) + '</div>')
 
 
 def _hhmm(ts, fmt="%H:%M"):
@@ -276,10 +308,18 @@ def day_photos(memories, image_dir, title=None):
         f'<div style="display:flex;flex-wrap:wrap;gap:10px">{cards}</div></div>')
 
 
-def day_notes(memories):
-    """The day's voice and text notes as a table: time, kind, and words."""
+def day_notes(memories, limit=10):
+    """The day's voice and text notes as a table: time, kind, and words.
+
+    Shows the earliest `limit` notes, because a whole day of them runs off
+    the bottom of the recording frame. Pass a bigger number for more, or
+    `limit=None` for the lot. The title says how many there are either way.
+    """
     notes = sorted((m for m in memories if not m.get("file")),
                    key=lambda m: m["timestamp"])
+    total = len(notes)
+    if limit is not None:
+        notes = notes[:limit]
     # A couple of notes are stamped the evening before, so the date is shown
     # whenever the set spans more than one day.
     spans_days = len({_hhmm(m["timestamp"], "%j") for m in notes}) > 1
@@ -293,8 +333,10 @@ def day_notes(memories):
                             color=MODALITY_COLOR.get(kind, INK), weight=600,
                             nowrap=True)
                     + _cell(_memory_text(m)))
-    return _html(_table(["Time", "Kind", "Note"], rows,
-                        f"{len(notes)} voice and text notes"))
+    title = (f"{total} voice and text notes" if len(notes) == total
+             else f"First {len(notes)} of {total} voice and text notes")
+    return _html(_table(["Time", "Kind", "Note"], rows, title,
+                        widths=("15%", "12%", "73%")))
 
 
 def answers_table(answers, image_dir=None, title="Ask your assistant"):
@@ -335,11 +377,13 @@ def answers_table(answers, image_dir=None, title="Ask your assistant"):
 
 
 def memory_inbox(sections, image_dir, min_score=None):
-    """Render query results grouped by modality, never one blended list.
+    """One question's answers as side-by-side lanes, never one blended list.
 
-    `sections` maps a section title to a list of ScoredPoint. Every section is
-    rendered even when empty. Scores below `min_score` are dimmed and tagged
-    as weaker matches.
+    `sections` maps a lane title to a list of ScoredPoint, and each lane is a
+    column ranked best first. Columns rather than a wrapping row because the
+    lanes are the point: a reader compares down one lane and across three,
+    and a wrap would put two lanes' cards on the same line. Every lane is
+    drawn even when empty. Scores below `min_score` are dimmed.
     """
     def card(h):
         p = h.payload
@@ -352,53 +396,40 @@ def memory_inbox(sections, image_dir, min_score=None):
                          if x)
         if p.get("file"):
             uri = _thumb_data_uri(Path(image_dir) / p["file"], 260)
-            body = (f'<img src="{uri}" style="width:100%;height:150px;'
+            body = (f'<img src="{uri}" style="width:100%;height:130px;'
                     f'object-fit:cover;border-radius:8px;display:block;'
                     f'margin-top:6px">')
         else:
-            body = (f'<div style="font-size:13.5px;margin-top:6px;'
+            body = (f'<div style="font-size:13px;margin-top:6px;'
                     f'color:{INK}">{_esc(_memory_text(p))}</div>')
-        tag = ('<span style="font-size:11px;color:#B0088A"> · weaker match</span>'
+        tag = ('<span style="font-size:11px;color:#B0088A"> · weaker</span>'
                if weak else '')
+        head = (f'<div style="font-size:11px;color:{MUTED}">{_esc(ctx)}</div>'
+                if ctx else '')
         return (f'<div style="border:1px solid {LINE};border-radius:10px;'
-                f'padding:10px;width:230px;background:#fff;'
+                f'padding:9px;margin-bottom:8px;background:#fff;'
                 f'{"opacity:.5" if weak else ""}">'
-                f'<div style="font-size:11px;color:{MUTED}">{_esc(ctx)}</div>'
-                f'{body}<div style="font-size:12.5px;margin-top:6px">score '
+                f'{head}'
+                f'{body}<div style="font-size:12.5px;margin-top:6px">'
                 f'<span style="color:{QDRANT_RED};font-weight:700">'
                 f'{h.score:.3f}</span>{tag}</div></div>')
 
-    blocks = []
+    lanes = []
     for title, hits in sections.items():
-        inner = (f'<div style="display:flex;flex-wrap:wrap;gap:10px">'
-                 f'{"".join(card(h) for h in hits)}</div>' if hits else
+        ranked = sorted(hits, key=lambda h: h.score, reverse=True)
+        inner = ("".join(card(h) for h in ranked) if ranked else
                  f'<div style="font-size:13px;color:{MUTED};font-style:italic">'
                  f'No matches</div>')
-        blocks.append(
-            f'<div style="margin:12px 0">'
-            f'<div style="font-weight:700;color:{INK};'
-            f'border-bottom:2px solid {QDRANT_RED};display:inline-block;'
-            f'margin-bottom:8px">{_esc(title)}</div>{inner}</div>')
+        lanes.append(
+            f'<div style="flex:1 1 0;min-width:0">'
+            f'<div style="font-weight:700;font-size:13px;color:{INK};'
+            f'border-bottom:2px solid {QDRANT_RED};margin-bottom:8px;'
+            f'padding-bottom:3px">{_esc(title)}</div>{inner}</div>')
     return _html(
         f'<div style="{FONT};background:#F7F7F8;border-radius:12px;'
         f'padding:14px 16px;max-width:760px">'
-        f'<div style="font-weight:800;font-size:15px;color:{INK}">'
-        f'Memory Inbox</div>{"".join(blocks)}</div>')
-
-
-def show_raw(hits):
-    """The plain evidence behind a grouped recall: lane, score, id, memory."""
-    rows = []
-    for lane, group in hits.items():
-        for h in group:
-            # No bar: the photo lane is CLIP, the note lanes are Nomic, and
-            # the two scales do not compare.
-            rows.append(_cell(lane, color=MUTED, nowrap=True)
-                        + _score_cell(h.score, None)
-                        + _cell(h.id, align="right", color=MUTED)
-                        + _cell(_memory_text(h.payload)[:60]))
-    return _html(_table(["Lane", "Score", "id", "Memory"], rows,
-                        "What came back, before the inbox groups it"))
+        f'<div style="display:flex;gap:12px;align-items:flex-start">'
+        f'{"".join(lanes)}</div></div>')
 
 
 def threshold_calibration(object_dir, scene_dir, selected, current=None):
@@ -419,23 +450,17 @@ def threshold_calibration(object_dir, scene_dir, selected, current=None):
     paths = [p for views in groups.values() for p in views] + scenes
     vectors = dict(zip(paths, embed_image([str(p) for p in paths])))
 
-    def cosine(a, b):
-        dot = sum(x * y for x, y in zip(a, b))
-        na = math.sqrt(sum(x * x for x in a))
-        nb = math.sqrt(sum(y * y for y in b))
-        return dot / (na * nb)
-
     same = []
     different = []
     for label, query in held_out.items():
-        same.append(max(cosine(vectors[query], vectors[p])
+        same.append(max(_cosine(vectors[query], vectors[p])
                         for p in taught[label]))
         different.extend(
-            cosine(vectors[query], vectors[p])
+            _cosine(vectors[query], vectors[p])
             for other, views in taught.items() if other != label
             for p in views)
     different.extend(
-        cosine(vectors[scene], vectors[p])
+        _cosine(vectors[scene], vectors[p])
         for scene in scenes for views in taught.values() for p in views)
 
     same_min = min(same)
@@ -484,39 +509,61 @@ def threshold_calibration(object_dir, scene_dir, selected, current=None):
     plt.show()
 
 
-def latency_hist(timings_ms, points_count, embed_ms=None):
-    """Histogram of live recall timings with the median marked.
+# Measured by .build/measure_latency.py on Apple M5 Pro, CPU only,
+# Python 3.14.6, 300 queries per size, median reported. The lesson draws
+# this curve rather than timing anything live: a 250,000-vector store does
+# not fit in the course container, and a number timed on a shared sandbox
+# moves on every re-run. Re-measure and paste if the model or Edge changes.
+LOOKUP_LATENCY = [
+    (1_000, 0.054),
+    (5_000, 0.179),
+    (25_000, 0.526),
+    (100_000, 1.439),
+    (250_000, 2.646),
+]
+QUERY_EMBED_MS = 5.50
+MEASURED_ON = "Apple M5 Pro, CPU only, median of 300 queries per size"
 
-    Pass `embed_ms`, also measured live, to add the budget line: embedding the
-    question costs far more than the lookup, and a reader planning a real loop
-    needs to see which term wins. Both halves are local, so this stays a
-    where-the-time-goes breakdown and never a comparison against a server.
+
+def latency_curve(points=LOOKUP_LATENCY, embed_ms=QUERY_EMBED_MS):
+    """Vector lookup time as the store grows, against the cost of embedding.
+
+    Two local costs make up one answer. Embedding the question is a fixed
+    price the encoder charges whatever the store holds, so it draws as a
+    flat line. The lookup grows with the number of vectors, so it draws as
+    a curve. Both stay on the device, which keeps this a breakdown of where
+    the time goes and never a comparison against a server.
     """
-    timings = sorted(timings_ms)
-    median = timings[len(timings) // 2]
-    fig, ax = plt.subplots(figsize=(FIG_W, 3.2 if embed_ms is None else 3.9))
-    ax.hist(timings, bins=30, color="#8F98B2", edgecolor="white")
-    ax.axvline(median, color=QDRANT_RED, lw=2, ls="--")
-    ax.text(median, ax.get_ylim()[1] * 0.92, f"  median {median:.2f} ms",
-            color=QDRANT_RED, fontsize=11, fontweight="bold", va="top")
-    ax.set_title(f"Vector lookup at {points_count:,} memories "
-                 f"({len(timings)} queries, CPU only)", loc="left")
-    ax.set_xlabel("milliseconds per lookup (query embedding not included)")
-    ax.set_ylabel("queries")
+    sizes = [n for n, _ in points]
+    times = [ms for _, ms in points]
+    fig, ax = plt.subplots(figsize=(FIG_W, 3.5))
+
+    ax.axhline(embed_ms, color="#8F98B2", lw=2, ls="--")
+    ax.annotate(f"query embedding · {embed_ms:.1f} ms",
+                xy=(sizes[0], embed_ms), xytext=(0, 7),
+                textcoords="offset points", color="#5C6480", fontsize=9.5)
+    ax.plot(sizes, times, color=QDRANT_RED, lw=2.2, marker="o",
+            markersize=6, markerfacecolor="white",
+            markeredgecolor=QDRANT_RED, markeredgewidth=2, zorder=3)
+    for n, ms in points:
+        ax.annotate(f"{ms:.2f} ms", xy=(n, ms), xytext=(0, 11),
+                    textcoords="offset points", ha="center", va="bottom",
+                    color=QDRANT_RED, fontsize=9.5, fontweight="bold")
+
+    ax.set_xscale("log")
+    ax.set_xticks(sizes)
+    ax.set_xticklabels([f"{n:,}" for n in sizes])
+    ax.minorticks_off()
+    ax.set_xlabel("memories")
+    ax.set_ylabel("milliseconds")
+    ax.set_ylim(0, max(embed_ms, max(times)) * 1.35)
+    ax.set_title("Vector lookup as memory grows", loc="left")
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
-    if embed_ms is not None:
-        # The budget goes under the axes, where it has the full width.
-        total = embed_ms + median
-        fig.subplots_adjust(bottom=0.36)
-        fig.text(0.012, 0.10,
-                 f"embed {embed_ms:.2f} ms + lookup {median:.2f} ms"
-                 f" = {total:.2f} ms per answer",
-                 fontsize=11, fontweight="bold", color=INK)
-        fig.text(0.012, 0.02,
-                 f"embedding is {embed_ms / median:.0f}x the lookup"
-                 f" · about {1000 / total:.0f} answers per second",
-                 fontsize=10, color="#4E5366")
+    # One provenance line, kept shorter than the figure: a wider line makes
+    # matplotlib grow the whole figure past the recording frame.
+    fig.subplots_adjust(bottom=0.24)
+    fig.text(0.012, 0.03, MEASURED_ON, fontsize=9.5, color="#4E5366")
     plt.show()
 
 
@@ -581,27 +628,20 @@ def recognition_result(query_photo, top, known, image_dir=None,
     detail = ""
     if known is None:
         if expected and label == expected:
-            detail = ("Retrieval found the right memory. Next, choose when "
-                      "a match is close enough to accept.")
+            detail = ""
         else:
-            detail = ("Nearest search always returns something. Your subject "
-                      "has not been taught yet.")
-        detail = (f'<div style="font-size:13px;color:{MUTED};font-weight:650;'
-                  f'margin:0 0 10px">{_esc(detail)}</div>')
+            detail = ""
     elif threshold is not None:
-        delta = abs(top.score - threshold)
         if known:
-            detail = (f'Similarity {top.score:.3f} clears the '
-                      f'{threshold:.3f} threshold by {delta:.3f}.')
+            detail = f'{top.score:.3f} clears the {threshold:.3f} threshold.'
         else:
-            detail = (f'The closest memory scores {top.score:.3f}, below the '
-                      f'{threshold:.3f} threshold.')
+            detail = f'{top.score:.3f} is below the {threshold:.3f} threshold.'
         detail = (f'<div style="font-size:13px;color:{color};font-weight:650;'
                   f'margin:0 0 10px">{_esc(detail)}</div>')
 
     heading = f"{mark} " if mark else ""
-    score_detail = (f" · similarity {top.score:.3f}" if known is None else
-                    f" · closest memory: {_esc(label)}"
+    score_detail = (f" · closest: {_esc(label)} · similarity {top.score:.3f}"
+                    if known is False else
                     f" · similarity {top.score:.3f}")
     return _html(
         f'<div style="{FONT};max-width:620px">'
@@ -619,7 +659,6 @@ def demo():
     html = receipt_table([("path", "./coffee_shard"), ("memories", 6),
                           ("network_calls", 0)]).data
     assert "coffee_shard" in html and "<table" in html
-    assert "✅" in before_after("q", [], [], "t").data or True
     print("viz demo OK")
 
 

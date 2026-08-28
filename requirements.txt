@@ -25,7 +25,7 @@ onnx-asr==0.12.0
 onnxruntime==1.27.0
 tokenizers==0.23.1
 
-# The upload button in Lesson 6. Ships its own JupyterLab extension, so it
+# The upload button in Lesson 5. Ships its own JupyterLab extension, so it
 # works in a container with no outbound network.
 ipywidgets==8.1.8
 
@@ -34,5 +34,5 @@ matplotlib==3.11.0
 numpy==2.5.1
 Pillow==12.3.0
 
-# Server client, for the optional cloud sync in Lesson 7
+# Server client, for the optional cloud sync in the appendix
 qdrant-client==1.18.0

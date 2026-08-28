@@ -1,4 +1,4 @@
-"""Build ro_shared_data/memories.json: one person's day, shared across L3-L6.
+"""Build ro_shared_data/memories.json: one person's day, shared across L3-L5 and the appendix.
 
 Text and voice notes plus photo captures, each with metadata the labs filter on
 (category, location, timestamp, price). Photo entries point at files in
@@ -16,7 +16,7 @@ BASE = 1_699_920_000  # today 00:00:00 UTC (2023-11-14)
 # content -> note (text), transcript (voice), or image filename (photo).
 DAY = [
     # --- text notes ---
-    (8.3, "text", "Great little coffee place on 5th with outdoor seating and fast wifi", "food", "5th St", None, None),
+    (8.3, "text", "Great little coffee place on 5th with outdoor seating and fast wifi", "food", "5th St", 6.0, None),
     (10.0, "text", "Standup with Sarah moved to Thursday to review the Q3 roadmap", "work", "Office", None, None),
     (9.0, "text", "Pick up dry cleaning before Friday, ticket is on the fridge", "errands", "Home", None, None),
     (11.5, "text", "Idea: batch the weekly report so it drafts itself every Monday", "work", "Office", None, None),
@@ -24,7 +24,7 @@ DAY = [
     (15.3, "text", "Liked the black and white running shoes at the mall, about $45", "shopping", "Mall", 45.0, None),
     (21.0, "text", "Book club is reading the new sci-fi novel, we meet next Tuesday", "social", "Home", None, None),
     (12.0, "text", "Dentist appointment confirmed for next Wednesday at 2pm", "health", "Home", None, None),
-    (12.5, "text", "Try the new ramen place downtown, everyone raves about the tonkotsu", "food", "Downtown", None, None),
+    (12.5, "text", "Try the new ramen place downtown, everyone raves about the tonkotsu", "food", "Downtown", 18.0, None),
     (17.5, "text", "Water the plants twice a week while the amaryllis is blooming", "home", "Home", None, None),
     (7.5, "text", "Renewed the gym membership, locker code is 4471", "health", "Gym", 40.0, None),
     (16.0, "text", "Found a quiet cafe with good wifi to work from near the park", "work", "Park", None, None),
@@ -63,8 +63,8 @@ DAY = [
     (7.4, "photo", "gym.jpg", "health", "Gym", None, None),
 ]
 
-# Voice notes carry the audio file L5 transcribes on-device. The stored
-# transcript is the fallback text L3/L4/L6 read; L5 replaces it with what its
+# Voice notes carry the audio file L4 transcribes on-device. The stored
+# transcript is the fallback text L3 and L5 read; L4 replaces it with what its
 # Whisper model produces from these clips (see .build/utils/audio.py).
 VOICE_AUDIO = {
     "Note to self, the ramen downtown was incredible, fourteen dollars and worth it, sat right by the window": "ramen.wav",
@@ -108,6 +108,12 @@ def main():
     missing_audio = [m["audio_file"] for m in memories
                      if m["source_type"] == "voice" and m["audio_file"] not in clips]
     assert not missing_audio, f"voice entries with no audio on disk: {missing_audio}"
+    # Every food note carries a price. A range condition skips points that
+    # lack the field, so an unpriced food note would drop out of a "food
+    # under $15" filter for the wrong reason (L3 section 9).
+    unpriced = [m["id"] for m in memories if m["category"] == "food"
+                and m["source_type"] in ("text", "voice") and "price" not in m]
+    assert not unpriced, f"food notes with no price: {unpriced}"
     Path("ro_shared_data/memories.json").write_text(json.dumps(memories, indent=2) + "\n")
 
     from collections import Counter
