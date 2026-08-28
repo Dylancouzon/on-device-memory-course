@@ -8,159 +8,130 @@
 ## Marketing Script
 
 **Target runtime:** ~2 min
-**Target length:** 250–350 words
-**Format:** Talking heads, Andrew and Dylan
+**Target spoken length:** 250–350 words
+**Format:** Talking heads, Andrew and Dylan, with course B-roll
 
 ### Script
 
 [Andrew]
 
-An AI application can respond to what it sees or hears right now. But how does
-it remember what happened an hour ago, survive a restart, or recognize
-something you taught it yesterday?
-
-If every memory requires a cloud request, recall disappears with the network.
-For a phone, wearable, robot, or field device, the memory may need to live
-where the application runs.
+AI Apps can interpret what they see and hear, but without memory,
+every interaction starts over. In this course, you'll build a persistent,
+multimodal memory that runs directly on a device.
 
 Welcome to *Building On-Device AI Memory with Qdrant Edge*, created with
 Qdrant and taught by Dylan Couzon, Developer Relations Engineer at Qdrant.
 
+Dylan, what will learners be able to do by the end of the course?
+
 [Dylan]
 
-Thanks, Andrew. In this course, you'll build a persistent memory layer that
-runs inside an application. You'll turn text and images into vectors, store
-them with useful context, retrieve them by meaning, and remove memories you no
-longer want.
+You'll build the memory layer for an AI assistant. It will capture text,
+images, and voice notes, then retrieve the right information by meaning,
+visual similarity, or metadata.
 
-We'll use Qdrant Edge, the embedded version of Qdrant's vector search engine.
-It runs in the application process and stores its data on local disk, so the
-core course needs no separate server, Qdrant account, or network connection.
+[B-ROLL: Show memories being captured, followed by text and image search
+results from the course.]
+
+We'll begin with a working robot to see what on-device memory makes possible.
+Then we'll trace how observations move from sensors and local models into
+searchable memory.
+
+Most of the course is hands-on. You'll create a local Qdrant Edge shard in
+Python, add and update memories, filter search results, and remove information
+that the application should forget.
+
+[B-ROLL: Show the Qdrant Edge shard, stored records, filtered results, and the
+before-and-after delete table.]
+
+You'll also connect several forms of memory. You'll search images with natural
+language, retrieve related text and voice notes, and teach the application to
+recognize a new subject from a few examples. You'll evaluate similarity scores
+and choose a threshold so the application can decide when to return a match
+and when to say it doesn't know.
 
 [Andrew]
 
-You'll first see the complete idea running on a robot. It remembers where it
-saw an object, and it can learn a personal name from a few examples without
-retraining a model. You don't need the robot or any special hardware to follow
-along.
+Why keep this memory on the device?
 
 [Dylan]
 
-In the notebooks, you'll build the same memory loop on a regular computer.
-You'll store and forget notes, add metadata filters, search photos with words,
-transcribe voice notes locally, and assemble a memory of an entire day.
+Local memory can remain available without a network connection and keep
+personal data close to where you captured it. Qdrant Edge runs inside the
+application process, so the core lessons don't require a separate vector
+search server, special hardware, or a Qdrant account.
 
-Then you'll teach the assistant to recognize a subject it has never seen. A
-held-out photo tests whether it learned the subject, and you'll calibrate the
-threshold that separates a match from an unknown object.
-
-An optional appendix shows how selected memories can move between devices
-through Qdrant Cloud.
-
-If you're comfortable with Python and know the basic ideas behind embeddings
-and vector search, this course will take you from those concepts to a memory
-system you can run, inspect, and adapt. I hope you'll join us.
+If you're comfortable with Python and familiar with embeddings and vector
+search, this course will give you a complete memory loop that you can inspect,
+adapt, and extend for your own AI applications.
 
 ---
 
 ## Lesson 0: Introduction to the Course
 
-**Target runtime:** 3–4 min
+**Target runtime:** ~2 min
+**Target spoken length:** 250–350 words
 **Format:** Talking heads, Andrew and Dylan
-
-## Beat Map
-
-| # | Speaker | Content | Est. sec |
-|---|---|---|---:|
-| 1 | Andrew | Welcome and the missing-memory problem | 35 |
-| 2 | Andrew | Why local memory matters | 25 |
-| 3 | Andrew | Introduce Dylan | 10 |
-| 4 | Dylan | Define the memory loop and Qdrant Edge | 35 |
-| 5 | Dylan | Current course roadmap | 85 |
-| 6 | Andrew | Prerequisites and setup expectations | 20 |
-| 7 | Dylan | Learning outcome and transition | 15 |
-
-Total: ~225 sec (~3 min 45 sec).
 
 ### Script
 
 [Andrew]
 
+In this course, you'll build persistent, searchable memory for an AI
+application. It will support text, images, and voice notes directly on the
+device.
+
 Welcome to *Building On-Device AI Memory with Qdrant Edge*, created with
+Qdrant. Your instructor is Dylan Couzon, Developer Relations Engineer at
 Qdrant.
-
-AI models can classify an image, understand speech, and generate a response.
-But a model's weights are not a record of what happened to you today. They do
-not contain the note you wrote this morning, the place you left your keys, or
-the object you taught your device five minutes ago.
-
-An application needs a separate memory. That memory has to accept new
-observations, keep useful context, survive a restart, and return the right
-information later.
-
-For some applications, a cloud service is the right place to store it. For
-others, every cloud request adds a dependency on connectivity, latency, and an
-external provider. Personal data may also be better kept on the device that
-captured it.
-
-This course explores that local path. Your instructor is Dylan Couzon,
-Developer Relations Engineer at Qdrant.
 
 [Dylan]
 
-Thanks, Andrew. I'm excited to build this with you.
+Thanks, Andrew. We'll use one memory loop throughout the course: capture an
+observation, encode it as a vector, store it with metadata, and retrieve it
+when a later query points to the same idea or subject. You can add memories
+without retraining the models.
 
-The method is simple: capture an observation, encode it as a vector, store the
-vector with useful metadata, and retrieve it when a later question or image
-points to the same memory. When the application learns something new, it adds
-a memory. It does not need to retrain the model.
+You'll implement this loop with Qdrant Edge, an embedded version of Qdrant's
+vector search engine that runs inside your Python process.
 
-We'll implement that loop with Qdrant Edge, the embedded version of Qdrant's
-vector search engine. It runs inside the application process and stores a
-shard in a local directory. Search is a function call in your program, not a
-request to a separate vector search server.
+In Lesson 1, you'll see a robot use local memory to recall observations and
+learn from a few examples. In Lesson 2, you'll examine the system behind it,
+from the camera and local models to storage and retrieval.
 
-The course begins with two video lessons.
+Then you'll build the memory yourself. In Lesson 3, you'll store, retrieve,
+filter, and forget text and image memories. You'll also compare the time spent
+creating embeddings with the time spent searching vectors.
 
-In Lesson 1, a robot recalls where it saw a water bottle, then learns Potato,
-one specific cat plushie. Those examples introduce embeddings, similarity,
-multimodal memory, and the capture, store, recall, and forget loop.
+In Lesson 4, you'll combine text, photos, and locally transcribed voice notes.
+In Lesson 5, you'll teach the application a new visual subject, evaluate its
+matches, and calibrate its recognition threshold.
 
-In Lesson 2, we'll take the robot apart and follow the path from its camera to
-its memory. The Jetson keeps live vision responsive, but it is not a course
-requirement.
-
-Then you'll build the memory yourself in three notebooks.
-
-In Lesson 3, you'll store, retrieve, and forget notes in a Qdrant Edge shard.
-You'll add metadata filters, search a photo bank with words, and see how lookup
-time changes as memory grows.
-
-In Lesson 4, you'll combine a day of text, photos, and locally transcribed voice
-notes. You'll ask questions across all three modalities, then add and retrieve
-a memory of your own.
-
-In Lesson 5, you'll teach the assistant from a few photos and test it with a
-held-out view. You'll compare scores, calibrate a recognition threshold, and
-assemble one persistent assistant.
-
-The optional appendix moves selected memory through Qdrant Cloud. You'll pull
-it onto a second device, transfer only what changed, and search local and
-shared memories together.
+The optional appendix shows how to share selected memories through Qdrant
+Cloud while keeping the rest local.
 
 [Andrew]
 
-You should be comfortable reading Python and familiar with the basic ideas
-behind embeddings and vector search. You won't need special hardware, a
-Qdrant account, or an API key for the core lessons. The notebooks run on CPU,
-and recall works offline once the local models are available.
+You should be comfortable reading Python and familiar with embeddings and
+vector search. You won't need special hardware, a Qdrant account, or an API
+key for the core lessons.
+
+[ACKNOWLEDGMENTS SLIDE]
+
+Many people from DeepLearning.AI and Qdrant contributed to this course. We
+would like to thank everyone who helped make it possible.
+
+[PRODUCTION NOTE: Add every name shown on the acknowledgments slide here with
+its phonetic pronunciation before recording.]
+
+[BACK TO ANDREW AND DYLAN]
+
+[Andrew]
+
+Dylan, what will we do first?
 
 [Dylan]
 
-By the end, you'll understand how to give an application a memory that grows
-without changing its model weights. You'll be able to inspect what it stored,
-control what it retrieves, remove what it should forget, and decide what stays
-local.
-
-We'll start with the finished robot and the question that motivates the whole
-course: where did you last see my water bottle?
+We'll begin by seeing on-device memory in action, then use that example to
+identify the parts we'll build throughout the course. I'm excited to get
+started.
